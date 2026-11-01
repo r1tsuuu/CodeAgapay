@@ -19,7 +19,7 @@ MAX_REASON = 300
 MAX_MILESTONES = 6
 MAX_CHECKS = 6
 
-SYSTEM_PROMPT = """You plan a learning path for a beginner on LearnPath, a free app that sends
+SYSTEM_PROMPT = """You plan a learning path for a beginner on CodeAgapay, a free app that sends
 learners to existing free resources and checks their understanding.
 
 Choose the topics this learner needs for their goal and project, ONLY from the topic list

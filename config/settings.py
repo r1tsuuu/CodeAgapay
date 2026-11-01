@@ -1,4 +1,4 @@
-"""Django settings for LearnPath.
+"""Django settings for CodeAgapay.
 
 Every secret and deploy-specific value comes from environment variables.
 Locally they are read from `.env` (copy `.env.example`). See README.md.

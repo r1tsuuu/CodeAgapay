@@ -1,12 +1,22 @@
 {% extends "base.html" %}
+{% load static %}
 
-{% block title %}Your learning plan · LearnPath{% endblock %}
+{% block title %}Your learning plan · CodeAgapay{% endblock %}
 
 {% block content %}
-<h1>Your plan{% if profile.path %}: {{ profile.path.title }}{% endif %}</h1>
-{% include "partials/progress_bar.html" %}
-<p class="plan-progress-note">{{ done_count }} of {{ counted }} topic{{ counted|pluralize }} done{% if starting.shown %} · plus {{ starting.shown|length }} you already showed on the check{% endif %}</p>
+<section class="plan-hero">
+  <img class="mascot plan-mascot-1" src="{% static 'img/mascots/star-pink.svg' %}" alt="">
+  <img class="mascot plan-mascot-2" src="{% static 'img/mascots/star-yellow.svg' %}" alt="">
+  <img class="mascot plan-mascot-3" src="{% static 'img/mascots/flower-teal.svg' %}" alt="">
+  <img class="mascot plan-mascot-4" src="{% static 'img/mascots/flower-yellow.svg' %}" alt="">
+  <img class="mascot plan-mascot-5" src="{% static 'img/mascots/oval-berry.svg' %}" alt="">
+  <h1>Your {% if profile.path %}{{ profile.path.title }}{% elif profile.track %}{{ profile.track.name }}{% endif %} learning plan</h1>
+  <p class="plan-percent" aria-hidden="true">{{ progress }}%</p>
+  {% include "partials/progress_bar.html" %}
+  <p class="plan-progress-note">{{ done_count }} of {{ counted }} topic{{ counted|pluralize }} done{% if starting.shown %} · plus {{ starting.shown|length }} you already showed on the check{% endif %}</p>
+</section>
 
+<div class="plan-sheet">
 {% if next_action %}
 <section class="next-action next-action-{{ next_action.kind }}" aria-labelledby="next-action-title">
   <p class="next-action-label">{% if next_action.kind == "review" %}Review due{% else %}Your next step{% endif %}</p>
@@ -50,7 +60,7 @@
       <select id="plan-hours" name="hours">
         {% for h in hours_choices %}<option value="{{ h }}"{% if h == estimate.hours %} selected{% endif %}>{{ h }}</option>{% endfor %}
       </select>
-      <button type="submit" class="button">Update pace</button>
+      <button type="submit" class="button button-small">Update pace</button>
     </form>
   </div>
 </section>
@@ -74,29 +84,34 @@
   {% endif %}
   <ol class="plan-items">
     {% for item in week.items %}
-    <li class="plan-item plan-item-{{ item.status }}">
-      <h3 class="plan-item-title"><a href="{% url 'lesson' item.topic.slug %}">{{ item.topic.title }}</a></h3>
-      <p class="plan-item-meta">{% if tracks|length > 1 %}{{ item.topic.track.name }} · {% endif %}{{ item.topic.estimated_minutes }} min · {{ item.get_status_display }}</p>
-      {% if item.reason %}<p class="plan-item-reason">Why: {{ item.reason|capfirst }}</p>{% endif %}
+    <li class="plan-item plan-item-{{ item.status }}{% if next_action and item.topic_id == next_action.topic_id %} plan-item-current{% endif %}">
+      <h3 class="plan-item-title"><a href="{% url 'lesson' item.topic.slug %}">{{ item.topic.title }}</a> <span class="plan-item-minutes">· {{ item.topic.estimated_minutes }} min</span></h3>
       {% if item.topic.summary %}<p class="plan-item-summary">{{ item.topic.summary }}</p>{% endif %}
+      <p class="plan-item-meta"><span class="status status-{{ item.status }}">{{ item.get_status_display }}</span>{% if tracks|length > 1 %} {{ item.topic.track.name }}{% endif %}</p>
+      {% if item.reason %}<p class="plan-item-reason">Why: {{ item.reason|capfirst }}</p>{% endif %}
       {% if item.topic_id in unchecked and item.status == "todo" and item.topic.quiz_items.all %}
       <p class="plan-item-skip">Already know this? <a href="{% url 'quiz' item.topic.slug %}">Take the quiz</a> to skip it.</p>
       {% endif %}
 
-      {% if item.topic.resources.all %}
-      <ul class="plan-item-resources">
-        {% for resource in item.topic.resources.all %}
-        <li><a href="{{ resource.url }}" target="_blank" rel="noopener">{{ resource.title }}</a> <span class="resource-kind">{{ resource.get_kind_display }}, {{ resource.estimated_minutes }} min</span></li>
-        {% endfor %}
-      </ul>
+      {% if item.topic.resources.all or item.topic.tips.all %}
+      <details class="plan-item-details">
+        <summary>Resources and tips</summary>
+        {% if item.topic.resources.all %}
+        <ul class="plan-item-resources">
+          {% for resource in item.topic.resources.all %}
+          <li><a class="external" href="{{ resource.url }}" target="_blank" rel="noopener">{{ resource.title }}</a> ({{ resource.get_kind_display }}, {{ resource.estimated_minutes }} min)</li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+        {% if item.topic.tips.all %}
+        <ul class="plan-item-tips">
+          {% for tip in item.topic.tips.all %}<li>{{ tip.text }}</li>{% endfor %}
+        </ul>
+        {% endif %}
+      </details>
       {% endif %}
 
-      {% if item.topic.tips.all %}
-      <ul class="plan-item-tips">
-        {% for tip in item.topic.tips.all %}<li>{{ tip.text }}</li>{% endfor %}
-      </ul>
-      {% endif %}
-
+      <a class="button button-lagoon button-small plan-item-open" href="{% url 'lesson' item.topic.slug %}">Open topic</a>
       <form class="plan-item-actions" method="post" action="{% url 'plan_item_status' item.pk %}">
         {% csrf_token %}
         {% if item.status == "done" or item.status == "skipped" %}
@@ -140,4 +155,5 @@
     <button type="submit" class="button">Send</button>
   </form>
 </details>
+</div>
 {% endblock %}

@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.shortcuts import redirect, render
 
 from .models import get_profile
@@ -11,4 +12,4 @@ def home(request):
 
 
 def welcome(request):
-    return render(request, "accounts/welcome.html")
+    return render(request, "accounts/welcome.html", {"ai_daily_limit": settings.AI_DAILY_LIMIT})

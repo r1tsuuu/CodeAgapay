@@ -2,13 +2,21 @@
   {% if field.field.widget.input_type == "radio" %}
   <fieldset>
     <legend>{{ field.label }}</legend>
-    {% for choice in field %}
-    <label class="choice">{{ choice.tag }} {{ choice.choice_label }}</label>
-    {% endfor %}
+    <div class="choice-options">
+      {% for choice in field %}
+      <label class="choice{% if field.name == 'track' %} choice-track{% endif %}">{{ choice.tag }} {{ choice.choice_label }}</label>
+      {% endfor %}
+      {% if field.name == "track" %}{% for track in form.coming_soon %}
+      <span class="choice choice-track choice-soon" aria-disabled="true">{{ track.name }} <span class="visually-hidden">(coming soon)</span></span>
+      {% endfor %}{% endif %}
+    </div>
   </fieldset>
+  {% elif field.field.widget.input_type == "checkbox" %}
+  <label class="check-row" for="{{ field.id_for_label }}">{{ field }} {{ field.label }}</label>
   {% else %}
   <label for="{{ field.id_for_label }}">{{ field.label }}</label>
   {{ field }}
   {% endif %}
+  {% if field.help_text %}<p class="field-help">{{ field.help_text }}</p>{% endif %}
   {% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}
 </div>

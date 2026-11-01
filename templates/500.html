@@ -3,15 +3,25 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Something went wrong · LearnPath</title>
+  <title>Something went wrong · CodeAgapay</title>
+  <link rel="icon" href="{% static 'img/mascots/flower-pink.svg' %}" type="image/svg+xml">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito+Sans:wght@400;600;700;800&display=swap">
   <link rel="stylesheet" href="{% static 'css/main.css' %}">
 </head>
 <body>
-  <header class="navbar"><a class="navbar-brand" href="/">LearnPath</a></header>
+  <header class="navbar">
+    <a class="navbar-brand" href="/">
+      <img src="{% static 'img/mascots/flower-pink.svg' %}" alt="" width="40" height="36">
+      <span>Code<span class="brand-accent">Agapay</span></span>
+    </a>
+  </header>
   <main class="page">
-    <h1>Something went wrong</h1>
-    <p>That's on us, not you. Your progress is saved. Try again in a minute.</p>
-    <p><a class="button button-primary" href="/">Back to my plan</a></p>
+    <section class="error-page">
+      <img class="mascot" src="{% static 'img/mascots/flower-orange.svg' %}" alt="">
+      <h1>Something broke on our side</h1>
+      <p class="lead">That's on us, not you. Your progress is saved. Try again in a minute.</p>
+      <a class="button button-primary" href="/">Back to My Plan</a>
+    </section>
   </main>
 </body>
 </html>

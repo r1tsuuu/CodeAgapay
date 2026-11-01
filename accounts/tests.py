@@ -28,7 +28,7 @@ class HomeTests(TestCase):
         self.assertTrue(LearnerProfile.objects.filter(user=self.user, onboarded=False).exists())
 
     def test_welcome_greets_learner(self):
-        self.assertContains(self.client.get(reverse("welcome")), "Welcome, Ana")
+        self.assertContains(self.client.get(reverse("welcome")), "Hi, Ana!")
 
     def test_logout_page_uses_site_layout(self):
         response = self.client.get(reverse("account_logout"))

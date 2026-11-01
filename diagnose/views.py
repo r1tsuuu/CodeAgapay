@@ -98,6 +98,7 @@ def result(request):
             "track": profile.track,
             "known": [r for r in results if r.known],
             "to_learn": [r for r in results if not r.known],
+            "total": len(results),
         },
     )
 

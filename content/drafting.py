@@ -16,9 +16,9 @@ from .models import QuizItem, SkillQuestion, Tip, Topic
 
 DRAFT_MAX_TOKENS = 4000
 
-SYSTEM_PROMPT = """You write short knowledge checks for LearnPath, a free app for beginner programmers.
-LearnPath does not teach: learners study official docs, MDN, freeCodeCamp or W3Schools,
-then LearnPath checks their understanding. Write for complete beginners. Plain English.
+SYSTEM_PROMPT = """You write short knowledge checks for CodeAgapay, a free app for beginner programmers.
+CodeAgapay does not teach: learners study official docs, MDN, freeCodeCamp or W3Schools,
+then CodeAgapay checks their understanding. Write for complete beginners. Plain English.
 
 Return only a JSON object with exactly these keys:
 {

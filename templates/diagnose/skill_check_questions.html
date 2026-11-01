@@ -1,14 +1,32 @@
 {% extends "base.html" %}
+{% load static %}
 
-{% block title %}Skill check · LearnPath{% endblock %}
+{% block title %}Skill check · CodeAgapay{% endblock %}
+{% block page_class %}page-wide{% endblock %}
 
 {% block content %}
-<h1>Skill check: {{ track.name }}</h1>
+<div class="skill-check-head">
+  <h1>{{ track.name }} Skill Check</h1>
+  <span class="skill-check-count">{{ form.questions|length }} question{{ form.questions|length|pluralize }}</span>
+</div>
 
-<form class="skill-check-form" method="post">
-  {% csrf_token %}
-  {% if form.errors %}<p class="field-error">Answer every question. "I don't know yet" is a fine answer.</p>{% endif %}
-  {% include "partials/skill_questions.html" %}
-  <button type="submit" class="button button-primary">See my result</button>
-</form>
+<div class="skill-check-layout">
+  <form class="skill-check-form" method="post">
+    {% csrf_token %}
+    {% if form.errors %}<p class="message message-error">Answer every question. "I don't know yet" is a fine answer.</p>{% endif %}
+    {% include "partials/skill_questions.html" %}
+    <div class="actions">
+      <a class="button" href="{% url 'skill_check' %}">Back</a>
+      <button type="submit" class="button button-primary">See my result</button>
+    </div>
+  </form>
+
+  <aside aria-label="Tip">
+    <p class="speech"><strong>No pressure!</strong> This isn't graded. It shows how much you already know. "I don't know yet" is a perfectly good answer.</p>
+    <div class="speech-mascots" aria-hidden="true">
+      <img class="mascot" src="{% static 'img/mascots/star-pink.svg' %}" alt="" style="width:55%;left:0;top:35%">
+      <img class="mascot" src="{% static 'img/mascots/oval-berry.svg' %}" alt="" style="width:62%;right:0;top:0">
+    </div>
+  </aside>
+</div>
 {% endblock %}

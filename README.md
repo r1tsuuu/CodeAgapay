@@ -1,4 +1,4 @@
-# LearnPath
+# CodeAgapay
 
 A free web app that helps beginner programmers keep learning when no tutor is around. Learners take a short skill check, get a personal learning plan built from free online resources, and can ask an AI helper for hints when they get stuck.
 
@@ -93,7 +93,7 @@ All tracks, topics, links, tips and quiz questions are edited in the admin page 
 
 ### Drafting topics with AI
 
-LearnPath doesn't write tutorials; it points learners to docs, MDN, freeCodeCamp, W3Schools and similar, then checks their understanding. The AI can draft the checks so curators only review:
+CodeAgapay doesn't write tutorials; it points learners to docs, MDN, freeCodeCamp, W3Schools and similar, then checks their understanding. The AI can draft the checks so curators only review:
 
 ```bash
 python manage.py draft_topic html "Page structure" "Text and headings" "Links and images"

@@ -1,18 +1,35 @@
 {% extends "base.html" %}
+{% load static %}
 
-{% block title %}Welcome · LearnPath{% endblock %}
+{% block title %}Welcome · CodeAgapay{% endblock %}
 
 {% block content %}
 <section class="welcome">
-  <h1>Welcome{% if user.first_name %}, {{ user.first_name }}{% endif %}!</h1>
-  <p>Tell us what you want to make. You'll learn the skill by building a real project of your own, step by step, using free resources from the web.</p>
-  <ul class="welcome-steps">
-    <li>Answer a few quick questions (mostly just tap)</li>
-    <li>Take a short check on what you already know</li>
-    <li>Get a weekly plan built around your project</li>
-  </ul>
-  <p>It takes about 3 minutes.</p>
-  <a class="button button-primary" href="{% url 'intake' %}">Get started</a>
-  <p><a href="{% url 'about_you' %}">Prefer a short form instead?</a></p>
+  <img class="mascot" src="{% static 'img/mascots/flower-yellow.svg' %}" alt="" width="96" height="86">
+  <h1>Hi{% if user.first_name %}, {{ user.first_name }}{% endif %}!</h1>
+  <p class="lead">Welcome to CodeAgapay. Here's how we'll help you learn to code.</p>
+  <ol class="welcome-steps">
+    <li class="tile welcome-step">
+      <span class="step-pill">Step 1</span>
+      <img class="mascot" src="{% static 'img/mascots/star-yellow.svg' %}" alt="">
+      <h2>Check your skills</h2>
+      <p>Tell us what you want to make, then answer a few quick questions so we know what you already know. It's not graded.</p>
+    </li>
+    <li class="tile welcome-step">
+      <span class="step-pill">Step 2</span>
+      <img class="mascot" src="{% static 'img/mascots/star-pink.svg' %}" alt="">
+      <h2>Get your plan</h2>
+      <p>We build a week-by-week plan from the best free lessons online, skipping what you know.</p>
+    </li>
+    <li class="tile welcome-step">
+      <span class="step-pill">Step 3</span>
+      <img class="mascot" src="{% static 'img/mascots/flower-teal.svg' %}" alt="">
+      <h2>Learn with help</h2>
+      <p>Stuck? Ask Agapay, our AI helper, for a hint. It nudges you without giving away the answer.</p>
+    </li>
+  </ol>
+  <p class="info-note"><span><strong>Heads up:</strong> AI help has a daily limit of {{ ai_daily_limit }} messages. It resets every day.</span></p>
+  <p><a class="button button-primary" href="{% url 'intake' %}">Get started</a></p>
+  <p class="welcome-alt"><a href="{% url 'about_you' %}">Prefer a short form instead?</a></p>
 </section>
 {% endblock %}

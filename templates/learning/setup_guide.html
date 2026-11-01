@@ -1,21 +1,28 @@
 {% extends "base.html" %}
 
-{% block title %}Set up {{ track.name }} · LearnPath{% endblock %}
+{% block title %}Set up {{ track.name }} · CodeAgapay{% endblock %}
 
 {% block content %}
-<h1>Set up {{ track.name }}</h1>
+<div class="page-head">
+  <p class="eyebrow">Setup guide</p>
+  <h1>Get ready to code {{ track.name }}</h1>
+  <p class="lead">Follow these steps once. Then you're ready for every topic in your plan.</p>
+</div>
 {% if steps %}
 <ol class="setup-steps">
   {% for step in steps %}
   <li class="setup-step">
     <h2 class="setup-step-title">{{ step.title }}</h2>
     <p class="setup-step-body">{{ step.body|linebreaksbr }}</p>
-    {% if step.link %}<p><a href="{{ step.link }}" target="_blank" rel="noopener">Open the guide</a></p>{% endif %}
+    {% if step.link %}<p><a class="text-link external" href="{{ step.link }}" target="_blank" rel="noopener">Open the guide</a></p>{% endif %}
   </li>
   {% endfor %}
 </ol>
 {% else %}
-<p>Setup steps for {{ track.name }} are coming soon.</p>
+<p class="lead">Setup steps for {{ track.name }} are coming soon.</p>
 {% endif %}
-<p><a href="{% url 'plan' %}">Back to my plan</a></p>
+<div class="actions">
+  <a class="text-link" href="{% url 'plan' %}">Back to my plan</a>
+  <a class="button button-primary" href="{% url 'plan' %}">I'm set up</a>
+</div>
 {% endblock %}

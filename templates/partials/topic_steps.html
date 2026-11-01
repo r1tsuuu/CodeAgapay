@@ -1,0 +1,11 @@
+<ol class="topic-steps" aria-label="Steps in this topic">
+  <li class="topic-step{% if current == 'lesson' %} topic-step-current{% endif %}"{% if current == 'lesson' %} aria-current="step"{% endif %}>
+    <span class="topic-step-number">1</span>{% if current == 'lesson' %}Lesson{% else %}<a href="{% url 'lesson' topic.slug %}">Lesson</a>{% endif %}
+  </li>
+  <li class="topic-step-line" aria-hidden="true"></li>
+  <li class="topic-step"><span class="topic-step-number">2</span>Practice <span class="visually-hidden">(coming soon)</span></li>
+  <li class="topic-step-line" aria-hidden="true"></li>
+  <li class="topic-step{% if current == 'quiz' %} topic-step-current{% endif %}"{% if current == 'quiz' %} aria-current="step"{% endif %}>
+    <span class="topic-step-number">3</span>{% if current == 'quiz' or not has_quiz %}Quiz{% else %}<a href="{% url 'quiz' topic.slug %}">Quiz</a>{% endif %}
+  </li>
+</ol>

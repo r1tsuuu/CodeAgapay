@@ -1,18 +1,37 @@
 {% extends "base.html" %}
-{% load socialaccount %}
+{% load socialaccount static %}
 
-{% block title %}Log in · LearnPath{% endblock %}
+{% block title %}Log in · CodeAgapay{% endblock %}
 
-{% block content %}
-<section class="login">
-  <h1>LearnPath</h1>
-  <p class="login-intro">Learn to code by building something you actually want to make, one small step at a time.</p>
-  <ul class="login-points">
-    <li><strong>A plan built around your project</strong>, like a page for your org or a tool for a chore.</li>
-    <li><strong>The best free resources</strong>, from official docs, MDN, freeCodeCamp and W3Schools, picked for you.</li>
-    <li><strong>Hints when you're stuck</strong>, never just the answer, so you actually learn it.</li>
-  </ul>
-  <a class="button button-primary" href="{% provider_login_url 'google' process='login' %}">Continue with Google</a>
-  <p class="login-note">Free, open source, and made by Ateneo students with CompSAt. We only use your Google name and email to sign you in.</p>
-</section>
+{% block navbar %}{% endblock %}
+
+{% block main %}
+<main class="login">
+  <div class="login-art" aria-hidden="true">
+    <img class="mascot" src="{% static 'img/mascots/star-pink.svg' %}" alt="" style="width:30%;left:4%;top:-4%">
+    <img class="mascot" src="{% static 'img/mascots/oval-teal.svg' %}" alt="" style="width:25%;left:40%;top:9%">
+    <img class="mascot" src="{% static 'img/mascots/flower-orange.svg' %}" alt="" style="width:23%;left:72%;top:4%">
+    <img class="mascot" src="{% static 'img/mascots/flower-yellow.svg' %}" alt="" style="width:22%;left:12%;top:20%">
+    <img class="mascot" src="{% static 'img/mascots/star-yellow.svg' %}" alt="" style="width:32%;left:36%;top:44%">
+    <img class="mascot" src="{% static 'img/mascots/flower-teal.svg' %}" alt="" style="width:22%;left:76%;top:55%">
+    <img class="mascot" src="{% static 'img/mascots/oval-berry.svg' %}" alt="" style="width:25%;left:54%;top:72%">
+    <img class="mascot" src="{% static 'img/mascots/flower-teal.svg' %}" alt="" style="width:22%;left:20%;top:66%">
+    <img class="mascot" src="{% static 'img/mascots/star-pink.svg' %}" alt="" style="width:24%;left:-4%;top:46%">
+  </div>
+
+  <section class="login-panel">
+    <span class="navbar-brand">
+      <img src="{% static 'img/mascots/flower-pink.svg' %}" alt="" width="52" height="46">
+      <span>Code<span class="brand-accent">Agapay</span></span>
+    </span>
+    {% include "partials/messages.html" %}
+    <h1>Learn to code, one easy step at a time.</h1>
+    <p class="login-intro">Get a free learning plan made just for you, with a friendly AI helper for when you get stuck.</p>
+    <a class="google-button" href="{% provider_login_url 'google' process='login' %}">
+      <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Continue with Google
+    </a>
+    <p class="login-note">New here? The same button creates your account. We only use your name and email.</p>
+  </section>
+</main>
 {% endblock %}

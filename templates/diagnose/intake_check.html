@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}Quick check · LearnPath{% endblock %}
+{% block title %}Quick check · CodeAgapay{% endblock %}
 
 {% block content %}
 <h1>Let's plan your learning</h1>
 {% include "partials/phase_steps.html" %}
 
 <section class="chat-message chat-assistant chat-current">
-  <span class="chat-author">LearnPath guide</span>
+  <span class="chat-author">Agapay</span>
   <p class="chat-text chat-question">Quick check: {{ track.name }}</p>
   {% if not has_questions %}
   <p class="chat-help">We don't have check questions for those topics yet, so they'll stay in your plan. Each one has a short quiz you can take to skip it.</p>

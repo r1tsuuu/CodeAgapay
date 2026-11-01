@@ -1,19 +1,30 @@
 {% extends "base.html" %}
+{% load static %}
 
-{% block title %}Skill check · LearnPath{% endblock %}
+{% block title %}Skill check · CodeAgapay{% endblock %}
 
 {% block content %}
-<h1>Skill check: {{ track.name }}</h1>
-{% if question_count %}
-<p>{{ question_count }} short question{{ question_count|pluralize }} to find out what you already know, so your plan can skip it.</p>
-<p>This isn't a test. If you're not sure, pick "I don't know yet". Guessing only puts topics you need to learn out of your plan.</p>
-<a class="button button-primary" href="{% url 'skill_check_questions' %}">Start</a>
-{% else %}
-<p>There are no skill check questions for {{ track.name }} yet, so your plan will include every topic.</p>
-<form method="post" action="{% url 'skill_check_questions' %}">
-  {% csrf_token %}
-  <button type="submit" class="button button-primary">Continue</button>
-</form>
-{% endif %}
-<p><a href="{% url 'about_you' %}">Change my answers about me</a></p>
+<div class="page-head">
+  <p class="eyebrow">Step 2 of 3</p>
+  <h1>{{ track.name }} Skill Check</h1>
+  <img class="mascot" src="{% static 'img/mascots/star-yellow.svg' %}" alt="">
+</div>
+
+<section class="card">
+  {% if question_count %}
+  <p class="lead">{{ question_count }} short question{{ question_count|pluralize }} to find out what you already know, so your plan can skip it.</p>
+  <p class="info-note"><span><strong>No pressure!</strong> This isn't graded. If you're not sure, pick "I don't know yet". Guessing only puts topics you need to learn out of your plan.</span></p>
+  <div class="actions">
+    <a class="text-link" href="{% url 'about_you' %}">Change my answers about me</a>
+    <a class="button button-primary" href="{% url 'skill_check_questions' %}">Start</a>
+  </div>
+  {% else %}
+  <p class="lead">There are no skill check questions for {{ track.name }} yet, so your plan will include every topic.</p>
+  <form class="actions" method="post" action="{% url 'skill_check_questions' %}">
+    {% csrf_token %}
+    <a class="text-link" href="{% url 'about_you' %}">Change my answers about me</a>
+    <button type="submit" class="button button-primary">Continue</button>
+  </form>
+  {% endif %}
+</section>
 {% endblock %}

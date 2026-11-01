@@ -19,7 +19,8 @@ class AboutYouForm(forms.ModelForm):
         label="How much have you coded before?",
     )
     hours_per_week = forms.IntegerField(
-        min_value=1, max_value=40, label="How many hours a week can you study?"
+        min_value=1, max_value=40, label="How many hours a week can you study?",
+        help_text="Even 2–3 hours a week is a great start.",
     )
     goal_text = forms.CharField(
         required=False, max_length=300, label="What's your goal? (optional)",
@@ -29,6 +30,11 @@ class AboutYouForm(forms.ModelForm):
     class Meta:
         model = LearnerProfile
         fields = ["track", "experience", "hours_per_week", "goal_text"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Shown greyed out as "Coming soon"; only active tracks can be picked.
+        self.coming_soon = Track.objects.filter(is_active=False)
 
 
 class SkillCheckForm(forms.Form):

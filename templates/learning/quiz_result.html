@@ -1,48 +1,62 @@
 {% extends "base.html" %}
 
-{% block title %}Quiz result: {{ topic.title }} · LearnPath{% endblock %}
+{% block title %}Quiz result: {{ topic.title }} · CodeAgapay{% endblock %}
+{% block page_class %}page-wide{% endblock %}
 
 {% block content %}
-<p class="breadcrumb"><a href="{% url 'lesson' topic.slug %}">{{ topic.title }}</a> / Quiz result</p>
-<h1>{% if result.passed %}You passed!{% else %}Not yet{% endif %}</h1>
-<p class="quiz-score">{{ result.correct }} of {{ result.total }} correct ({{ result.percent }}%). You need {{ pass_percent }}% to pass.</p>
+<p class="breadcrumb"><a href="{% url 'plan' %}">{{ topic.track.name }}</a> / <a href="{% url 'lesson' topic.slug %}">{{ topic.title }}</a> / <strong>Quiz result</strong></p>
+{% include "partials/topic_steps.html" with current="quiz" has_quiz=True %}
 
-<ol class="quiz-feedback">
-  {% for r in result.items %}
-  <li class="quiz-feedback-item {% if r.correct %}quiz-correct{% else %}quiz-wrong{% endif %}">
-    <code class="quiz-prompt">{{ r.item.prompt }}</code>
-    <p>Your answer: <code>{{ r.answer|default:"(blank)" }}</code> · {% if r.correct %}Correct{% else %}Not quite{% endif %}</p>
-    {% if not r.correct and r.item.hint %}<p class="quiz-hint">Hint: {{ r.item.hint }}</p>{% endif %}
-  </li>
-  {% endfor %}
-</ol>
+<div class="quiz-layout">
+  <div>
+    <h2>How you did</h2>
+    <ol class="quiz-feedback">
+      {% for r in result.items %}
+      <li class="quiz-feedback-item {% if r.correct %}quiz-correct{% else %}quiz-wrong{% endif %}">
+        <code class="quiz-prompt">{{ r.item.prompt }}</code>
+        <p>Your answer: <code>{{ r.answer|default:"(blank)" }}</code> · {% if r.correct %}Correct{% else %}Not quite{% endif %}</p>
+        {% if not r.correct and r.item.hint %}<p class="quiz-hint">Hint: {{ r.item.hint }}</p>{% endif %}
+      </li>
+      {% endfor %}
+    </ol>
 
-{% if result.passed %}
-<section class="quiz-passed">
-  <p><strong>{{ topic.title }} is done.</strong>{% if plan_progress is not None %} Your plan is now {{ plan_progress }}% done.{% endif %}</p>
-  {% if next_action and next_action.kind != "project" %}
-  <p>Next up: <strong>{{ next_action.title }}</strong></p>
-  <a class="button button-primary" href="{{ next_action.url }}">{{ next_action.button }}</a>
-  <p><a href="{% url 'plan' %}">Back to my plan</a></p>
-  {% elif next_action %}
-  <p>That was the last topic. Time to finish your project!</p>
-  <a class="button button-primary" href="{% url 'plan' %}#project">See your project steps</a>
-  {% else %}
-  <a class="button button-primary" href="{% url 'plan' %}">Back to my plan</a>
-  {% endif %}
-</section>
-{% else %}
-{% if struggling %}
-<section class="quiz-stuck">
-  <h2>Stuck on this one? That's normal.</h2>
-  <p>Read the hints above first. Then try a different way in:</p>
-  <ul>
-    {% for resource in resources %}<li><a href="{{ resource.url }}" target="_blank" rel="noopener">{{ resource.title }}</a> ({{ resource.get_kind_display|lower }})</li>{% endfor %}
-    {% for prerequisite in prerequisites %}<li>Look back at <a href="{% url 'lesson' prerequisite.slug %}">{{ prerequisite.title }}</a>, which this topic builds on.</li>{% endfor %}
-  </ul>
-</section>
-{% endif %}
-<a class="button button-primary" href="{% url 'quiz' topic.slug %}">Try again</a>
-<p><a href="{% url 'lesson' topic.slug %}">Review the lesson</a></p>
-{% endif %}
+    {% if not result.passed and struggling %}
+    <section class="quiz-stuck">
+      <h2>Stuck on this one? That's normal.</h2>
+      <p>Read the hints above first. Then try a different way in:</p>
+      <ul>
+        {% for resource in resources %}<li><a class="external" href="{{ resource.url }}" target="_blank" rel="noopener">{{ resource.title }}</a> ({{ resource.get_kind_display|lower }})</li>{% endfor %}
+        {% for prerequisite in prerequisites %}<li>Look back at <a href="{% url 'lesson' prerequisite.slug %}">{{ prerequisite.title }}</a>, which this topic builds on.</li>{% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+  </div>
+
+  <aside class="quiz-score-panel">
+    <h1>{% if result.passed %}You passed!{% else %}Not yet{% endif %}</h1>
+    <p class="quiz-score-big">{{ result.correct }} out of {{ result.total }}</p>
+    <p class="quiz-score">{{ result.correct }} of {{ result.total }} correct ({{ result.percent }}%). You need {{ pass_percent }}% to pass.</p>
+
+    {% if result.passed %}
+    <section class="quiz-passed">
+      <p><strong>{{ topic.title }} is done.</strong>{% if plan_progress is not None %} Your plan is now {{ plan_progress }}% done.{% endif %}</p>
+      {% if next_action and next_action.kind != "project" %}
+      <p>Next up: <strong>{{ next_action.title }}</strong></p>
+      <a class="button button-primary" href="{{ next_action.url }}">{{ next_action.button }}</a>
+      <p><a class="text-link" href="{% url 'plan' %}">Back to my plan</a></p>
+      {% elif next_action %}
+      <p>That was the last topic. Time to finish your project!</p>
+      <a class="button button-primary" href="{% url 'plan' %}#project">See your project steps</a>
+      {% else %}
+      <a class="button button-primary" href="{% url 'plan' %}">Back to my plan</a>
+      {% endif %}
+    </section>
+    {% else %}
+    <div class="actions">
+      <a class="button" href="{% url 'lesson' topic.slug %}">Review the lesson</a>
+      <a class="button button-primary no-arrow" href="{% url 'quiz' topic.slug %}">Try again</a>
+    </div>
+    {% endif %}
+  </aside>
+</div>
 {% endblock %}

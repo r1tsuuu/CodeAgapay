@@ -114,5 +114,5 @@ class ProjectIdeaAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Tip)
-admin.site.site_header = "LearnPath content admin"
-admin.site.site_title = "LearnPath admin"
+admin.site.site_header = "CodeAgapay content admin"
+admin.site.site_title = "CodeAgapay admin"

@@ -1,12 +1,26 @@
-<header class="navbar">
-  <a class="navbar-brand" href="{% url 'home' %}">LearnPath</a>
+{% load static %}<header class="navbar">
+  <a class="navbar-brand" href="{% url 'home' %}">
+    <img src="{% static 'img/mascots/flower-pink.svg' %}" alt="" width="40" height="36">
+    <span>Code<span class="brand-accent">Agapay</span></span>
+  </a>
   {% if user.is_authenticated %}
-  <nav class="navbar-links">
-    <a href="{% url 'home' %}">My plan</a>
-    <form class="navbar-logout" method="post" action="{% url 'account_logout' %}">
-      {% csrf_token %}
-      <button type="submit" class="button-link">Log out</button>
-    </form>
+  <a class="navbar-plan" href="{% url 'home' %}"{% if request.resolver_match.url_name == "plan" %} aria-current="page"{% endif %}>My Plan</a>
+  <nav class="navbar-links" aria-label="Account">
+    {% with profile=user.learner_profile %}
+    {% if profile.path or profile.track %}
+    <a class="navbar-track" href="{% url 'home' %}"><span class="navbar-track-icon" aria-hidden="true">&lt;&gt;</span> {% if profile.path %}{{ profile.path.title }}{% else %}{{ profile.track.name }} Track{% endif %}</a>
+    {% endif %}
+    {% endwith %}
+    <details class="account-menu">
+      <summary><span class="avatar" aria-hidden="true">{{ user.first_name|default:user.username|first|upper }}</span> {{ user.first_name|default:"Account" }}</summary>
+      <div class="account-menu-panel">
+        {% if user.email %}<p class="account-menu-email">{{ user.email }}</p>{% endif %}
+        <form class="navbar-logout" method="post" action="{% url 'account_logout' %}">
+          {% csrf_token %}
+          <button type="submit" class="button-link">Log out</button>
+        </form>
+      </div>
+    </details>
   </nav>
   {% endif %}
 </header>

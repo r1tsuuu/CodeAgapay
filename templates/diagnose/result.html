@@ -1,40 +1,55 @@
 {% extends "base.html" %}
+{% load static %}
 
-{% block title %}Your result · LearnPath{% endblock %}
+{% block title %}Your result · CodeAgapay{% endblock %}
+{% block page_class %}page-wide{% endblock %}
 
 {% block content %}
-<h1>Your result: {{ track.name }}</h1>
+<section class="card result-card">
+  <h1>{% if known %}Outstanding work!{% else %}Your {{ track.name }} result{% endif %}</h1>
+  <p class="result-summary">You already know {{ known|length }} of {{ total }} {{ track.name }} topic{{ total|pluralize }}</p>
+  <p class="lead">{% if to_learn %}We'll help you focus on the topics you're still learning.{% else %}You got everything right. You already know this whole track!{% endif %}</p>
 
-<section class="result-section result-known">
-  <h2>You already know</h2>
-  {% if known %}
-  <ul class="topic-results">
-    {% for r in known %}
-    <li class="topic-result"><span class="topic-result-title">{{ r.topic.title }}</span> <span class="topic-result-reason">{{ r.reason }}</span></li>
-    {% endfor %}
-  </ul>
-  <p>We'll skip these in your plan.</p>
-  {% else %}
-  <p>Nothing yet, and that's fine. Your plan starts from the beginning.</p>
-  {% endif %}
+  <div class="result-layout">
+    <div class="result-lists">
+      <section class="result-section result-known">
+        <h2>You already know</h2>
+        {% if known %}
+        <ul class="topic-results">
+          {% for r in known %}
+          <li class="topic-result"><span class="topic-result-title">{{ r.topic.title }}</span> <span class="topic-result-reason">{{ r.reason }}</span></li>
+          {% endfor %}
+        </ul>
+        <p class="field-help">We'll skip these in your plan.</p>
+        {% else %}
+        <p>Nothing yet, and that's fine. Your plan starts from the beginning.</p>
+        {% endif %}
+      </section>
+
+      <section class="result-section result-to-learn">
+        <h2>You'll learn</h2>
+        {% if to_learn %}
+        <ul class="topic-results">
+          {% for r in to_learn %}
+          <li class="topic-result"><span class="topic-result-title">{{ r.topic.title }}</span> <span class="topic-result-reason">{{ r.reason }}</span></li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <p>Nothing left to learn here. Try another track next!</p>
+        {% endif %}
+      </section>
+    </div>
+
+    <aside class="result-plan">
+      <h2>Your plan is ready to build</h2>
+      <p>It skips what you know and puts what you'll learn in order, week by week.</p>
+      <form class="build-plan" method="post" action="{% url 'plan_build' %}">
+        {% csrf_token %}
+        <button type="submit" class="button button-primary no-arrow">Build my plan</button>
+      </form>
+      <p class="result-retake"><a class="text-link" href="{% url 'skill_check' %}">Retake the skill check</a></p>
+    </aside>
+  </div>
+  <img class="mascot result-mascot" src="{% static 'img/mascots/star-yellow.svg' %}" alt="">
 </section>
-
-<section class="result-section result-to-learn">
-  <h2>You'll learn</h2>
-  {% if to_learn %}
-  <ul class="topic-results">
-    {% for r in to_learn %}
-    <li class="topic-result"><span class="topic-result-title">{{ r.topic.title }}</span> <span class="topic-result-reason">{{ r.reason }}</span></li>
-    {% endfor %}
-  </ul>
-  {% else %}
-  <p>You got everything right. You already know this whole track!</p>
-  {% endif %}
-</section>
-
-<form class="build-plan" method="post" action="{% url 'plan_build' %}">
-  {% csrf_token %}
-  <button type="submit" class="button button-primary">Build my plan</button>
-</form>
-<p><a href="{% url 'skill_check' %}">Retake the skill check</a></p>
 {% endblock %}

@@ -125,10 +125,20 @@ class DiagnoseFlowTests(ContentMixin, TestCase):
         self.assertEqual(profile.track, self.track)
         self.assertEqual(profile.hours_per_week, 3)
 
-    def test_about_you_only_offers_active_tracks(self):
+    def test_about_you_shows_inactive_tracks_as_coming_soon(self):
         response = self.client.get(reverse("about_you"))
         self.assertContains(response, "Python")
-        self.assertNotContains(response, "SQL")
+        self.assertContains(response, "SQL <span class=\"visually-hidden\">(coming soon)</span>")
+        sql = Track.objects.get(slug="sql")
+        self.assertNotContains(response, f'value="{sql.pk}"')
+
+    def test_about_you_rejects_inactive_track(self):
+        sql = Track.objects.get(slug="sql")
+        response = self.client.post(reverse("about_you"), {
+            "track": sql.pk, "experience": "a_little", "hours_per_week": 3, "goal_text": "",
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(get_profile(self.user).onboarded)
 
     def test_skill_check_needs_about_you_first(self):
         self.assertRedirects(self.client.get(reverse("skill_check")), reverse("about_you"))
