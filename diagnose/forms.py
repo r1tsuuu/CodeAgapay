@@ -24,7 +24,7 @@ class AboutYouForm(forms.ModelForm):
     )
     goal_text = forms.CharField(
         required=False, max_length=300, label="What's your goal? (optional)",
-        widget=forms.TextInput(attrs={"placeholder": "e.g. pass CS 11, build a small website"}),
+        widget=forms.TextInput(attrs={"placeholder": "e.g. pass a programming class, build a small website"}),
     )
 
     class Meta:
