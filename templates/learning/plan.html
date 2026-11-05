@@ -67,8 +67,33 @@
 
 <p class="plan-controls">
   <a href="{% url 'intake' %}?edit=1">Change my answers</a>
-  {% for track in tracks %} · <a href="{% url 'setup_guide' track.slug %}">Set up {{ track.name }}</a>{% endfor %}
 </p>
+
+{% if setup.items %}
+<details class="plan-week plan-week-setup"{% if not setup.all_done %} open{% endif %}>
+  <summary class="plan-week-summary">
+    <h2>Week 0: Setup</h2>
+    <span class="plan-week-count">{% if setup.all_done %}Done{% else %}Get ready to code{% endif %}</span>
+  </summary>
+  {% if not setup.all_done %}<p class="plan-setup-skip">Already set up? Mark it done below and jump to Week 1.</p>{% endif %}
+  <ol class="plan-items">
+    {% for s in setup.items %}
+    <li class="plan-item plan-item-setup plan-item-{% if s.done %}done{% else %}todo{% endif %}">
+      <h3 class="plan-item-title"><a href="{% url 'setup_guide' s.track.slug %}">Set up {{ s.track.name }}</a>{% if s.steps %} <span class="plan-item-minutes">· {{ s.steps }} step{{ s.steps|pluralize }}</span>{% endif %}</h3>
+      {% if s.track.setup_check %}<p class="plan-item-summary">Check it works: {{ s.track.setup_check }}</p>{% endif %}
+      <p class="plan-item-meta"><span class="status status-{% if s.done %}done{% else %}todo{% endif %}">{% if s.done %}Done{% else %}To do{% endif %}</span></p>
+      <a class="button button-lagoon button-small plan-item-open" href="{% url 'setup_guide' s.track.slug %}">Open guide</a>
+      {% if not s.done %}
+      <form class="plan-item-actions" method="post" action="{% url 'setup_guide' s.track.slug %}">
+        {% csrf_token %}
+        <button type="submit" class="button">I'm already set up</button>
+      </form>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ol>
+</details>
+{% endif %}
 
 {% for week in weeks %}
 <details class="plan-week"{% if week.number == current_week or not current_week %} open{% endif %}>
@@ -87,7 +112,7 @@
     <li class="plan-item plan-item-{{ item.status }}{% if next_action and item.topic_id == next_action.topic_id %} plan-item-current{% endif %}">
       <h3 class="plan-item-title"><a href="{% url 'lesson' item.topic.slug %}">{{ item.topic.title }}</a> <span class="plan-item-minutes">· {{ item.topic.estimated_minutes }} min</span></h3>
       {% if item.topic.summary %}<p class="plan-item-summary">{{ item.topic.summary }}</p>{% endif %}
-      <p class="plan-item-meta"><span class="status status-{{ item.status }}">{{ item.get_status_display }}</span>{% if tracks|length > 1 %} {{ item.topic.track.name }}{% endif %}</p>
+      <p class="plan-item-meta">{% if item.shaky %}<span class="status status-shaky">Shaky · review later</span>{% else %}<span class="status status-{{ item.status }}">{{ item.get_status_display }}</span>{% endif %}{% if tracks|length > 1 %} {{ item.topic.track.name }}{% endif %}</p>
       {% if item.reason %}<p class="plan-item-reason">Why: {{ item.reason|capfirst }}</p>{% endif %}
       {% if item.topic_id in unchecked and item.status == "todo" and item.topic.quiz_items.all %}
       <p class="plan-item-skip">Already know this? <a href="{% url 'quiz' item.topic.slug %}">Take the quiz</a> to skip it.</p>
@@ -124,6 +149,12 @@
     </li>
     {% endfor %}
   </ol>
+  {% if week.outcomes %}
+  <div class="plan-week-milestone{% if week.done == week.items|length %} plan-week-milestone-done{% endif %}">
+    <p class="plan-week-milestone-label">{% if week.done == week.items|length %}Week {{ week.number }} done! You can now:{% else %}By the end of Week {{ week.number }}, you'll be able to:{% endif %}</p>
+    <ul>{% for text in week.outcomes %}<li>{{ text }}</li>{% endfor %}</ul>
+  </div>
+  {% endif %}
 </details>
 {% empty %}
 <p>You've already shown every topic we have for this path. Focus on your project!</p>

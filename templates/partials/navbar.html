@@ -12,7 +12,7 @@
     {% endif %}
     {% endwith %}
     <details class="account-menu">
-      <summary><span class="avatar" aria-hidden="true">{{ user.first_name|default:user.username|first|upper }}</span> {{ user.first_name|default:"Account" }}</summary>
+      <summary><span class="avatar" aria-hidden="true">{{ user.first_name|default:user.username|first|upper }}</span> <span class="account-name">{{ user.first_name|default:"Account" }}</span></summary>
       <div class="account-menu-panel">
         {% if user.email %}<p class="account-menu-email">{{ user.email }}</p>{% endif %}
         <form class="navbar-logout" method="post" action="{% url 'account_logout' %}">

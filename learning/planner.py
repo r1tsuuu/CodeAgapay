@@ -191,7 +191,8 @@ def set_item_status(item, status):
     """Change a plan item's status. Marking done also records the topic as known (manual)."""
     item.status = status
     item.completed_at = timezone.now() if status == PlanItem.Status.DONE else None
-    item.save(update_fields=["status", "completed_at"])
+    item.shaky = False
+    item.save(update_fields=["status", "completed_at", "shaky"])
 
     learner = item.plan.learner
     mastery = TopicMastery.objects.filter(learner=learner, topic=item.topic).first()
@@ -202,6 +203,14 @@ def set_item_status(item, status):
     elif mastery and mastery.known and mastery.source == TopicMastery.Source.MANUAL:
         # Undoing a manual "done" takes back the only evidence there was.
         record_mastery(learner, item.topic, TopicMastery.Status.UNKNOWN, "", TopicMastery.Source.MANUAL, force=True)
+
+
+def move_on_shaky(item):
+    """After missing the quiz twice: continue the plan and bring the topic back as a review later."""
+    item.status = PlanItem.Status.SKIPPED
+    item.shaky = True
+    item.completed_at = timezone.now()
+    item.save(update_fields=["status", "shaky", "completed_at"])
 
 
 def plan_item_for_topic(profile, topic):

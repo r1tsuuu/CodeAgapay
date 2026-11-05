@@ -3,16 +3,20 @@ from itertools import groupby
 from django.contrib import messages
 from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from accounts.models import get_profile
+from assistant.service import daily_limit, practice_feedback, remaining_today
 from content.models import Resource, Topic, Track
 
 from . import journey
 from .forms import QuizForm
 from .grading import PASS_PERCENT, latest_result, submit_quiz
-from .models import PlanFeedback, PlanItem, QuizAttempt
-from .planner import active_plan, plan_item_for_topic, plan_tracks, repace_plan, set_item_status, start_item
+from .models import PlanFeedback, PlanItem, PracticeSubmission, QuizAttempt
+from .planner import (
+    active_plan, move_on_shaky, plan_item_for_topic, plan_tracks, repace_plan, set_item_status, start_item,
+)
 from .tailoring import build_plan_with_template
 
 
@@ -48,8 +52,11 @@ def plan(request):
             "number": week,
             "items": group,
             "milestones": milestones.get(week, []),
+            # The week's milestone line: what each topic lets them do, skipped ones left out.
+            "outcomes": [i.topic.summary for i in group if i.topic.summary and i.status != PlanItem.Status.SKIPPED],
             "done": sum(1 for i in group if i.status in (PlanItem.Status.DONE, PlanItem.Status.SKIPPED)),
         })
+    tracks = plan_tracks(profile)
     reviews = journey.due_reviews(profile, current)
     starting = journey.starting_point(profile, current)
     unchecked = journey.unchecked_topic_ids(profile, items)
@@ -66,7 +73,8 @@ def plan(request):
         {
             "plan": current,
             "profile": profile,
-            "tracks": plan_tracks(profile),
+            "tracks": tracks,
+            "setup": journey.setup_status(profile, tracks),
             "weeks": weeks,
             "progress": current.progress_percent(),
             "project": getattr(current, "project", None),
@@ -138,10 +146,19 @@ def plan_item_status(request, item_id):
 
 def setup_guide(request, track):
     track = get_object_or_404(Track, slug=track, is_active=True)
+    profile = get_profile(request.user)
+    if request.method == "POST":
+        profile.setup_done.add(track)
+        messages.success(request, f"{track.name} is set up. On to Week 1!")
+        return redirect("plan")
     return render(
         request,
         "learning/setup_guide.html",
-        {"track": track, "steps": track.setup_steps.all()},
+        {
+            "track": track,
+            "steps": track.setup_steps.all(),
+            "done": profile.setup_done.filter(pk=track.pk).exists(),
+        },
     )
 
 
@@ -151,7 +168,8 @@ def _active_topic(slug):
 
 def lesson(request, topic):
     topic = _active_topic(topic)
-    item = plan_item_for_topic(get_profile(request.user), topic)
+    profile = get_profile(request.user)
+    item = plan_item_for_topic(profile, topic)
     start_item(item)
     # What to build with this topic: the project step for the week it's in.
     build_steps = journey.milestones_by_week(item.plan).get(item.week, []) if item else []
@@ -161,11 +179,67 @@ def lesson(request, topic):
         {
             "topic": topic,
             "item": item,
+            "warm_up": journey.warm_up(profile, item),
             "build_steps": build_steps,
             "resources": topic.resources.filter(is_active=True),
             "tips": topic.tips.all(),
             "prerequisites": topic.prerequisites.all(),
             "has_quiz": topic.quiz_items.exists(),
+            "has_practice": _practice_task(topic) is not None,
+            **_help(profile, topic, "lesson"),
+        },
+    )
+
+
+def _help(profile, topic, screen):
+    """What the Agapay panel needs on a topic screen: messages left, and tips and links for when there are none."""
+    return {
+        "help_screen": screen,
+        "help_remaining": remaining_today(profile),
+        "help_limit": daily_limit(),
+        "help_tips": topic.tips.all()[:2],
+        "help_resources": topic.resources.filter(is_active=True),
+    }
+
+
+MAX_PRACTICE_ANSWER = 4000
+
+
+def _practice_task(topic):
+    return topic.practice_tasks.filter(approved=True).first()
+
+
+def practice(request, topic):
+    """Task → the learner's answer → hint-style feedback (AI, or the checklist when AI is off)."""
+    topic = _active_topic(topic)
+    task = _practice_task(topic)
+    profile = get_profile(request.user)
+    if request.method == "POST" and task is not None:
+        answer = request.POST.get("answer", "").strip()[:MAX_PRACTICE_ANSWER]
+        if not answer:
+            messages.error(request, "Write your answer first. Any try is fine, even a rough one.")
+            return redirect("practice", topic=topic.slug)
+        feedback = practice_feedback(profile, task, answer)
+        PracticeSubmission.objects.create(
+            learner=profile, task=task, answer=answer, feedback=feedback.text, mode=feedback.mode
+        )
+        return redirect(f"{reverse('practice', args=[topic.slug])}#feedback")
+    latest = (
+        PracticeSubmission.objects.filter(learner=profile, task=task).first() if task else None
+    )
+    return render(
+        request,
+        "learning/practice.html",
+        {
+            "topic": topic,
+            "task": task,
+            "item": plan_item_for_topic(profile, topic),
+            "latest": latest,
+            "revising": request.GET.get("revise") == "1",
+            "has_quiz": topic.quiz_items.exists(),
+            "has_practice": task is not None,
+            "max_answer": MAX_PRACTICE_ANSWER,
+            **_help(profile, topic, "practice"),
         },
     )
 
@@ -184,7 +258,9 @@ def quiz(request, topic):
     return render(
         request,
         "learning/quiz.html",
-        {"topic": topic, "form": form, "pass_percent": PASS_PERCENT},
+        {"topic": topic, "form": form, "pass_percent": PASS_PERCENT,
+         "has_practice": _practice_task(topic) is not None,
+         **_help(get_profile(request.user), topic, "quiz")},
     )
 
 
@@ -209,6 +285,9 @@ def quiz_result(request, topic):
         return redirect("quiz", topic=topic.slug)
     # Rough count of tries: each submission saves one attempt per item.
     tries = QuizAttempt.objects.filter(learner=profile, quiz_item__in=items).count() // max(len(items), 1)
+    resources = list(topic.resources.filter(is_active=True))
+    item = plan_item_for_topic(profile, topic)
+    struggling = not result.passed and tries >= 2
     return render(
         request,
         "learning/quiz_result.html",
@@ -216,10 +295,33 @@ def quiz_result(request, topic):
             "topic": topic,
             "result": result,
             "pass_percent": PASS_PERCENT,
+            "has_practice": _practice_task(topic) is not None,
+            **_help(profile, topic, "quiz"),
             # After a couple of misses, point back to what this topic builds on.
-            "struggling": not result.passed and tries >= 2,
+            "struggling": struggling,
+            # Plan progress only means something if this topic was in the plan.
+            "topic_in_plan": item is not None,
             **(_after_pass(profile) if result.passed else {}),
             "prerequisites": topic.prerequisites.filter(track__is_active=True),
-            "resources": topic.resources.filter(is_active=True),
+            "resources": resources,
+            # A different way in: the link of another type than the first (e.g. a video, not docs).
+            "other_resource": next((r for r in resources[1:] if r.kind != resources[0].kind), None)
+            if resources else None,
+            # Two misses: let them move on instead of looping, and bring it back as a review.
+            "move_on_item": item if struggling and item and item.status != PlanItem.Status.DONE and not item.shaky else None,
         },
     )
+
+
+@require_POST
+def plan_item_shaky(request, item_id):
+    item = get_object_or_404(
+        PlanItem.objects.select_related("topic"),
+        pk=item_id,
+        plan__learner__user=request.user,
+        plan__is_active=True,
+    )
+    if item.status != PlanItem.Status.DONE:
+        move_on_shaky(item)
+        messages.success(request, f"Moved on from {item.topic.title}. It'll come back as a short review next week.")
+    return redirect("plan")

@@ -2,7 +2,7 @@ from types import SimpleNamespace
 
 from django.contrib.auth import get_user_model
 from django.db import IntegrityError
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from accounts.models import get_profile
@@ -464,3 +464,233 @@ class UXTests(PlanTestMixin, TestCase):
         self.assertContains(page, "Topic 1 is done.")
         self.assertContains(page, "Your plan is now 25% done.")
         self.assertContains(page, "Next up: <strong>Topic 2</strong>")
+
+
+class FrameworkTests(PlanTestMixin, TestCase):
+    """Setup as Week 0, score bands, moving on from shaky topics, warm-ups, topic intros, milestones."""
+
+    def setUp(self):
+        self.make_learner(hours=1)
+        self.client.force_login(self.user)
+        from .tailoring import build_plan_with_template
+        self.plan = build_plan_with_template(self.profile)
+        self.quiz = [
+            QuizItem.objects.create(topic=self.topics[0], prompt=f"q{i} = ___", accepted_answers=[str(i)], hint=f"Hint {i}")
+            for i in range(1, 5)
+        ]
+
+    def answer(self, right):
+        """Submit topic 1's quiz with the first `right` answers correct."""
+        data = {f"item_{q.pk}": str(i) if i <= right else "x" for i, q in enumerate(self.quiz, 1)}
+        return self.client.post(reverse("quiz", args=["topic-1"]), data)
+
+    def item(self, topic=0):
+        return PlanItem.objects.get(plan__is_active=True, topic=self.topics[topic])
+
+    def test_setup_is_week_0_until_the_learner_is_set_up(self):
+        from content.models import SetupStep
+        SetupStep.objects.create(track=self.track, order=1, title="Install Python", body="Download it.")
+        self.track.setup_check = 'Run print("Hello!") and see Hello! printed.'
+        self.track.save()
+        page = self.client.get(reverse("plan"))
+        self.assertContains(page, "Week 0: Setup")
+        self.assertContains(page, '<details class="plan-week plan-week-setup" open>')
+        self.assertContains(page, "Check it works: Run print(&quot;Hello!&quot;)")
+        self.assertContains(self.client.get(reverse("setup_guide", args=["python"])), "Jump to Week 1")
+        self.assertRedirects(self.client.post(reverse("setup_guide", args=["python"])), reverse("plan"))
+        self.assertTrue(self.profile.setup_done.filter(pk=self.track.pk).exists())
+        self.assertNotContains(self.client.get(reverse("plan")), '<details class="plan-week plan-week-setup" open>')
+        self.assertNotContains(self.client.get(reverse("setup_guide", args=["python"])), "Jump to Week 1")
+
+    def test_no_week_0_without_setup_content(self):
+        self.assertNotContains(self.client.get(reverse("plan")), "Week 0: Setup")
+
+    def test_score_bands(self):
+        items = [SimpleNamespace(pk=i, accepted_answers=["a"], case_sensitive=False) for i in range(1, 5)]
+        bands = [grade(items, {i: "a" for i in range(1, right + 1)}).band for right in (4, 3, 2, 1, 0)]
+        self.assertEqual(bands, ["perfect", "passed", "almost", "low", "low"])
+
+    def test_close_miss_suggests_the_other_kind_of_link(self):
+        from content.models import Resource
+        Resource.objects.create(topic=self.topics[0], title="Docs page", url="https://example.com/a", kind="docs", order=1)
+        Resource.objects.create(topic=self.topics[0], title="Loops video", url="https://example.com/b", kind="video", order=2)
+        self.answer(2)
+        page = self.client.get(reverse("quiz_result", args=["topic-1"]))
+        self.assertContains(page, "You're close")
+        self.assertContains(page, "Loops video</a>, a video that explains it another way")
+        self.assertNotContains(page, "Move on for now")
+
+    def test_low_score_points_to_prerequisites(self):
+        item = QuizItem.objects.create(topic=self.topics[1], prompt="___", accepted_answers=["a"])
+        self.client.post(reverse("quiz", args=["topic-2"]), {f"item_{item.pk}": "b"})
+        page = self.client.get(reverse("quiz_result", args=["topic-2"]))
+        self.assertContains(page, "Let's try a different way in")
+        self.assertContains(page, "which this topic needs")
+
+    def test_two_misses_let_the_learner_move_on_and_review_later(self):
+        from django.utils import timezone
+        from . import journey
+        self.answer(1)
+        self.answer(1)
+        self.assertContains(self.client.get(reverse("quiz_result", args=["topic-1"])), "Move on for now")
+        self.client.post(reverse("plan_item_shaky", args=[self.item().pk]))
+        item = self.item()
+        self.assertEqual((item.status, item.shaky), ("skipped", True))
+        plan_page = self.client.get(reverse("plan"))
+        self.assertContains(plan_page, "Shaky · review later")
+        self.assertEqual(plan_page.context["next_action"].title, "Topic 2")
+        PlanItem.objects.filter(pk=item.pk).update(completed_at=timezone.now() - timezone.timedelta(days=8))
+        self.assertEqual(journey.due_reviews(self.profile, self.plan)[0], self.topics[0])
+        self.answer(4)
+        item = self.item()
+        self.assertEqual((item.status, item.shaky), ("done", False))
+
+    def test_warm_up_comes_from_the_previous_topic_and_prefers_a_miss(self):
+        self.assertNotContains(self.client.get(reverse("lesson", args=["topic-1"])), "Warm-up from")
+        self.answer(3)  # misses the fourth question
+        page = self.client.get(reverse("lesson", args=["topic-2"]))
+        self.assertContains(page, "Warm-up from Topic 1 · not graded")
+        self.assertContains(page, "q4 = ___")
+        self.assertContains(page, "Answer: <code>4</code>")
+
+    def test_topic_intro_shows_only_once_approved(self):
+        topic = self.topics[0]
+        topic.summary = "Store values in named boxes."
+        topic.why_it_matters = "Programs need to remember things."
+        topic.key_terms = [{"term": "variable", "definition": "A name for a stored value."}]
+        topic.explanation = "A variable is a label.\n\nYou give it a value with =."
+        topic.example = "age = 18\nprint(age)"
+        topic.example_output = "18"
+        topic.save()
+        page = self.client.get(reverse("lesson", args=["topic-1"]))
+        self.assertContains(page, "You'll be able to:</strong> Store values in named boxes.")
+        self.assertNotContains(page, "Programs need to remember things.")
+        self.assertNotContains(page, "In a nutshell")
+        topic.intro_approved = True
+        topic.save()
+        page = self.client.get(reverse("lesson", args=["topic-1"]))
+        self.assertContains(page, "Programs need to remember things.")
+        self.assertContains(page, "<dt>variable</dt><dd>A name for a stored value.</dd>")
+        self.assertContains(page, "In a nutshell")
+        self.assertContains(page, "<p>A variable is a label.</p>\n\n<p>You give it a value with =.</p>")
+        self.assertContains(page, "<code>age = 18\nprint(age)</code>")
+        self.assertContains(page, "What it prints")
+
+    def test_week_milestone_lines(self):
+        Topic.objects.filter(pk=self.topics[0].pk).update(summary="Store values in variables.")
+        page = self.client.get(reverse("plan"))
+        self.assertContains(page, "By the end of Week 1, you'll be able to:")
+        self.assertContains(page, "<li>Store values in variables.</li>")
+        self.answer(4)
+        self.assertContains(self.client.get(reverse("plan")), "Week 1 done! You can now:")
+
+
+AI_OFF = {"GROQ_API_KEY": "", "CF_ACCOUNT_ID": "", "CF_API_TOKEN": ""}
+AI_ON = {"GROQ_API_KEY": "groq-test", "CF_ACCOUNT_ID": "", "CF_API_TOKEN": "", "AI_DAILY_LIMIT": 2}
+
+
+@override_settings(**AI_OFF)
+class PracticeTests(PlanTestMixin, TestCase):
+    """Practice: approved tasks only, hint feedback (or the checklist), sample answer after a try."""
+
+    def setUp(self):
+        from content.models import PracticeTask, Tip
+        self.make_learner()
+        self.client.force_login(self.user)
+        build_plan(self.profile)
+        self.topic = self.topics[0]
+        Tip.objects.create(topic=self.topic, text="Print the counter to see what the loop does.")
+        self.task = PracticeTask.objects.create(
+            topic=self.topic, prompt="Print the numbers 1 to 3.", sample_answer="for i in range(1, 4):\n    print(i)",
+            checklist=["Uses a loop", "Prints 1, 2 and 3"], approved=True,
+        )
+        self.url = reverse("practice", args=["topic-1"])
+
+    def test_only_approved_tasks_show(self):
+        self.task.approved = False
+        self.task.save()
+        self.assertContains(self.client.get(self.url), "no practice task for Topic 1 yet")
+        lesson = self.client.get(reverse("lesson", args=["topic-1"]))
+        self.assertNotContains(lesson, "Try the practice")
+        self.assertContains(lesson, "Practice <span class=\"topic-step-tag\">Soon</span>")
+
+    def test_lesson_points_to_practice(self):
+        lesson = self.client.get(reverse("lesson", args=["topic-1"]))
+        self.assertContains(lesson, f'href="{self.url}">Try the practice')
+        self.assertContains(lesson, f'<a href="{self.url}">Practice</a>')
+
+    def test_task_shows_without_the_sample_answer_until_a_try(self):
+        page = self.client.get(self.url)
+        self.assertContains(page, "Print the numbers 1 to 3.")
+        self.assertContains(page, "<li>Uses a loop</li>")
+        self.assertNotContains(page, "See a sample answer")
+
+    def test_empty_answer_is_not_sent(self):
+        from .models import PracticeSubmission
+        self.client.post(self.url, {"answer": "   "})
+        self.assertFalse(PracticeSubmission.objects.exists())
+
+    def test_ai_off_falls_back_to_the_checklist(self):
+        from .models import PracticeSubmission
+        response = self.client.post(self.url, {"answer": "print(1)"})
+        self.assertRedirects(response, self.url + "#feedback", fetch_redirect_response=False)
+        submission = PracticeSubmission.objects.get()
+        self.assertEqual(submission.mode, "fallback")
+        page = self.client.get(self.url)
+        self.assertContains(page, "The AI helper is off right now.")
+        self.assertContains(page, "See a sample answer")
+        self.assertContains(page, "?revise=1#answer")
+        revise = self.client.get(self.url + "?revise=1")
+        self.assertContains(revise, ">print(1)</textarea>")
+
+    @override_settings(**AI_ON)
+    def test_ai_feedback_counts_against_the_daily_cap(self):
+        from unittest import mock
+        from assistant.service import remaining_today
+        with mock.patch("assistant.service.ask_model", return_value="Good start! Which numbers does it skip?") as ask:
+            self.client.post(self.url, {"answer": "print(1)"})
+        sent = str(ask.call_args)
+        self.assertIn("Print the numbers 1 to 3.", sent)
+        self.assertNotIn("range(1, 4)", sent)  # the sample answer never goes to the model
+        self.assertContains(self.client.get(self.url), "Good start! Which numbers does it skip?")
+        self.assertEqual(remaining_today(self.profile), 1)
+
+    @override_settings(**AI_ON)
+    def test_out_of_messages_uses_the_checklist(self):
+        from assistant.models import AIUsage
+        from django.utils import timezone
+        AIUsage.objects.create(learner=self.profile, date=timezone.localdate(), messages_used=2)
+        self.client.post(self.url, {"answer": "print(1)"})
+        self.assertContains(self.client.get(self.url), "You&#x27;ve used all your AI messages for today.")
+
+
+@override_settings(**AI_ON)
+class HelpPanelTests(PlanTestMixin, TestCase):
+    def setUp(self):
+        from content.models import Tip
+        self.make_learner()
+        self.client.force_login(self.user)
+        build_plan(self.profile)
+        Tip.objects.create(topic=self.topics[0], text="Print the counter to see what the loop does.")
+
+    def test_topic_screens_have_the_panel(self):
+        page = self.client.get(reverse("lesson", args=["topic-1"]))
+        self.assertContains(page, "Need help?")
+        self.assertContains(page, 'data-topic="topic-1"')
+        self.assertContains(page, "2 of 2 messages left today")
+
+    def test_out_of_messages_shows_tips_and_a_greyed_box(self):
+        from assistant.models import AIUsage
+        from django.utils import timezone
+        AIUsage.objects.create(learner=self.profile, date=timezone.localdate(), messages_used=2)
+        page = self.client.get(reverse("lesson", args=["topic-1"]))
+        self.assertContains(page, "used today's AI help")
+        self.assertContains(page, "Print the counter to see what the loop does.")
+        self.assertContains(page, 'placeholder="Ask in English or Taglish" disabled')
+
+    def test_wrong_quiz_answers_offer_why(self):
+        item = QuizItem.objects.create(topic=self.topics[0], prompt="x = ___", accepted_answers=["1"])
+        self.client.post(reverse("quiz", args=["topic-1"]), {f"item_{item.pk}": "2"})
+        page = self.client.get(reverse("quiz_result", args=["topic-1"]))
+        self.assertContains(page, "Why is this wrong?")
+        self.assertContains(page, f'data-quiz-item="{item.pk}" data-answer="2"')

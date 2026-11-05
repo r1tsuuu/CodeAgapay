@@ -2,7 +2,7 @@
 
 from django import forms
 
-from .models import ProjectIdea, QuizItem, SkillQuestion, Topic
+from .models import PracticeTask, ProjectIdea, QuizItem, SkillQuestion, Topic
 
 
 class LinesField(forms.CharField):
@@ -18,6 +18,28 @@ class LinesField(forms.CharField):
     def to_python(self, value):
         text = super().to_python(value)
         return [line.strip() for line in text.splitlines() if line.strip()]
+
+
+class KeyTermsField(forms.CharField):
+    """A textarea with one "term: definition" per line, stored as a list of dicts."""
+
+    widget = forms.Textarea(attrs={"rows": 3})
+
+    def prepare_value(self, value):
+        if isinstance(value, list):
+            return "\n".join(f"{t.get('term', '')}: {t.get('definition', '')}" for t in value if isinstance(t, dict))
+        return value
+
+    def to_python(self, value):
+        terms = []
+        for line in super().to_python(value).splitlines():
+            if not line.strip():
+                continue
+            term, colon, definition = line.partition(":")
+            if not colon or not term.strip() or not definition.strip():
+                raise forms.ValidationError(f'Write each line as "term: definition" ("{line.strip()}").')
+            terms.append({"term": term.strip(), "definition": definition.strip()})
+        return terms
 
 
 class SkillQuestionForm(forms.ModelForm):
@@ -36,6 +58,14 @@ class QuizItemForm(forms.ModelForm):
         fields = "__all__"
 
 
+class PracticeTaskForm(forms.ModelForm):
+    checklist = LinesField(help_text="What a good answer does, one check per line.")
+
+    class Meta:
+        model = PracticeTask
+        fields = "__all__"
+
+
 class ProjectIdeaForm(forms.ModelForm):
     done_when = LinesField(required=False, help_text="One \"done when\" check per line, e.g. \"It runs without errors.\"")
 
@@ -45,6 +75,10 @@ class ProjectIdeaForm(forms.ModelForm):
 
 
 class TopicForm(forms.ModelForm):
+    key_terms = KeyTermsField(
+        required=False, help_text='Up to 3, one per line as "term: definition".'
+    )
+
     class Meta:
         model = Topic
         fields = "__all__"

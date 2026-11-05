@@ -113,3 +113,66 @@ class DraftTopicCommandTests(TestCase):
     def test_needs_api_key(self):
         with self.assertRaises(CommandError):
             self.run_command("html", "Page structure", payload=GOOD)
+
+
+class TopicIntroTests(TestCase):
+    def setUp(self):
+        self.track = Track.objects.create(name="Python", slug="python")
+        self.topic = Topic.objects.create(track=self.track, title="Loops", slug="python-loops", summary="Repeat code.")
+
+    def test_save_intro_keeps_it_hidden_until_approved(self):
+        from .drafting import save_intro
+        self.topic.intro_approved = True
+        save_intro(self.topic, {"why_it_matters": "Repeating by hand is slow.",
+                                "key_terms": [{"term": "loop", "definition": "Code that repeats."}],
+                                "explanation": "A loop repeats code.", "example": "for i in range(2):\n    print(i)",
+                                "example_output": "0\n1"})
+        self.topic.refresh_from_db()
+        self.assertFalse(self.topic.intro_approved)
+        self.assertEqual(self.topic.key_terms, [{"term": "loop", "definition": "Code that repeats."}])
+        self.assertEqual((self.topic.explanation, self.topic.example_output), ("A loop repeats code.", "0\n1"))
+
+    def test_more_than_three_key_terms_is_rejected(self):
+        from .drafting import save_intro
+        terms = [{"term": f"t{i}", "definition": "d"} for i in range(4)]
+        with self.assertRaises(DraftError):
+            save_intro(self.topic, {"why_it_matters": "Because.", "key_terms": terms})
+
+    def test_admin_form_reads_one_term_per_line(self):
+        from django.core.exceptions import ValidationError
+        from .forms import KeyTermsField
+        field = KeyTermsField(required=False)
+        self.assertEqual(field.clean("loop: Code that repeats.\n\nrange: Counts for you."),
+                         [{"term": "loop", "definition": "Code that repeats."},
+                          {"term": "range", "definition": "Counts for you."}])
+        with self.assertRaises(ValidationError):
+            field.clean("no colon here")
+
+    @override_settings(GROQ_API_KEY="test")
+    def test_draft_intro_skips_approved_topics(self):
+        approved = Topic.objects.create(track=self.track, title="Lists", slug="python-lists", order=2, intro_approved=True)
+        client = fake_client('{"why_it_matters": "Repeating by hand is slow.", "key_terms": []}')
+        with mock.patch("content.management.commands.draft_intro.make_client", return_value=client):
+            call_command("draft_intro", "python", stdout=StringIO())
+        self.topic.refresh_from_db()
+        self.assertEqual(self.topic.why_it_matters, "Repeating by hand is slow.")
+        self.assertEqual(client.chat.completions.create.call_count, 1)
+        approved.refresh_from_db()
+        self.assertEqual(approved.why_it_matters, "")
+
+    @override_settings(GROQ_API_KEY="test")
+    def test_draft_practice_saves_hidden_tasks_once(self):
+        payload = ('{"prompt": "Print 1 to 3.", "starter_code": "", "sample_answer": "for i in range(1, 4): print(i)",'
+                   ' "checklist": ["Uses a loop", "Prints 1 to 3"]}')
+        client = fake_client(payload)
+        with mock.patch("content.management.commands.draft_practice.make_client", return_value=client):
+            call_command("draft_practice", "python", stdout=StringIO())
+            call_command("draft_practice", "python", stdout=StringIO())  # already has one: skipped
+        task = self.topic.practice_tasks.get()
+        self.assertEqual((task.prompt, task.approved, task.checklist), ("Print 1 to 3.", False, ["Uses a loop", "Prints 1 to 3"]))
+        self.assertEqual(client.chat.completions.create.call_count, 1)
+
+    def test_practice_without_sample_answer_is_rejected(self):
+        from .drafting import save_practice
+        with self.assertRaises(DraftError):
+            save_practice(self.topic, {"prompt": "Print 1 to 3.", "sample_answer": "", "checklist": ["x"]})

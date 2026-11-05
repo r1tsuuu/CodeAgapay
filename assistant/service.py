@@ -10,6 +10,7 @@ Never sent to the model: accepted quiz answers, names, emails.
 
 import json
 import logging
+import re
 import time
 from dataclasses import dataclass, field
 
@@ -34,6 +35,27 @@ HINT_STYLES = {
     "explain": "They like clear explanations, so be plain and direct about the concept.",
     "example": "They learn from examples, so include a short, different example when you can.",
 }
+
+LANGUAGE_RULES = (
+    "- Match the learner's language. If their message has any Tagalog words, reply in Taglish\n"
+    "  (everyday Tagalog mixed with English, the way they wrote). Otherwise reply in English.\n"
+    "- Plain text only: no markdown, no backticks, no asterisks, no headings."
+)
+
+# Common Tagalog words. Two or more in a message means the learner wrote in Taglish.
+TAGALOG_WORDS = {
+    "ako", "ano", "bakit", "ba", "di", "hindi", "ito", "iyan", "kasi", "ko", "lang", "mo", "naman",
+    "nga", "paano", "po", "sa", "siya", "talaga", "tapos", "wala", "yung", "kung", "pero", "gawin",
+}
+
+
+def language_note(text):
+    """An explicit instruction when the learner wrote in Taglish; models often reply in English otherwise."""
+    words = set(re.findall(r"[a-z]+", text.lower()))
+    if len(words & TAGALOG_WORDS) >= 2:
+        return "\n\n(I wrote in Taglish. Please reply in Taglish too.)"
+    return ""
+
 
 HINT_LEVELS = {
     1: "Ask one guiding question that points the learner toward the idea they are missing.",
@@ -130,10 +152,10 @@ def build_messages(request):
         f"- This is hint level {request.hint_level} of 3. {HINT_LEVELS[request.hint_level]}\n"
         f"{style}"
         "- Keep the reply under 120 words.\n"
-        "- Reply in the learner's language: English, or Taglish if they write in Taglish.\n"
-        "- If the question is not about programming, gently steer back to the topic."
+        "- If the question is not about programming, gently steer back to the topic.\n"
+        f"{LANGUAGE_RULES}"
     )
-    user = f"My question: {request.question}"
+    user = f"My question: {request.question}{language_note(request.question)}"
     if request.screen == "quiz" and request.quiz_item is not None:
         # The prompt only. accepted_answers never leave the server.
         user = (
@@ -182,11 +204,18 @@ def call_with_retry(provider, messages, **kwargs):
         return call_provider(provider, messages, **kwargs)
 
 
+def clean_reply(text):
+    """Strip markdown the page would show as raw symbols: backticks, bold stars, heading marks."""
+    text = re.sub(r"`+", "", text)
+    text = re.sub(r"\*\*(.+?)\*\*", r"\1", text)
+    return re.sub(r"(?m)^#+\s*", "", text).strip()
+
+
 def ask_model(messages):
-    """Try each provider in order. Returns the reply text, or None if all fail."""
+    """Try each provider in order. Returns the cleaned reply text, or None if all fail."""
     for provider in providers():
         try:
-            return call_with_retry(provider, messages)
+            return clean_reply(call_with_retry(provider, messages))
         except Exception:  # Any provider error means "try the next one".
             logger.warning("AI provider %s failed", provider.name, exc_info=True)
     return None
@@ -299,6 +328,52 @@ def fallback(request, learner, reason):
         tips=topic_tips(request.topic),
         resources=topic_resources(request.topic),
     )
+
+
+@dataclass
+class PracticeFeedback:
+    mode: str  # "ai" or "fallback"
+    text: str
+
+
+def build_practice_messages(task, answer, hint_style=""):
+    """Feedback on a practice answer. The task and its checklist only: the sample answer never leaves."""
+    topic = task.topic
+    checks = "\n".join(f"- {c}" for c in task.checklist) or "- (none)"
+    style = f"- {HINT_STYLES[hint_style]}\n" if hint_style in HINT_STYLES else ""
+    system = (
+        "You are a patient tutor giving feedback on a beginner programmer's practice answer.\n"
+        f"Topic: {topic.title} ({topic.track.name}).\n"
+        f"The task: {task.prompt}\n"
+        f"A good answer:\n{checks}\n\n"
+        "Rules:\n"
+        "- First look for bugs that break the program: a loop that never stops, an error it would\n"
+        "  raise, or wrong output. Mention those before anything else.\n"
+        "- Say one thing they did well, if anything.\n"
+        "- Then give at most 3 short hints, each pointing at a line or idea in their answer and\n"
+        "  asking what it does, so they find the fix themselves.\n"
+        "- Never write code: not the corrected code, not a fixed line, not a call with the right\n"
+        "  arguments. Describe the idea in words instead.\n"
+        "- If it already meets every check, say so and suggest one small way to stretch it.\n"
+        f"{style}"
+        "- Keep it under 120 words.\n"
+        f"{LANGUAGE_RULES}"
+    )
+    user = f"My answer:\n{answer}"
+    return [{"role": "system", "content": system}, {"role": "user", "content": user}]
+
+
+def practice_feedback(learner, task, answer):
+    """AI hints on a practice answer, counted against the daily cap; the checklist when AI is unavailable."""
+    if not providers():
+        return PracticeFeedback("fallback", "The AI helper is off right now. Check your answer against the list below.")
+    if not reserve_message(learner):
+        return PracticeFeedback("fallback", "You've used all your AI messages for today. Check your answer against the list below; they reset tomorrow.")
+    text = ask_model(build_practice_messages(task, answer, learner.hint_style))
+    if text is None:
+        release_message(learner)
+        return PracticeFeedback("fallback", "The AI helper is busy right now. Check your answer against the list below.")
+    return PracticeFeedback("ai", text)
 
 
 def ask(learner, request):

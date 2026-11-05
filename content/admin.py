@@ -1,7 +1,9 @@
 from django.contrib import admin
 
-from .forms import ProjectIdeaForm, QuizItemForm, SkillQuestionForm, TopicForm
-from .models import Path, PathTrack, ProjectIdea, QuizItem, Resource, SetupStep, SkillQuestion, Tip, Topic, Track
+from .forms import PracticeTaskForm, ProjectIdeaForm, QuizItemForm, SkillQuestionForm, TopicForm
+from .models import (
+    Path, PathTrack, PracticeTask, ProjectIdea, QuizItem, Resource, SetupStep, SkillQuestion, Tip, Topic, Track,
+)
 
 
 class SetupStepInline(admin.StackedInline):
@@ -27,6 +29,7 @@ class TrackAdmin(admin.ModelAdmin):
     list_display = ["name", "order", "is_active"]
     list_editable = ["order", "is_active"]
     prepopulated_fields = {"slug": ["name"]}
+    fields = ["name", "slug", "description", "order", "is_active", "setup_check"]
     inlines = [TopicInline, SetupStepInline, ProjectIdeaInline]
 
 
@@ -54,16 +57,22 @@ class QuizItemInline(admin.StackedInline):
     extra = 0
 
 
+class PracticeTaskInline(admin.StackedInline):
+    model = PracticeTask
+    form = PracticeTaskForm
+    extra = 0
+
+
 @admin.register(Topic)
 class TopicAdmin(admin.ModelAdmin):
     form = TopicForm
-    list_display = ["title", "track", "order", "estimated_minutes"]
+    list_display = ["title", "track", "order", "estimated_minutes", "intro_approved"]
     list_editable = ["order", "estimated_minutes"]
-    list_filter = ["track"]
+    list_filter = ["track", "intro_approved"]
     search_fields = ["title", "summary"]
     prepopulated_fields = {"slug": ["title"]}
     filter_horizontal = ["prerequisites"]
-    inlines = [ResourceInline, TipInline, SkillQuestionInline, QuizItemInline]
+    inlines = [ResourceInline, TipInline, PracticeTaskInline, SkillQuestionInline, QuizItemInline]
 
 
 @admin.register(Resource)
@@ -85,6 +94,13 @@ class QuizItemAdmin(admin.ModelAdmin):
     form = QuizItemForm
     list_display = ["__str__", "topic"]
     list_filter = ["topic__track"]
+
+
+@admin.register(PracticeTask)
+class PracticeTaskAdmin(admin.ModelAdmin):
+    form = PracticeTaskForm
+    list_display = ["__str__", "topic", "approved"]
+    list_filter = ["approved", "topic__track"]
 
 
 @admin.register(SetupStep)

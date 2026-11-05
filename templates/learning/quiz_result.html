@@ -8,30 +8,7 @@
 {% include "partials/topic_steps.html" with current="quiz" has_quiz=True %}
 
 <div class="quiz-layout">
-  <div>
-    <h2>How you did</h2>
-    <ol class="quiz-feedback">
-      {% for r in result.items %}
-      <li class="quiz-feedback-item {% if r.correct %}quiz-correct{% else %}quiz-wrong{% endif %}">
-        <code class="quiz-prompt">{{ r.item.prompt }}</code>
-        <p>Your answer: <code>{{ r.answer|default:"(blank)" }}</code> · {% if r.correct %}Correct{% else %}Not quite{% endif %}</p>
-        {% if not r.correct and r.item.hint %}<p class="quiz-hint">Hint: {{ r.item.hint }}</p>{% endif %}
-      </li>
-      {% endfor %}
-    </ol>
-
-    {% if not result.passed and struggling %}
-    <section class="quiz-stuck">
-      <h2>Stuck on this one? That's normal.</h2>
-      <p>Read the hints above first. Then try a different way in:</p>
-      <ul>
-        {% for resource in resources %}<li><a class="external" href="{{ resource.url }}" target="_blank" rel="noopener">{{ resource.title }}</a> ({{ resource.get_kind_display|lower }})</li>{% endfor %}
-        {% for prerequisite in prerequisites %}<li>Look back at <a href="{% url 'lesson' prerequisite.slug %}">{{ prerequisite.title }}</a>, which this topic builds on.</li>{% endfor %}
-      </ul>
-    </section>
-    {% endif %}
-  </div>
-
+  {# Verdict first in the source, so phones and screen readers get it before the details. #}
   <aside class="quiz-score-panel">
     <h1>{% if result.passed %}You passed!{% else %}Not yet{% endif %}</h1>
     <p class="quiz-score-big">{{ result.correct }} out of {{ result.total }}</p>
@@ -39,7 +16,8 @@
 
     {% if result.passed %}
     <section class="quiz-passed">
-      <p><strong>{{ topic.title }} is done.</strong>{% if plan_progress is not None %} Your plan is now {{ plan_progress }}% done.{% endif %}</p>
+      <p><strong>{{ topic.title }} is done.</strong>{% if plan_progress is not None and topic_in_plan %} Your plan is now {{ plan_progress }}% done.{% endif %}</p>
+      {% if result.band == "perfect" %}<p>Every answer right. Feeling easy? You can take the next topic's quiz to skip it.</p>{% else %}<p>The one you missed comes back as a warm-up in your next topic.</p>{% endif %}
       {% if next_action and next_action.kind != "project" %}
       <p>Next up: <strong>{{ next_action.title }}</strong></p>
       <a class="button button-primary" href="{{ next_action.url }}">{{ next_action.button }}</a>
@@ -58,5 +36,48 @@
     </div>
     {% endif %}
   </aside>
+
+  <div class="quiz-details">
+    <h2>How you did</h2>
+    <ol class="quiz-feedback">
+      {% for r in result.items %}
+      <li class="quiz-feedback-item {% if r.correct %}quiz-correct{% else %}quiz-wrong{% endif %}">
+        <code class="quiz-prompt">{{ r.item.prompt }}</code>
+        <p>Your answer: <code>{{ r.answer|default:"(blank)" }}</code> · {% if r.correct %}Correct{% else %}Not quite{% endif %}</p>
+        {% if not r.correct and r.item.hint %}<p class="quiz-hint">Hint: {{ r.item.hint }}</p>{% endif %}
+        {% if not r.correct %}<button type="button" class="help-inline" data-help-ask="Why is my answer wrong?" data-quiz-item="{{ r.item.pk }}" data-answer="{{ r.answer }}">Why is this wrong?</button>{% endif %}
+      </li>
+      {% endfor %}
+    </ol>
+
+    {% if not result.passed and struggling %}
+    <section class="quiz-stuck">
+      <h2>Stuck on this one? That's normal.</h2>
+      <p>Read the hints above first. Then try a different way in:</p>
+      <ul>
+        {% for resource in resources %}<li><a class="external" href="{{ resource.url }}" target="_blank" rel="noopener">{{ resource.title }}</a> ({{ resource.get_kind_display|lower }})</li>{% endfor %}
+        {% for prerequisite in prerequisites %}<li>Look back at <a href="{% url 'lesson' prerequisite.slug %}">{{ prerequisite.title }}</a>, which this topic builds on.</li>{% endfor %}
+      </ul>
+      {% if move_on_item %}
+      <form class="quiz-move-on" method="post" action="{% url 'plan_item_shaky' move_on_item.pk %}">
+        {% csrf_token %}
+        <p>Still stuck after two tries? You don't have to keep looping. Move on for now, and {{ topic.title }} comes back as a short review next week.</p>
+        <button type="submit" class="button">Move on for now</button>
+      </form>
+      {% endif %}
+    </section>
+    {% elif not result.passed %}
+    <section class="quiz-next quiz-next-{{ result.band }}">
+      <h2>{% if result.band == "almost" %}You're close{% else %}Let's try a different way in{% endif %}</h2>
+      <p>Read the hints above, then:</p>
+      <ol>
+        <li>Go back to <a href="{% url 'lesson' topic.slug %}">{{ topic.title }}</a>{% if other_resource %} and try <a class="external" href="{{ other_resource.url }}" target="_blank" rel="noopener">{{ other_resource.title }}</a>, a {{ other_resource.get_kind_display|lower }} that explains it another way{% endif %}.</li>
+        {% if result.band == "low" and prerequisites %}<li>Check you're comfortable with {% for prerequisite in prerequisites %}<a href="{% url 'lesson' prerequisite.slug %}">{{ prerequisite.title }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}, which this topic needs.</li>{% endif %}
+        <li>Take the quiz again. Retries are free and unlimited.</li>
+      </ol>
+    </section>
+    {% endif %}
+  </div>
 </div>
+{% include "partials/help_panel.html" %}
 {% endblock %}

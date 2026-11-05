@@ -155,3 +155,14 @@ class AskViewTests(AssistantTestMixin, TestCase):
         self.user.is_staff = True
         self.user.save()
         self.assertContains(self.client.get(reverse("help_test")), "AI helper test")
+
+
+class ReplyTextTests(TestCase):
+    def test_markdown_is_stripped(self):
+        from .service import clean_reply
+        self.assertEqual(clean_reply("## Tip\nUse **range** like `range(5)`."), "Tip\nUse range like range(5).")
+
+    def test_taglish_is_detected(self):
+        from .service import language_note
+        self.assertIn("Taglish", language_note("bakit hindi tumitigil yung loop ko?"))
+        self.assertEqual(language_note("why does my loop never stop?"), "")

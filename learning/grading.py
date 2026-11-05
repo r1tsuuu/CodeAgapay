@@ -17,6 +17,8 @@ from diagnose.scoring import record_mastery
 from .models import PlanItem, QuizAttempt
 
 PASS_PERCENT = 70
+# Below the pass mark but at least this: close, so suggest the other link and retake.
+ALMOST_PERCENT = 50
 
 
 def normalize(text, case_sensitive=False):
@@ -57,6 +59,13 @@ class QuizResult:
         # Compare exact fractions so rounding never turns 69.5% into a pass.
         return self.total > 0 and self.correct * 100 >= PASS_PERCENT * self.total
 
+    @property
+    def band(self):
+        """What happens next: perfect or passed move on; almost and low get help first."""
+        if self.passed:
+            return "perfect" if self.correct == self.total else "passed"
+        return "almost" if self.correct * 100 >= ALMOST_PERCENT * self.total else "low"
+
 
 def grade(items, answers):
     """`answers` maps quiz item id to the learner's text answer."""
@@ -77,7 +86,7 @@ def submit_quiz(profile, topic, items, answers):
         PlanItem.objects.filter(
             plan__learner=profile, plan__is_active=True, topic=topic
         ).exclude(status=PlanItem.Status.DONE).update(
-            status=PlanItem.Status.DONE, completed_at=timezone.now()
+            status=PlanItem.Status.DONE, completed_at=timezone.now(), shaky=False
         )
     record_quiz_evidence(profile, topic, result)
     return result

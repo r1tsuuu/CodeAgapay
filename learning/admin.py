@@ -1,12 +1,12 @@
 from django.contrib import admin
 
-from .models import LearningPlan, PlanFeedback, PlanItem, QuizAttempt
+from .models import LearningPlan, PlanFeedback, PlanItem, PracticeSubmission, QuizAttempt
 
 
 class PlanItemInline(admin.TabularInline):
     model = PlanItem
     extra = 0
-    fields = ["order", "week", "topic", "status", "completed_at"]
+    fields = ["order", "week", "topic", "status", "shaky", "completed_at"]
 
 
 @admin.register(LearningPlan)
@@ -27,3 +27,10 @@ class PlanFeedbackAdmin(admin.ModelAdmin):
     list_display = ["text", "plan", "created_at", "resolved"]
     list_editable = ["resolved"]
     list_filter = ["resolved"]
+
+
+@admin.register(PracticeSubmission)
+class PracticeSubmissionAdmin(admin.ModelAdmin):
+    list_display = ["learner", "task", "mode", "created_at"]
+    list_filter = ["mode", "task__topic__track"]
+    readonly_fields = ["learner", "task", "answer", "feedback", "mode", "created_at"]

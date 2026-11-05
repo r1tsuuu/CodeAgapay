@@ -7,7 +7,8 @@
       "slug": "python",
       "description": "A beginner-friendly language for scripts, data and automation.",
       "order": 1,
-      "is_active": true
+      "is_active": true,
+      "setup_check": "Run a file containing print(\"Hello!\") and see Hello! printed."
     }
   },
   {
@@ -18,7 +19,8 @@
       "slug": "javascript",
       "description": "The language of the web browser.",
       "order": 2,
-      "is_active": false
+      "is_active": false,
+      "setup_check": "Type console.log(\"Hello!\") in the browser console and see Hello! printed."
     }
   },
   {
@@ -29,7 +31,8 @@
       "slug": "html",
       "description": "The structure of every web page.",
       "order": 3,
-      "is_active": false
+      "is_active": false,
+      "setup_check": "Open your index.html in a browser and see your name as a heading."
     }
   },
   {
@@ -40,7 +43,8 @@
       "slug": "css",
       "description": "How web pages look.",
       "order": 4,
-      "is_active": false
+      "is_active": false,
+      "setup_check": "Link style.css to your page and see your heading change colour."
     }
   },
   {
@@ -51,7 +55,8 @@
       "slug": "java",
       "description": "A widely used language for apps and backend systems.",
       "order": 5,
-      "is_active": false
+      "is_active": false,
+      "setup_check": "Run a Hello.java file that prints your name."
     }
   },
   {
@@ -62,7 +67,8 @@
       "slug": "sql",
       "description": "How to ask questions of a database.",
       "order": 6,
-      "is_active": false
+      "is_active": false,
+      "setup_check": "Run SELECT * FROM movies; in the first SQLBolt exercise and see rows come back."
     }
   },
   {

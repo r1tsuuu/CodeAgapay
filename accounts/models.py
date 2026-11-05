@@ -34,6 +34,9 @@ class LearnerProfile(models.Model):
         max_length=20, choices=HintStyle.choices, blank=True, help_text="What helps them most when stuck."
     )
     email_reminders = models.BooleanField(default=True)
+    setup_done = models.ManyToManyField(
+        "content.Track", blank=True, related_name="+", help_text="Tracks whose setup the learner finished."
+    )
     onboarded = models.BooleanField(default=False)
 
     def __str__(self):

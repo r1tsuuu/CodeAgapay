@@ -8,9 +8,53 @@
 <p class="breadcrumb"><a href="{% url 'plan' %}">{{ topic.track.name }}</a>{% if item %} / <a href="{% url 'plan' %}">Week {{ item.week }}</a>{% endif %} / <strong>{{ topic.title }}</strong></p>
 {% include "partials/topic_steps.html" with current="lesson" %}
 
+{% if warm_up %}
+<details class="warm-up">
+  <summary>
+    <span class="warm-up-label">Warm-up from {{ warm_up.topic.title }} · not graded</span>
+    <span class="warm-up-prompt"><code>{{ warm_up.question.prompt }}</code></span>
+    <span class="warm-up-reveal">Think of your answer, then tap to check</span>
+  </summary>
+  <p class="warm-up-answer">Answer: <code>{{ warm_up.answer }}</code>{% if warm_up.question.hint %} · {{ warm_up.question.hint }}{% endif %}</p>
+</details>
+{% endif %}
+
 <h1>{{ topic.title }}</h1>
-{% if topic.summary %}<p class="lesson-summary">{{ topic.summary }}</p>{% endif %}
+{% if topic.summary %}<p class="lesson-summary"><strong>You'll be able to:</strong> {{ topic.summary }}</p>{% endif %}
 <p class="lesson-meta">About {{ topic.estimated_minutes }} minutes{% if item %} · <span class="status status-{{ item.status }}">{{ item.get_status_display }}</span>{% endif %}</p>
+
+{% if topic.intro_approved and topic.why_it_matters %}
+<section class="lesson-intro">
+  <div class="lesson-why">
+    <h2>Why it matters</h2>
+    <p>{{ topic.why_it_matters }}</p>
+  </div>
+  {% if topic.key_terms %}
+  <div class="lesson-terms">
+    <h2>Key terms</h2>
+    <dl>
+      {% for t in topic.key_terms %}<div><dt>{{ t.term }}</dt><dd>{{ t.definition }}</dd></div>{% endfor %}
+    </dl>
+  </div>
+  {% endif %}
+</section>
+{% endif %}
+
+{% if topic.intro_approved and topic.explanation %}
+<section class="nutshell" aria-labelledby="nutshell-title">
+  <h2 id="nutshell-title">In a nutshell</h2>
+  {{ topic.explanation|linebreaks }}
+  {% if topic.example %}
+  <p class="nutshell-label">Example</p>
+  <pre class="code"><code>{{ topic.example }}</code></pre>
+  {% if topic.example_output %}
+  <p class="nutshell-label">What it prints</p>
+  <pre class="nutshell-output"><code>{{ topic.example_output }}</code></pre>
+  {% endif %}
+  {% endif %}
+  <p class="field-help">That's the core idea. The resources below go deeper, with more examples to try.</p>
+</section>
+{% endif %}
 
 {% if prerequisites %}
 <p class="lesson-prerequisites">Builds on:
@@ -71,8 +115,16 @@
 
 <div class="lesson-footer">
   <a class="text-link" href="{% url 'plan' %}">Back to plan</a>
-  {% if has_quiz %}<a class="button button-primary" href="{% url 'quiz' topic.slug %}">Take the quiz</a>{% endif %}
+  <div class="lesson-next">
+    {% if has_practice %}
+    {% if has_quiz %}<a class="button" href="{% url 'quiz' topic.slug %}">Take the quiz</a>{% endif %}
+    <a class="button button-primary" href="{% url 'practice' topic.slug %}">Try the practice</a>
+    {% elif has_quiz %}
+    <a class="button button-primary" href="{% url 'quiz' topic.slug %}">Take the quiz</a>
+    {% endif %}
+  </div>
 </div>
 <p class="field-help"><a href="{% url 'setup_guide' topic.track.slug %}">Need to set up {{ topic.track.name }}?</a></p>
 </div>
+{% include "partials/help_panel.html" %}
 {% endblock %}

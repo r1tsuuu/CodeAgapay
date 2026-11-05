@@ -33,7 +33,13 @@ class NextAction:
 
 
 def due_reviews(profile, plan):
-    """Topics to review now: ones that need a review, or quiz passes a week old or more."""
+    """Topics to review now: ones that need a review, quiz passes a week old or more, and
+    shaky topics the learner moved on from a week ago or more."""
+    cutoff = timezone.now() - timezone.timedelta(days=REVIEW_AFTER_DAYS)
+    shaky = [
+        item.topic
+        for item in plan.items.select_related("topic").filter(shaky=True, completed_at__lte=cutoff)
+    ]
     done = {
         item.topic_id: item.topic
         for item in plan.items.select_related("topic").filter(status=PlanItem.Status.DONE)
@@ -46,8 +52,7 @@ def due_reviews(profile, plan):
         .values("quiz_item__topic_id").annotate(last=Max("created_at"))
         .values_list("quiz_item__topic_id", "last")
     )
-    cutoff = timezone.now() - timezone.timedelta(days=REVIEW_AFTER_DAYS)
-    due = []
+    due = shaky
     for topic_id, topic in done.items():
         mastery = masteries.get(topic_id)
         if mastery is None:
@@ -126,6 +131,43 @@ def unchecked_topic_ids(profile, items):
         .exclude(status=Status.UNKNOWN).values_list("topic_id", flat=True)
     )
     return {i.topic_id for i in items if i.topic_id not in seen}
+
+
+def warm_up(profile, item):
+    """One ungraded question from the topic before this one in the plan, or None.
+
+    Prefers a question the learner got wrong last time, so a missed idea comes back;
+    otherwise rotates through the topic's questions day by day.
+    """
+    if item is None:
+        return None
+    previous = (
+        PlanItem.objects.filter(plan=item.plan, order__lt=item.order)
+        .select_related("topic").order_by("-order").first()
+    )
+    if previous is None:
+        return None
+    questions = list(previous.topic.quiz_items.all())
+    if not questions:
+        return None
+    latest = {}
+    for attempt in QuizAttempt.objects.filter(learner=profile, quiz_item__in=questions):
+        latest.setdefault(attempt.quiz_item_id, attempt)
+    missed = [q for q in questions if q.pk in latest and not latest[q.pk].is_correct]
+    pool = missed or questions
+    question = pool[timezone.localdate().toordinal() % len(pool)]
+    return {"topic": previous.topic, "question": question, "answer": question.accepted_answers[0]}
+
+
+def setup_status(profile, tracks):
+    """Week 0: each plan track that has setup steps, and whether the learner finished it."""
+    done = set(profile.setup_done.values_list("pk", flat=True))
+    items = [
+        {"track": t, "steps": t.setup_steps.count(), "done": t.pk in done}
+        for t in tracks
+    ]
+    items = [i for i in items if i["steps"] or i["track"].setup_check]
+    return {"items": items, "all_done": all(i["done"] for i in items)}
 
 
 def milestones_by_week(plan):

@@ -49,6 +49,9 @@ class PlanItem(models.Model):
     reason = models.CharField(
         max_length=300, blank=True, help_text="Why this topic is in the plan (from the AI intake)."
     )
+    shaky = models.BooleanField(
+        default=False, help_text="Moved on after missing the quiz twice; comes back as a review."
+    )
 
     class Meta:
         ordering = ["plan", "order"]
@@ -93,6 +96,29 @@ class QuizAttempt(models.Model):
 
     def __str__(self):
         return f"{self.learner.user} · {self.quiz_item} · {'right' if self.is_correct else 'wrong'}"
+
+
+class PracticeSubmission(models.Model):
+    """A learner's answer to a practice task and the feedback they got. Never graded."""
+
+    class Mode(models.TextChoices):
+        AI = "ai", "AI hints"
+        FALLBACK = "fallback", "Checklist (AI off or out of messages)"
+
+    learner = models.ForeignKey(
+        "accounts.LearnerProfile", on_delete=models.CASCADE, related_name="practice_submissions"
+    )
+    task = models.ForeignKey("content.PracticeTask", on_delete=models.CASCADE, related_name="+")
+    answer = models.TextField(max_length=4000)
+    feedback = models.TextField(blank=True)
+    mode = models.CharField(max_length=20, choices=Mode.choices)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at", "-pk"]
+
+    def __str__(self):
+        return f"{self.learner.user} · {self.task}"
 
 
 class PlanFeedback(models.Model):

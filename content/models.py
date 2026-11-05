@@ -12,6 +12,10 @@ class Track(models.Model):
     is_active = models.BooleanField(
         default=True, help_text="Only active tracks are shown to learners."
     )
+    setup_check = models.CharField(
+        max_length=300, blank=True,
+        help_text='One small action that proves setup works, e.g. "Run print(\\"Hello!\\") and see Hello! printed."',
+    )
 
     class Meta:
         ordering = ["order", "name"]
@@ -82,7 +86,21 @@ class Topic(models.Model):
         help_text="Used in lesson URLs, so it must be unique across all tracks "
         "(e.g. js-loops if Python already has loops).",
     )
-    summary = models.TextField(blank=True)
+    summary = models.TextField(blank=True, help_text="What the learner can do after this topic, in one sentence.")
+    why_it_matters = models.TextField(blank=True, help_text="The problem this topic solves, in 1 or 2 sentences.")
+    key_terms = models.JSONField(
+        default=list, blank=True, help_text='Up to 3, each {"term": ..., "definition": ...}.'
+    )
+    explanation = models.TextField(
+        blank=True, help_text="In a nutshell: the idea in plain words, about 150 words. Blank lines split paragraphs."
+    )
+    example = models.TextField(blank=True, help_text="One short worked example (code), with comments.")
+    example_output = models.TextField(blank=True, help_text="What the example prints. Run it to check.")
+    intro_approved = models.BooleanField(
+        default=False,
+        help_text="Show Why it matters, Key terms and In a nutshell to learners. "
+        "Tick only after checking the AI draft (and running the example).",
+    )
     order = models.PositiveIntegerField(default=0)
     estimated_minutes = models.PositiveIntegerField(default=60)
     prerequisites = models.ManyToManyField(
@@ -98,6 +116,13 @@ class Topic(models.Model):
 
     def __str__(self):
         return f"{self.track.name}: {self.title}"
+
+    def clean(self):
+        if not isinstance(self.key_terms, list) or len(self.key_terms) > 3 or not all(
+            isinstance(t, dict) and str(t.get("term", "")).strip() and str(t.get("definition", "")).strip()
+            for t in self.key_terms
+        ):
+            raise ValidationError({"key_terms": "Give up to 3 key terms, each with a term and a definition."})
 
 
 class Resource(models.Model):
@@ -133,6 +158,29 @@ class Tip(models.Model):
 
     def __str__(self):
         return self.text[:60]
+
+
+class PracticeTask(models.Model):
+    """An open-ended task the learner writes an answer to. AI-drafted, shown only once approved."""
+
+    topic = models.ForeignKey(Topic, on_delete=models.CASCADE, related_name="practice_tasks")
+    prompt = models.TextField(help_text="What to write, for a beginner, using only topics taught so far.")
+    starter_code = models.TextField(blank=True, help_text="Code to start from (copy, then change it). Optional.")
+    sample_answer = models.TextField(help_text="One good answer. Shown only after the learner sends theirs.")
+    checklist = models.JSONField(default=list, help_text="What a good answer does, one check per line.")
+    approved = models.BooleanField(
+        default=False, help_text="Show this task to learners. Tick only after checking the AI draft."
+    )
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["topic", "order", "pk"]
+
+    def __str__(self):
+        return self.prompt[:60]
+
+    def clean(self):
+        _validate_string_list(self.checklist, "checklist")
 
 
 class SetupStep(models.Model):

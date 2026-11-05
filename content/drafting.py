@@ -1,4 +1,4 @@
-"""AI drafts of topic tips, skill check questions and quiz items, for curators to review.
+"""AI drafts of topic text, tips, skill check questions and quiz items, for curators to review.
 
 Run once per topic from a laptop (see the draft_topic command), never per learner.
 The AI never writes links: models invent URLs, so curators add resources themselves.
@@ -12,17 +12,22 @@ from django.db.models import Max
 from django.utils.text import slugify
 from openai import OpenAI
 
-from .models import QuizItem, SkillQuestion, Tip, Topic
+from .models import PracticeTask, QuizItem, SkillQuestion, Tip, Topic
 
 DRAFT_MAX_TOKENS = 4000
 
 SYSTEM_PROMPT = """You write short knowledge checks for CodeAgapay, a free app for beginner programmers.
-CodeAgapay does not teach: learners study official docs, MDN, freeCodeCamp or W3Schools,
-then CodeAgapay checks their understanding. Write for complete beginners. Plain English.
+Learners read a short intro here, study official docs, MDN, freeCodeCamp or W3Schools for
+the details, then CodeAgapay checks their understanding. Write for complete beginners. Plain English.
 
 Return only a JSON object with exactly these keys:
 {
   "summary": "one sentence on what the learner can do after this topic",
+  "why_it_matters": "1 or 2 sentences on the problem this topic solves, in plain words",
+  "key_terms": [{"term": "a new word this topic introduces", "definition": "one plain line"}],
+  "explanation": "the core idea in 2 or 3 short paragraphs, 120 to 180 words, separated by a blank line",
+  "example": "one short worked example: under 12 lines of code, no input(), with a comment on the key lines",
+  "example_output": "exactly what the example prints, or an empty string",
   "estimated_minutes": integer between 30 and 120,
   "tips": ["2 short, practical tips about common beginner mistakes"],
   "skill_questions": [
@@ -34,11 +39,47 @@ Return only a JSON object with exactly these keys:
      "accepted_answers": ["every reasonable correct answer"], "hint": "a nudge, never the answer"}
   ]
 }
-Rules: exactly 2 tips, 2 skill_questions, 4 quiz_items. Each blank's answer is one
+Rules: up to 3 key_terms, exactly 2 tips, 2 skill_questions, 4 quiz_items. Each blank's answer is one
 keyword, function name, attribute, symbol or value that a learner could only spell one or
 two ways. Never a phrase, a whole tag pair, or anything the learner could choose freely
 (like a page title or variable name). Questions test this topic only, at beginner level.
 Vary the position of the correct choice. No links or URLs anywhere."""
+
+
+INTRO_PROMPT = """You write short topic introductions for CodeAgapay, a free app for beginner programmers.
+Learners read this first, then study linked resources for the full details. Write for complete
+beginners. Plain English, short sentences, no jokes.
+
+Return only a JSON object with exactly these keys:
+{
+  "why_it_matters": "1 or 2 sentences on the problem this topic solves, in plain words",
+  "key_terms": [{"term": "a new word this topic introduces", "definition": "one plain line"}],
+  "explanation": "the core idea in 2 or 3 short paragraphs, 120 to 180 words, paragraphs separated by a blank line",
+  "example": "one short worked example: under 12 lines of code with a comment on the key lines",
+  "example_output": "exactly what the example prints when run, or an empty string if it prints nothing"
+}
+Rules: explain the problem before the solution, then what it is and how to use it. One main
+idea, no internals or history. Up to 3 key_terms, only words this topic introduces, never terms
+from topics already covered. The example uses only this topic and topics already covered, needs
+no input(), files or internet, and its output must be exact. Plain text: no markdown, no
+backticks. No links or URLs anywhere."""
+
+
+PRACTICE_PROMPT = """You write one practice task for CodeAgapay, a free app for complete beginner programmers.
+Learners study linked resources, then try this task in their own editor and paste their answer.
+Plain English, short sentences.
+
+Return only a JSON object with exactly these keys:
+{
+  "prompt": "what to write, in 2 to 4 sentences, with a concrete small goal",
+  "starter_code": "a few lines to start from and change, or an empty string",
+  "sample_answer": "one short, correct, beginner-style answer (code only)",
+  "checklist": ["2 to 4 checks a good answer meets, each one short line"]
+}
+Rules: the task uses only this topic and topics already covered. It is small: under 15
+lines of code. Prefer "change this example" or "build something small from a real life
+situation" (a grade, a shopping list, an org's attendance). The answer must not need
+files, the internet or extra installs. No links or URLs anywhere."""
 
 
 class DraftError(Exception):
@@ -52,10 +93,36 @@ def request_draft(client, model, track, title, earlier_titles):
         f"Track: {track.name}\nTopic: {title}\n"
         f"The learner has already covered: {before}. Don't test those topics directly."
     )
+    return _ask(client, model, SYSTEM_PROMPT, user)
+
+
+def request_intro(client, model, topic, earlier_titles):
+    """Ask the model for an existing topic's Why it matters and Key terms."""
+    before = ", ".join(earlier_titles) or "nothing yet"
+    user = (
+        f"Track: {topic.track.name}\nTopic: {topic.title}\n"
+        f"After it the learner can: {topic.summary or 'not stated'}\n"
+        f"The learner has already covered: {before}."
+    )
+    return _ask(client, model, INTRO_PROMPT, user)
+
+
+def request_practice(client, model, topic, earlier_titles):
+    """Ask the model for one practice task on an existing topic."""
+    before = ", ".join(earlier_titles) or "nothing yet"
+    user = (
+        f"Track: {topic.track.name}\nTopic: {topic.title}\n"
+        f"After it the learner can: {topic.summary or 'not stated'}\n"
+        f"The learner has already covered: {before}."
+    )
+    return _ask(client, model, PRACTICE_PROMPT, user)
+
+
+def _ask(client, model, system, user):
     extra = {"reasoning_effort": "medium"} if model.startswith("openai/gpt-oss") else {}
     response = client.chat.completions.create(
         model=model,
-        messages=[{"role": "system", "content": SYSTEM_PROMPT}, {"role": "user", "content": user}],
+        messages=[{"role": "system", "content": system}, {"role": "user", "content": user}],
         response_format={"type": "json_object"},
         max_tokens=DRAFT_MAX_TOKENS,
         temperature=0.3,
@@ -65,6 +132,17 @@ def request_draft(client, model, track, title, earlier_titles):
         return json.loads(response.choices[0].message.content or "")
     except json.JSONDecodeError as error:
         raise DraftError(f"model did not return JSON: {error}") from error
+
+
+def _key_terms(data):
+    terms = data.get("key_terms") or []
+    if not isinstance(terms, list):
+        return terms  # Topic.clean rejects it.
+    return [
+        {"term": str(t.get("term", "")).strip(), "definition": str(t.get("definition", "")).strip()}
+        if isinstance(t, dict) else t
+        for t in terms
+    ]
 
 
 def _clamp_minutes(value):
@@ -85,6 +163,11 @@ def save_draft(track, title, data, prerequisite=None):
     topic = Topic(
         track=track, title=title, slug=slug, order=order,
         summary=str(data.get("summary", ""))[:1000],
+        why_it_matters=str(data.get("why_it_matters") or "")[:1000],
+        explanation=str(data.get("explanation") or "").strip()[:3000],
+        example=str(data.get("example") or "").strip("\n")[:2000],
+        example_output=str(data.get("example_output") or "").strip("\n")[:2000],
+        key_terms=_key_terms(data),
         estimated_minutes=_clamp_minutes(data.get("estimated_minutes")),
     )
     objects = [topic]
@@ -122,6 +205,47 @@ def save_draft(track, title, data, prerequisite=None):
     if counts["skill_questions"] == 0 or counts["quiz_items"] == 0:
         raise DraftError(f"draft for {title!r} has no questions or no quiz items")
     return topic, counts
+
+
+def save_intro(topic, data):
+    """Save a drafted intro (Why it matters, Key terms, In a nutshell) on a topic, hidden until approved."""
+    topic.why_it_matters = str(data.get("why_it_matters") or "").strip()[:1000]
+    topic.key_terms = _key_terms(data)
+    topic.explanation = str(data.get("explanation") or "").strip()[:3000]
+    topic.example = str(data.get("example") or "").strip("\n")[:2000]
+    topic.example_output = str(data.get("example_output") or "").strip("\n")[:2000]
+    topic.intro_approved = False
+    if not topic.why_it_matters:
+        raise DraftError(f"draft for {topic.title!r} has no why_it_matters")
+    try:
+        topic.full_clean()
+    except ValidationError as error:
+        raise DraftError(f"invalid draft for {topic.title!r}: {error}") from error
+    topic.save(update_fields=[
+        "why_it_matters", "key_terms", "explanation", "example", "example_output", "intro_approved",
+    ])
+    return topic
+
+
+def save_practice(topic, data):
+    """Save a drafted practice task on a topic, hidden until a curator approves it."""
+    task = PracticeTask(
+        topic=topic,
+        prompt=str(data.get("prompt") or "").strip()[:2000],
+        starter_code=str(data.get("starter_code") or "").strip()[:2000],
+        sample_answer=str(data.get("sample_answer") or "").strip()[:4000],
+        checklist=[str(c).strip() for c in data.get("checklist") or [] if str(c).strip()],
+        approved=False,
+        order=topic.practice_tasks.count() + 1,
+    )
+    if not task.prompt or not task.sample_answer:
+        raise DraftError(f"practice draft for {topic.title!r} has no prompt or sample answer")
+    try:
+        task.full_clean()
+    except ValidationError as error:
+        raise DraftError(f"invalid practice draft for {topic.title!r}: {error}") from error
+    task.save()
+    return task
 
 
 def make_client(api_key):

@@ -4,9 +4,17 @@
 
 {% block content %}
 <div class="page-head">
-  <p class="eyebrow">Setup guide</p>
+  <p class="eyebrow">Week 0 · Setup</p>
   <h1>Get ready to code {{ track.name }}</h1>
   <p class="lead">Follow these steps once. Then you're ready for every topic in your plan.</p>
+  {% if done %}
+  <p class="message message-success">You've already set up {{ track.name }}.</p>
+  {% else %}
+  <form class="setup-skip" method="post">
+    {% csrf_token %}
+    Already have this ready? <button type="submit" class="button-link">Jump to Week 1</button>
+  </form>
+  {% endif %}
 </div>
 {% if steps %}
 <ol class="setup-steps">
@@ -14,15 +22,25 @@
   <li class="setup-step">
     <h2 class="setup-step-title">{{ step.title }}</h2>
     <p class="setup-step-body">{{ step.body|linebreaksbr }}</p>
-    {% if step.link %}<p><a class="text-link external" href="{{ step.link }}" target="_blank" rel="noopener">Open the guide</a></p>{% endif %}
+    {% if step.link %}<p><a class="text-link external" href="{{ step.link }}" target="_blank" rel="noopener">Open the guide<span class="visually-hidden"> (opens in a new tab)</span></a></p>{% endif %}
   </li>
   {% endfor %}
 </ol>
 {% else %}
 <p class="lead">Setup steps for {{ track.name }} are coming soon.</p>
 {% endif %}
-<div class="actions">
-  <a class="text-link" href="{% url 'plan' %}">Back to my plan</a>
-  <a class="button button-primary" href="{% url 'plan' %}">I'm set up</a>
-</div>
+
+{% if track.setup_check %}
+<section class="setup-check">
+  <h2>Check it works</h2>
+  <p>{{ track.setup_check }}</p>
+  <p class="field-help">If it does, you're set up. If not, go back over the steps, or ask Agapay for help on your first topic.</p>
+</section>
+{% endif %}
+
+<form class="actions" method="post">
+  {% csrf_token %}
+  <a class="text-link" href="{% url 'plan' %}">Skip for now</a>
+  {% if not done %}<button type="submit" class="button button-primary no-arrow">I'm set up</button>{% else %}<a class="button button-primary" href="{% url 'plan' %}">Back to my plan</a>{% endif %}
+</form>
 {% endblock %}

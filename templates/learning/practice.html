@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Practice: {{ topic.title }} · CodeAgapay{% endblock %}
+
+{% block content %}
+<div class="lesson-layout">
+<p class="breadcrumb"><a href="{% url 'plan' %}">{{ topic.track.name }}</a>{% if item %} / <a href="{% url 'plan' %}">Week {{ item.week }}</a>{% endif %} / <a href="{% url 'lesson' topic.slug %}">{{ topic.title }}</a> / <strong>Practice</strong></p>
+{% include "partials/topic_steps.html" with current="practice" %}
+
+<h1>Practice</h1>
+{% if not task %}
+<p class="lead">There's no practice task for {{ topic.title }} yet.</p>
+<div class="actions">
+  <a class="text-link" href="{% url 'lesson' topic.slug %}">Back to lesson</a>
+  {% if has_quiz %}<a class="button button-primary" href="{% url 'quiz' topic.slug %}">Take the quiz</a>{% endif %}
+</div>
+{% else %}
+<p class="lead">Try it in your own editor first, then paste what you wrote. It isn't graded: Agapay gives hints, never the answer.</p>
+
+<section class="card practice-task">
+  <h2>Your task</h2>
+  <p class="practice-prompt">{{ task.prompt|linebreaksbr }}</p>
+  {% if task.starter_code %}
+  <p class="practice-label">Start from this code:</p>
+  <pre class="code"><code>{{ task.starter_code }}</code></pre>
+  {% endif %}
+  {% if task.checklist %}
+  <p class="practice-label">A good answer:</p>
+  <ul class="practice-checklist">
+    {% for check in task.checklist %}<li>{{ check }}</li>{% endfor %}
+  </ul>
+  {% endif %}
+</section>
+
+{% if latest and not revising %}
+<section class="practice-feedback" id="feedback" aria-labelledby="feedback-title">
+  <h2 id="feedback-title" class="visually-hidden">Feedback on your answer</h2>
+  <div class="practice-answer">
+    <p class="practice-label">Your answer</p>
+    <pre class="code"><code>{{ latest.answer }}</code></pre>
+  </div>
+
+  {% if latest.mode == "ai" %}
+  <div class="agapay-card">
+    <div class="agapay-head">
+      <img class="mascot" src="{% static 'img/mascots/flower-yellow.svg' %}" alt="" width="44" height="40">
+      <div><p class="agapay-name">Agapay</p><p class="agapay-sub">Hints on your answer, not the answer</p></div>
+    </div>
+    <div class="agapay-text">{{ latest.feedback|linebreaks }}</div>
+    <p class="field-help">AI can make mistakes. Check the linked resources.</p>
+  </div>
+  {% else %}
+  <div class="practice-fallback">
+    <p><strong>{{ latest.feedback }}</strong></p>
+    <p>Go through "A good answer" above. For each line, find the part of your answer that does it.</p>
+  </div>
+  {% endif %}
+
+  <details class="practice-sample">
+    <summary>See a sample answer</summary>
+    <p class="field-help">This is one way to do it. Yours can be different and still be right.</p>
+    <pre class="code"><code>{{ task.sample_answer }}</code></pre>
+  </details>
+
+  <div class="actions">
+    <a class="button" href="?revise=1#answer">Revise</a>
+    {% if has_quiz %}<a class="button button-primary" href="{% url 'quiz' topic.slug %}">Continue to quiz</a>{% else %}<a class="button button-primary" href="{% url 'plan' %}">Back to plan</a>{% endif %}
+  </div>
+</section>
+{% else %}
+<form class="practice-form" method="post" id="answer" data-loading="Agapay is reading your answer… this takes a few seconds.">
+  {% csrf_token %}
+  <label for="practice-answer" class="practice-label">Your answer</label>
+  <textarea id="practice-answer" name="answer" rows="10" maxlength="{{ max_answer }}" required spellcheck="false" placeholder="Paste or type your code here.">{% if revising and latest %}{{ latest.answer }}{% endif %}</textarea>
+  <div class="actions">
+    <a class="text-link" href="{% url 'lesson' topic.slug %}">Back to lesson</a>
+    <button type="submit" class="button button-primary no-arrow">Send</button>
+  </div>
+</form>
+{% endif %}
+{% endif %}
+</div>
+{% include "partials/help_panel.html" %}
+{% endblock %}
