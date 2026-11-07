@@ -1,0 +1,243 @@
+{
+  "track": "css",
+  "setup_steps": [
+    {
+      "title": "Add a stylesheet",
+      "body": "In the folder with your index.html, add a new file called style.css.",
+      "link": ""
+    },
+    {
+      "title": "Link it to your page",
+      "body": "Inside the <head> of index.html, add this line: <link rel=\"stylesheet\" href=\"style.css\">. Save the file.",
+      "link": "https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/link"
+    },
+    {
+      "title": "Check that it works",
+      "body": "In style.css, type h1 { color: red; } and save. Refresh your page. If the heading turns red, the two files are connected.",
+      "link": ""
+    }
+  ],
+  "project_ideas": [
+    {
+      "title": "Style your org's page",
+      "brief": "Take a page you built in HTML and give it a look of its own. Choose colors and fonts that suit it, space things out, and make sure it works on a phone.",
+      "done_when": [
+        "All the styles live in style.css, not in the HTML.",
+        "The page uses at most three main colors.",
+        "A row of items sits side by side using Flexbox.",
+        "The page is easy to read at phone width."
+      ]
+    }
+  ],
+  "topics": [
+    {
+      "title": "Selectors and rules",
+      "summary": "Write CSS rules that choose elements and change how they look.",
+      "why_it_matters": "HTML says what things are, but not how they should look. CSS lets you style a whole site from one file.",
+      "key_terms": [
+        {"term": "selector", "definition": "The part of a rule that chooses which elements to style."},
+        {"term": "declaration", "definition": "One property and its value, like color: red;"},
+        {"term": "class", "definition": "A name you give elements so you can style them together."}
+      ],
+      "explanation": "A plain HTML page works, but it looks the same as every other plain page. CSS changes that without touching your content.\n\nA CSS rule has two parts. The selector chooses which elements to style. The declarations, inside curly braces, say what to change. Each declaration is a property, a colon, a value and a semicolon.\n\nA selector can be a tag name like p, which matches every paragraph. To style only some elements, add a class attribute in your HTML, then select it with a dot, like .notice. Keep your rules in a separate style.css file, so one change updates every page.",
+      "example": "/* every paragraph */\np {\n  color: navy;\n}\n\n/* only elements with class=\"notice\" */\n.notice {\n  background-color: yellow;\n}",
+      "example_output": "",
+      "estimated_minutes": 60,
+      "tips": [
+        "If nothing changes, check that style.css is linked and that you saved the file before refreshing.",
+        "A missing semicolon or curly brace can quietly break the rule after it, so check the line before the problem too."
+      ],
+      "skill_questions": [
+        {
+          "prompt": "Which selector matches elements with class=\"card\"?",
+          "code_snippet": "",
+          "choices": ["card", "#card", ".card", "<card>"],
+          "correct_index": 2
+        },
+        {
+          "prompt": "In this rule, which part is the selector?",
+          "code_snippet": "h1 {\n  color: red;\n}",
+          "choices": ["h1", "color", "red", "color: red;"],
+          "correct_index": 0
+        }
+      ],
+      "quiz_items": [
+        {"prompt": "A class selector starts with the character ___", "accepted_answers": ["."], "hint": "It's a punctuation mark, as in .notice"},
+        {"prompt": "Set the text color: p { ___: red; }", "accepted_answers": ["color"], "hint": "CSS uses the American spelling."},
+        {"prompt": "Each declaration ends with the character ___", "accepted_answers": [";"], "hint": "It's what comes after red in color: red"},
+        {"prompt": "Give an element a class in HTML: <p ___=\"notice\">", "accepted_answers": ["class"], "hint": "The attribute has the same name as the selector type."}
+      ],
+      "resources": [
+        {"title": "Getting started with CSS", "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Styling_basics/Getting_started", "kind": "docs", "estimated_minutes": 30},
+        {"title": "CSS Syntax", "url": "https://www.w3schools.com/css/css_syntax.asp", "kind": "interactive", "estimated_minutes": 15}
+      ]
+    },
+    {
+      "title": "Colors and text",
+      "summary": "Choose colors and fonts that make a page pleasant to read.",
+      "why_it_matters": "Most of a web page is text. Good colors and fonts decide whether people stay and read or give up.",
+      "key_terms": [
+        {"term": "hex color", "definition": "A color written as # and six characters, like #C7366F."},
+        {"term": "contrast", "definition": "How much text stands out from the background behind it."},
+        {"term": "font family", "definition": "The typeface used for text, with backups in case it's missing."}
+      ],
+      "explanation": "You can give colors by name, like tomato, but most sites use hex codes like #C7366F because they can be any exact shade. The color property changes the text. The background-color property changes what's behind it.\n\nFor text, font-family picks the typeface. Always list a backup, such as sans-serif, in case the first font isn't available. The font-size property sets how big the text is, font-weight makes it bolder, and text-align moves it left, right or to the center.\n\nCheck your contrast. Pale gray on white may look stylish, but many people can't read it. Dark text on a light background is always a safe start.",
+      "example": "body {\n  font-family: Georgia, serif; /* serif is the backup */\n  color: #2A1A20;\n  background-color: #FFF8EF;\n}\n\nh1 {\n  font-size: 40px;\n  text-align: center;\n}",
+      "example_output": "",
+      "estimated_minutes": 60,
+      "tips": [
+        "Set font-family and color on body once. The elements inside it inherit them, so you don't have to repeat them.",
+        "Stick to two fonts and a few colors. More than that usually looks messy."
+      ],
+      "skill_questions": [
+        {
+          "prompt": "Which property changes what's behind the text?",
+          "code_snippet": "",
+          "choices": ["color", "background-color", "font-color", "fill"],
+          "correct_index": 1
+        },
+        {
+          "prompt": "Why is sans-serif listed here?",
+          "code_snippet": "font-family: Verdana, sans-serif;",
+          "choices": ["It makes the text bolder", "It's used for headings only", "It's a backup if Verdana is missing", "It removes the first font"],
+          "correct_index": 2
+        }
+      ],
+      "quiz_items": [
+        {"prompt": "Choose a typeface: p { ___: Arial, sans-serif; }", "accepted_answers": ["font-family"], "hint": "It's two words joined by a hyphen."},
+        {"prompt": "Make text bigger: p { ___: 20px; }", "accepted_answers": ["font-size"], "hint": "It's two words joined by a hyphen."},
+        {"prompt": "Center a heading: h1 { text-align: ___; }", "accepted_answers": ["center"], "hint": "CSS uses the American spelling."},
+        {"prompt": "A hex color starts with the character ___", "accepted_answers": ["#"], "hint": "It's the hash sign."}
+      ],
+      "resources": [
+        {"title": "Fundamental text and font styling", "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Text_styling/Fundamentals", "kind": "docs", "estimated_minutes": 30},
+        {"title": "CSS Colors", "url": "https://www.w3schools.com/css/css_colors.asp", "kind": "interactive", "estimated_minutes": 15}
+      ]
+    },
+    {
+      "title": "The box model",
+      "summary": "Control the space inside and around elements.",
+      "why_it_matters": "Crowded pages are hard to read, and most spacing problems come from one idea. Once you see every element as a box, spacing stops being guesswork.",
+      "key_terms": [
+        {"term": "padding", "definition": "Space inside an element, between its content and its border."},
+        {"term": "border", "definition": "The line around an element's padding."},
+        {"term": "margin", "definition": "Space outside an element, between it and its neighbors."}
+      ],
+      "explanation": "Every element on a page is a rectangular box, even when you can't see the edges. From the inside out, the box has four layers: the content, the padding, the border and the margin.\n\nPadding adds room inside the box, so text doesn't touch the edge. A background color fills the padding too. Margin pushes other elements away, and it's always see-through.\n\nBy default, width only measures the content, so padding and border make the box wider than you asked for. Adding box-sizing: border-box makes width include them, which is much easier to work with. Many developers apply it to everything at the start of their CSS.",
+      "example": "* {\n  box-sizing: border-box; /* width now includes padding and border */\n}\n\n.card {\n  width: 300px;\n  padding: 16px; /* space inside */\n  border: 2px solid gray;\n  margin: 24px; /* space outside */\n}",
+      "example_output": "",
+      "estimated_minutes": 75,
+      "tips": [
+        "Lost? Add border: 1px solid red; to an element for a moment to see exactly where its box is.",
+        "Right-click the page and choose Inspect. The browser draws each element's padding, border and margin for you."
+      ],
+      "skill_questions": [
+        {
+          "prompt": "Which property adds space inside an element's border?",
+          "code_snippet": "",
+          "choices": ["margin", "padding", "gap", "spacing"],
+          "correct_index": 1
+        },
+        {
+          "prompt": "With box-sizing: border-box, how wide is this box on the page?",
+          "code_snippet": ".box {\n  box-sizing: border-box;\n  width: 200px;\n  padding: 10px;\n}",
+          "choices": ["180px", "190px", "200px", "220px"],
+          "correct_index": 2
+        }
+      ],
+      "quiz_items": [
+        {"prompt": "Add space inside a box: .card { ___: 16px; }", "accepted_answers": ["padding"], "hint": "It's the layer between the content and the border."},
+        {"prompt": "Add space outside a box: .card { ___: 16px; }", "accepted_answers": ["margin"], "hint": "It's the outermost layer."},
+        {"prompt": "Draw a line around a box: .card { ___: 1px solid black; }", "accepted_answers": ["border"], "hint": "It sits between the padding and the margin."},
+        {"prompt": "Make width include padding: box-sizing: ___;", "accepted_answers": ["border-box"], "hint": "It has a hyphen and ends in the word box."}
+      ],
+      "resources": [
+        {"title": "The box model", "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Styling_basics/Box_model", "kind": "docs", "estimated_minutes": 30},
+        {"title": "CSS Box Model", "url": "https://www.w3schools.com/css/css_boxmodel.asp", "kind": "interactive", "estimated_minutes": 15}
+      ]
+    },
+    {
+      "title": "Layout with Flexbox",
+      "summary": "Line elements up in rows and columns with Flexbox.",
+      "why_it_matters": "Elements stack on top of each other by default. Navigation bars and rows of cards need things side by side, and Flexbox makes that simple.",
+      "key_terms": [
+        {"term": "flex container", "definition": "The parent element that has display: flex."},
+        {"term": "flex item", "definition": "A direct child of a flex container."}
+      ],
+      "explanation": "Without help, most elements stack from top to bottom. To put them side by side, add display: flex to their parent. The parent becomes the flex container, and its direct children become flex items in a row.\n\nYou control the layout from the container. The gap property adds space between the items. The justify-content property spreads them along the row, with values like center or space-between. The align-items property lines them up across it, so center makes them meet in the middle.\n\nTo stack items again, use flex-direction: column. If they run out of room, flex-wrap: wrap lets them continue on a new line, which helps on phones.",
+      "example": "<div class=\"row\">\n  <p>One</p>\n  <p>Two</p>\n</div>\n\n<style>\n  .row {\n    display: flex; /* children sit side by side */\n    gap: 16px;\n    justify-content: center;\n  }\n</style>",
+      "example_output": "",
+      "estimated_minutes": 90,
+      "tips": [
+        "Put display: flex on the parent, not on the items you want to move.",
+        "Only direct children become flex items. Something nested deeper doesn't take part."
+      ],
+      "skill_questions": [
+        {
+          "prompt": "To put three cards side by side, which element gets display: flex?",
+          "code_snippet": "",
+          "choices": ["Each card", "Only the first card", "The body, always", "The parent of the cards"],
+          "correct_index": 3
+        },
+        {
+          "prompt": "Which property adds space between flex items?",
+          "code_snippet": "",
+          "choices": ["gap", "space", "flex-space", "between"],
+          "correct_index": 0
+        }
+      ],
+      "quiz_items": [
+        {"prompt": "Turn on Flexbox: .row { display: ___; }", "accepted_answers": ["flex"], "hint": "It's the first part of the word Flexbox."},
+        {"prompt": "Add space between items: .row { ___: 16px; }", "accepted_answers": ["gap"], "hint": "It's a short word for an empty space."},
+        {"prompt": "Stack items instead: flex-direction: ___;", "accepted_answers": ["column"], "hint": "The opposite of a row."},
+        {"prompt": "Center items along the row: ___: center;", "accepted_answers": ["justify-content"], "hint": "It starts like the word used for lining up text at both edges."}
+      ],
+      "resources": [
+        {"title": "Flexbox", "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/CSS_layout/Flexbox", "kind": "docs", "estimated_minutes": 40},
+        {"title": "CSS Flexbox", "url": "https://www.w3schools.com/css/css3_flexbox.asp", "kind": "interactive", "estimated_minutes": 25}
+      ]
+    },
+    {
+      "title": "Responsive design",
+      "summary": "Make a page work well on phones and on big screens.",
+      "why_it_matters": "Many people will open your site on a phone. A page built only for a laptop becomes tiny or cut off there.",
+      "key_terms": [
+        {"term": "responsive", "definition": "Able to change its layout to fit any screen size."},
+        {"term": "media query", "definition": "A CSS block that only applies at certain screen sizes."},
+        {"term": "viewport", "definition": "The visible area of the page in the browser."}
+      ],
+      "explanation": "A fixed layout that fits a laptop won't fit a phone. A responsive page adapts instead, and it takes three steps.\n\nFirst, add the viewport meta tag to your <head>. Without it, phones shrink the whole page as if it were a desktop site.\n\nSecond, avoid fixed widths. Use max-width: 100% on images so they never overflow, and let boxes shrink with the screen.\n\nThird, use a media query when the layout needs to change. The rules inside @media only apply when its condition is true, such as a screen that's 600px wide or less. A common use is switching a row of cards into a single column.",
+      "example": "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n\n<style>\n  img {\n    max-width: 100%; /* never wider than the screen */\n  }\n\n  @media (max-width: 600px) {\n    .row {\n      flex-direction: column; /* stack on phones */\n    }\n  }\n</style>",
+      "example_output": "",
+      "estimated_minutes": 75,
+      "tips": [
+        "Make your browser window narrow as you work. It's the quickest way to see how the page behaves on a phone.",
+        "Put media queries after your normal rules. When two rules match, the later one wins."
+      ],
+      "skill_questions": [
+        {
+          "prompt": "When do the rules in this block apply?",
+          "code_snippet": "@media (max-width: 600px) {\n  p { font-size: 14px; }\n}",
+          "choices": ["Only on screens wider than 600px", "On screens 600px wide or less", "Only when printing", "On every screen"],
+          "correct_index": 1
+        },
+        {
+          "prompt": "Which rule stops an image from overflowing a small screen?",
+          "code_snippet": "",
+          "choices": ["width: 1000px;", "overflow: image;", "min-width: 100%;", "max-width: 100%;"],
+          "correct_index": 3
+        }
+      ],
+      "quiz_items": [
+        {"prompt": "A media query starts with @___", "accepted_answers": ["media"], "hint": "It's in the name: a ___ query."},
+        {"prompt": "Keep images inside the screen: img { ___: 100%; }", "accepted_answers": ["max-width"], "hint": "It sets the largest width allowed."},
+        {"prompt": "Tell phones to use their real width: <meta name=\"___\" content=\"width=device-width, initial-scale=1\">", "accepted_answers": ["viewport"], "hint": "It's the word for the visible area of the page."},
+        {"prompt": "Apply rules on small screens: @media (___: 600px) { }", "accepted_answers": ["max-width"], "hint": "Rules apply up to this width, and no wider."}
+      ],
+      "resources": [
+        {"title": "Responsive web design", "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/CSS_layout/Responsive_Design", "kind": "docs", "estimated_minutes": 30},
+        {"title": "CSS Media Queries", "url": "https://www.w3schools.com/css/css3_mediaqueries.asp", "kind": "interactive", "estimated_minutes": 20}
+      ]
+    }
+  ]
+}

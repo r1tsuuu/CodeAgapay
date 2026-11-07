@@ -148,7 +148,7 @@ erDiagram
 | --- | --- |
 | `config/` | Settings, root URLs, WSGI |
 | `accounts/` | Learner profile, the first-login redirect, Settings and unsubscribe |
-| `content/` | Paths, tracks, topics, resources, checks, the link checker and the AI drafting commands |
+| `content/` | Paths, tracks, topics, resources, checks, the link checker, the AI drafting commands and `drafts/` |
 | `diagnose/` | Onboarding, the skill check and scoring (`scoring.py`, `onboarding.py`) |
 | `learning/` | Plans, lessons, quizzes, practice and reminders (`planner.py`, `grading.py`, `tailoring.py`, `reminders.py`) |
 | `assistant/` | AI providers, the help endpoint and daily caps (`service.py`) |
@@ -233,6 +233,28 @@ python manage.py draft_topic html "Page structure" "Text and headings" "Links an
 - It refuses to write into a live track, so unreviewed drafts never reach learners. Draft into an inactive track, review every topic in admin, then tick **Active**.
 - Add `--dry-run` to see a draft without saving it.
 - Point `DATABASE_URL` at production only when you mean to draft into it.
+
+</details>
+
+<details>
+<summary><strong>Load drafted content</strong></summary>
+
+<br>
+
+`content/drafts/` holds content waiting for review: the HTML and CSS tracks, and a fourth quiz question for each Python topic. Nothing in it reaches the site until someone loads it.
+
+```bash
+DATABASE_URL="<neon url>" python manage.py load_drafts content/drafts/html.json
+DATABASE_URL="<neon url>" python manage.py load_drafts content/drafts/css.json
+```
+
+- It only adds. It finds tracks and topics by slug, skips what's already there, and never changes curated content.
+- It refuses to write into a live track. Review every topic in admin, tick **Intro approved** on each one, then tick **Active** on the track.
+- Load HTML and CSS before activating either, then run `check_links`.
+- The Python questions go straight to learners because Python is live, so read `content/drafts/python_quiz.json` first, then add `--allow-active-track`.
+
+> [!WARNING]
+> Don't use `loaddata fixtures/content.json` to add content to production. It overwrites curated topics with the older copy in the file.
 
 </details>
 
@@ -336,6 +358,8 @@ The credentials live in settings only. Don't add a Google "Social application" i
 | AI helper | ✅ Help panel on lesson, practice and quiz pages |
 | Practice tasks | ✅ Done, with AI feedback. No code editor |
 | AI drafting commands | ✅ `draft_topic`, `draft_intro` and `draft_practice` |
+| HTML and CSS tracks | 🟡 Drafted in `content/drafts/`. To do: review, load and activate. No practice tasks yet |
+| JavaScript, SQL and Java tracks | ⬜ Not started |
 | Finish screen and Settings | ✅ Done, at `/plan/finished/` and `/settings/` |
 | Reminder emails | 🟡 `send_reminders` is done and opt-in. To do: choose the sending email account |
 | Broken-link check | ✅ `check_links`, with results in admin. Run by hand |
@@ -345,7 +369,7 @@ Update this table as parts are finished, and list known bugs below.
 
 ### Known issues
 
-- Quizzes pass at 70%. With 2 or 3 items per topic, every answer must be right (2 of 3 is 67%). The sample Python topics have 3, so write 4 or more if one mistake should still pass.
+- Quizzes pass at 70%. With 2 or 3 items per topic, every answer must be right (2 of 3 is 67%). The sample Python topics have 3, so write 4 or more if one mistake should still pass. A fourth question for each is ready in `content/drafts/python_quiz.json`.
 - Reminders and link checks don't run by themselves. Someone runs them weekly by hand (see [Regular jobs](#regular-jobs)).
 - Opening a lesson isn't recorded, so a learner who only reads counts as away for reminders.
 - The link check can't see a page that says "not found" but answers 200.

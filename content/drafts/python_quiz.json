@@ -1,0 +1,13 @@
+{
+  "track": "python",
+  "quiz_items": [
+    {"topic": "python-variables-and-data-types", "prompt": "Turn the number 7 into text: ___(7)", "accepted_answers": ["str"], "hint": "Short for string."},
+    {"topic": "python-input-and-output", "prompt": "input() always gives back a value of type ___", "accepted_answers": ["str", "string"], "hint": "Even if the user types a number, it arrives as text."},
+    {"topic": "python-conditionals", "prompt": "Check that both are true: if a > 0 ___ b > 0:", "accepted_answers": ["and"], "hint": "It's a plain English word."},
+    {"topic": "python-loops", "prompt": "Skip to the next round of a loop: ___", "accepted_answers": ["continue"], "hint": "It's the opposite of stopping the loop with break."},
+    {"topic": "python-lists", "prompt": "Remove the last item and get it back: items.___()", "accepted_answers": ["pop"], "hint": "It's a short word, three letters."},
+    {"topic": "python-functions", "prompt": "The names inside the brackets of a def line are called ___", "accepted_answers": ["parameters", "parameter", "params"], "hint": "When you call the function, you pass arguments to these."},
+    {"topic": "python-dictionaries", "prompt": "Get all the keys of a dictionary: d.___()", "accepted_answers": ["keys"], "hint": "The method is named after what it gives back."},
+    {"topic": "python-files-and-exceptions", "prompt": "Get the whole file as one string: text = f.___()", "accepted_answers": ["read"], "hint": "It's what you do with a book."}
+  ]
+}

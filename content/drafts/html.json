@@ -1,0 +1,239 @@
+{
+  "track": "html",
+  "setup_steps": [
+    {
+      "title": "Install a code editor",
+      "body": "Download Visual Studio Code and run the installer. It's free, and it colors your code so mistakes are easier to spot.",
+      "link": "https://code.visualstudio.com/download"
+    },
+    {
+      "title": "Make your first page",
+      "body": "Make a new folder called my-site and open it in your editor. Add a file called index.html and type your name in it. Save the file.",
+      "link": ""
+    },
+    {
+      "title": "Open it in a browser",
+      "body": "Double-click index.html in your file explorer. Your browser opens it and you see your name. After each change, save the file and refresh the browser.",
+      "link": ""
+    }
+  ],
+  "project_ideas": [
+    {
+      "title": "A page for your org",
+      "brief": "Build one web page that introduces an org or club you care about. Say what it does, show a photo, list upcoming events, and add a form for people who want to join.",
+      "done_when": [
+        "The page opens in a browser without anything missing.",
+        "It has a heading, a paragraph, an image and a link.",
+        "It has a list or a table of events.",
+        "It has a form with at least two labeled fields."
+      ]
+    }
+  ],
+  "topics": [
+    {
+      "title": "Page structure",
+      "summary": "Write the basic skeleton that every web page is built on.",
+      "why_it_matters": "A browser needs to know what your page contains and how it's organized. HTML is how you tell it.",
+      "key_terms": [
+        {"term": "tag", "definition": "A word in angle brackets, like <p>, that marks a part of a page."},
+        {"term": "element", "definition": "An opening tag, a closing tag and everything between them."}
+      ],
+      "explanation": "A text file on its own is just text. To show a heading, a picture or a link, the browser needs labels that say what each part is. Those labels are called tags.\n\nMost tags come in pairs. An opening tag like <p> starts something, and a closing tag like </p> ends it. Together with the content inside, they make an element.\n\nEvery page has the same skeleton. <!DOCTYPE html> says this is a modern web page. The <html> element wraps everything. Inside it, <head> holds information about the page, such as its title. <body> holds everything people actually see.",
+      "example": "<!DOCTYPE html>\n<html>\n  <head>\n    <title>My page</title> <!-- shows on the browser tab -->\n  </head>\n  <body>\n    <p>Hello!</p> <!-- shows on the page -->\n  </body>\n</html>",
+      "example_output": "",
+      "estimated_minutes": 45,
+      "tips": [
+        "Close every tag you open. A missing </p> or </div> can make the rest of the page look wrong.",
+        "Save the file and refresh the browser after each change, or you'll keep seeing the old page."
+      ],
+      "skill_questions": [
+        {
+          "prompt": "Where does the text people see on the page go?",
+          "code_snippet": "",
+          "choices": ["Inside <head>", "Inside <body>", "Inside <title>", "Before <html>"],
+          "correct_index": 1
+        },
+        {
+          "prompt": "Which of these is a closing tag?",
+          "code_snippet": "",
+          "choices": ["<p>", "<p/>", "</p>", "<close p>"],
+          "correct_index": 2
+        }
+      ],
+      "quiz_items": [
+        {"prompt": "Everything people see on the page goes inside the <___> element.", "accepted_answers": ["body"], "hint": "It isn't the head."},
+        {"prompt": "The text on the browser tab comes from the <___> element.", "accepted_answers": ["title"], "hint": "Every page has one, inside <head>."},
+        {"prompt": "A closing tag starts with < followed by the character ___", "accepted_answers": ["/"], "hint": "Look at how </p> differs from <p>."},
+        {"prompt": "The first line of a page is <!___ html>", "accepted_answers": ["DOCTYPE"], "hint": "It declares the type of document."}
+      ],
+      "resources": [
+        {"title": "Basic HTML syntax", "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Structuring_content/Basic_HTML_syntax", "kind": "docs", "estimated_minutes": 25},
+        {"title": "HTML Basic Examples", "url": "https://www.w3schools.com/html/html_basic.asp", "kind": "interactive", "estimated_minutes": 15}
+      ]
+    },
+    {
+      "title": "Text and headings",
+      "summary": "Organize a page's text with headings, paragraphs and emphasis.",
+      "why_it_matters": "A wall of text is hard to read. Headings and paragraphs let people, search engines and screen readers find what they need.",
+      "key_terms": [
+        {"term": "heading", "definition": "A title for a section of the page, from <h1> down to <h6>."},
+        {"term": "semantic", "definition": "Chosen for what the content means, not how it looks."}
+      ],
+      "explanation": "Browsers ignore the line breaks and extra spaces in your file. If you want separate paragraphs, you have to mark them with <p>.\n\nHeadings go from <h1> to <h6>. Use <h1> once for the main title of the page, <h2> for sections, and <h3> for parts of a section. Pick a level for its place in the outline, not for its size. You'll change how it looks later with CSS.\n\nFor emphasis inside a sentence, use <strong> for something important and <em> for stress. Screen readers can use these tags, so they carry meaning that plain bold or italic text doesn't.",
+      "example": "<h1>Coding Club</h1> <!-- the main title, used once -->\n<h2>What we do</h2>\n<p>We meet <strong>every Friday</strong> to build small projects.</p>\n<p>Beginners are <em>very</em> welcome.</p>",
+      "example_output": "",
+      "estimated_minutes": 45,
+      "tips": [
+        "Don't skip levels. Go from <h2> to <h3>, not straight from <h2> to <h5>.",
+        "Pressing Enter in your file doesn't start a new paragraph on the page. Use a new <p>."
+      ],
+      "skill_questions": [
+        {
+          "prompt": "Which tag is for the main title of a page?",
+          "code_snippet": "",
+          "choices": ["<title>", "<head>", "<h6>", "<h1>"],
+          "correct_index": 3
+        },
+        {
+          "prompt": "How many paragraphs does the browser show?",
+          "code_snippet": "<p>One\n\n\nTwo</p>",
+          "choices": ["1", "2", "3", "4"],
+          "correct_index": 0
+        }
+      ],
+      "quiz_items": [
+        {"prompt": "The tag for a paragraph is <___>", "accepted_answers": ["p"], "hint": "It's a single letter."},
+        {"prompt": "The biggest heading level is <___>", "accepted_answers": ["h1"], "hint": "The lowest number is the most important."},
+        {"prompt": "Mark words as important with the <___> tag.", "accepted_answers": ["strong"], "hint": "Browsers show it in bold."},
+        {"prompt": "Add stress to a word with the <___> tag.", "accepted_answers": ["em"], "hint": "Short for emphasis."}
+      ],
+      "resources": [
+        {"title": "Headings and paragraphs", "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Structuring_content/Headings_and_paragraphs", "kind": "docs", "estimated_minutes": 25},
+        {"title": "HTML Headings", "url": "https://www.w3schools.com/html/html_headings.asp", "kind": "interactive", "estimated_minutes": 15}
+      ]
+    },
+    {
+      "title": "Links and images",
+      "summary": "Connect pages with links and add images that everyone can understand.",
+      "why_it_matters": "Links are what make the web a web, and images make a page worth looking at. Both need a few details to work properly.",
+      "key_terms": [
+        {"term": "attribute", "definition": "Extra information in an opening tag, like href=\"page.html\"."},
+        {"term": "alt text", "definition": "A description of an image for people who can't see it."}
+      ],
+      "explanation": "Some tags need more information to do their job. A link needs to know where it goes, and an image needs to know which file to show. You give that information with attributes, written inside the opening tag as name=\"value\".\n\nA link uses the <a> tag. Its href attribute holds the address, and the text between the tags is what people click.\n\nAn image uses the <img> tag, which has no closing tag. Its src attribute says which file to show. Its alt attribute describes the image. Screen readers read the alt text aloud, and it also appears if the image fails to load.",
+      "example": "<!-- href says where the link goes -->\n<a href=\"https://www.ateneo.edu\">Visit our school</a>\n\n<!-- src is the file, alt describes it -->\n<img src=\"team.jpg\" alt=\"Our team at the 2025 fair\">",
+      "example_output": "",
+      "estimated_minutes": 60,
+      "tips": [
+        "If an image doesn't show, check the file name, including capital letters, and that the file is in the folder you think it is.",
+        "Write link text that makes sense alone. \"See our events\" is better than \"click here\"."
+      ],
+      "skill_questions": [
+        {
+          "prompt": "Which attribute sets where a link goes?",
+          "code_snippet": "",
+          "choices": ["src", "link", "href", "url"],
+          "correct_index": 2
+        },
+        {
+          "prompt": "What is the alt attribute for?",
+          "code_snippet": "<img src=\"cat.jpg\" alt=\"A sleeping cat\">",
+          "choices": ["Describing the image for people who can't see it", "Setting the image size", "Choosing another file", "Adding a caption under the image"],
+          "correct_index": 0
+        }
+      ],
+      "quiz_items": [
+        {"prompt": "The tag for a link is <___>", "accepted_answers": ["a"], "hint": "It's a single letter, short for anchor."},
+        {"prompt": "Make a link: <a ___=\"about.html\">About us</a>", "accepted_answers": ["href"], "hint": "Short for hypertext reference."},
+        {"prompt": "Choose the image file: <img ___=\"logo.png\">", "accepted_answers": ["src"], "hint": "Short for source."},
+        {"prompt": "Describe an image: <img src=\"logo.png\" ___=\"Our logo\">", "accepted_answers": ["alt"], "hint": "Short for alternative."}
+      ],
+      "resources": [
+        {"title": "Creating links", "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Structuring_content/Creating_links", "kind": "docs", "estimated_minutes": 30},
+        {"title": "HTML Images", "url": "https://www.w3schools.com/html/html_images.asp", "kind": "interactive", "estimated_minutes": 15}
+      ]
+    },
+    {
+      "title": "Lists and tables",
+      "summary": "Show groups of items in lists and data in tables.",
+      "why_it_matters": "Steps, menus and schedules are easier to read when they're laid out clearly. Lists and tables give that kind of content a proper structure.",
+      "key_terms": [
+        {"term": "nesting", "definition": "Putting one element inside another."},
+        {"term": "table row", "definition": "One horizontal line of cells in a table, written with <tr>."}
+      ],
+      "explanation": "Use a list when you have several items of the same kind. <ul> makes an unordered list with bullets. <ol> makes an ordered list with numbers, for steps or rankings. Either way, each item goes inside its own <li>.\n\nUse a table when your data has rows and columns, like a schedule. <table> wraps everything and <tr> makes each row. Inside a row, <th> is a heading cell and <td> is a normal data cell.\n\nNotice the nesting: items sit inside lists, and cells sit inside rows. Indenting your code to match makes it much easier to spot mistakes. Tables are for data only, not for arranging a page.",
+      "example": "<ol>\n  <li>Register</li> <!-- numbered automatically -->\n  <li>Join the group chat</li>\n</ol>\n\n<table>\n  <tr><th>Day</th><th>Event</th></tr> <!-- heading row -->\n  <tr><td>Friday</td><td>Workshop</td></tr>\n</table>",
+      "example_output": "",
+      "estimated_minutes": 60,
+      "tips": [
+        "Only <li> can go directly inside <ul> or <ol>. Plain text there is a mistake.",
+        "Every row of a table should have the same number of cells, or the columns won't line up."
+      ],
+      "skill_questions": [
+        {
+          "prompt": "Which tag makes a numbered list?",
+          "code_snippet": "",
+          "choices": ["<ul>", "<li>", "<nl>", "<ol>"],
+          "correct_index": 3
+        },
+        {
+          "prompt": "In a table, what does <tr> make?",
+          "code_snippet": "",
+          "choices": ["A row", "A column", "A heading", "A border"],
+          "correct_index": 0
+        }
+      ],
+      "quiz_items": [
+        {"prompt": "A bulleted list uses the <___> tag.", "accepted_answers": ["ul"], "hint": "Short for unordered list."},
+        {"prompt": "Each item in a list goes inside <___>", "accepted_answers": ["li"], "hint": "Short for list item."},
+        {"prompt": "A normal cell in a table uses the <___> tag.", "accepted_answers": ["td"], "hint": "Short for table data."},
+        {"prompt": "A heading cell in a table uses the <___> tag.", "accepted_answers": ["th"], "hint": "Short for table heading."}
+      ],
+      "resources": [
+        {"title": "Lists", "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Structuring_content/Lists", "kind": "docs", "estimated_minutes": 25},
+        {"title": "HTML Tables", "url": "https://www.w3schools.com/html/html_tables.asp", "kind": "interactive", "estimated_minutes": 20}
+      ]
+    },
+    {
+      "title": "Forms",
+      "summary": "Build a form that collects information from visitors.",
+      "why_it_matters": "Sign-ups, surveys and search boxes all need a way for visitors to type something in. Forms are how a page listens.",
+      "key_terms": [
+        {"term": "form", "definition": "A group of fields that visitors fill in and send."},
+        {"term": "label", "definition": "The text that says what a field is for."}
+      ],
+      "explanation": "So far your pages only talk. A form lets visitors talk back. The <form> element wraps all the fields.\n\nThe <input> tag makes most fields, and its type attribute decides which kind: text, email, checkbox and more. Like <img>, it has no closing tag. A <textarea> is for longer answers, and a <button> sends the form.\n\nEvery field needs a <label>. To connect them, give the input an id and give the label a matching for attribute. Clicking the label then selects the field, and screen readers announce what it's for.\n\nHTML only builds the form. Saving the answers needs a server, which is a later step.",
+      "example": "<form>\n  <label for=\"email\">Your email</label> <!-- for matches the id -->\n  <input type=\"email\" id=\"email\" name=\"email\" required>\n\n  <button type=\"submit\">Join</button>\n</form>",
+      "example_output": "",
+      "estimated_minutes": 75,
+      "tips": [
+        "A label's for must match the input's id exactly, or they won't be connected.",
+        "Use type=\"email\" for email addresses. The browser checks the format, and phones show a better keyboard."
+      ],
+      "skill_questions": [
+        {
+          "prompt": "Which attribute decides what kind of field an <input> is?",
+          "code_snippet": "",
+          "choices": ["kind", "name", "type", "field"],
+          "correct_index": 2
+        },
+        {
+          "prompt": "How do you connect this label to its input?",
+          "code_snippet": "<label>Name</label>\n<input id=\"name\">",
+          "choices": ["Put them on the same line", "Add for=\"name\" to the label", "Add label=\"Name\" to the input", "Use a <p> around them"],
+          "correct_index": 1
+        }
+      ],
+      "quiz_items": [
+        {"prompt": "All the fields go inside the <___> element.", "accepted_answers": ["form"], "hint": "It's the name of this topic, in the singular."},
+        {"prompt": "A field for email addresses: <input ___=\"email\">", "accepted_answers": ["type"], "hint": "This attribute picks the kind of field."},
+        {"prompt": "A box for long answers uses the <___> tag.", "accepted_answers": ["textarea"], "hint": "One word: an area for text."},
+        {"prompt": "Connect a label to a field: <label ___=\"age\">Age</label>", "accepted_answers": ["for"], "hint": "It says which field this label is for."}
+      ],
+      "resources": [
+        {"title": "Your first form", "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Extensions/Forms/Your_first_form", "kind": "docs", "estimated_minutes": 30},
+        {"title": "HTML Forms", "url": "https://www.w3schools.com/html/html_forms.asp", "kind": "interactive", "estimated_minutes": 20}
+      ]
+    }
+  ]
+}
