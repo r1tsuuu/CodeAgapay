@@ -3263,3 +3263,60 @@ summary:focus-visible {
     grid-column: 1 / -1;
   }
 }
+
+/* ---------- Finish screen and Settings ---------- */
+
+.account-menu-link {
+  display: block;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.account-menu-link:hover {
+  background: var(--berry-soft);
+}
+
+.finish-next {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr));
+  gap: 1.25rem;
+  margin-top: 2rem;
+}
+
+.finish-next h2 {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.finish-next + .plan-controls {
+  margin-top: 2rem;
+}
+
+.finish-next-part h3 {
+  margin-top: 0;
+}
+
+.settings-account {
+  margin-top: 1.5rem;
+}
+
+.reminder-ask {
+  margin-bottom: 1.5rem;
+}
+
+.reminder-ask p {
+  margin-top: 0;
+}
+
+.reminder-ask-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.settings-account h2:not(:first-child) {
+  margin-top: 1.5rem;
+}

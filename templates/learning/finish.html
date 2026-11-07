@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}You finished your plan · CodeAgapay{% endblock %}
+
+{% block content %}
+<section class="plan-hero">
+  <img class="mascot plan-mascot-1" src="{% static 'img/mascots/star-pink.svg' %}" alt="">
+  <img class="mascot plan-mascot-4" src="{% static 'img/mascots/flower-yellow.svg' %}" alt="">
+  <h1>You finished your plan!</h1>
+  <p class="plan-progress-note">{{ done|length }} topic{{ done|length|pluralize }} done in about {{ weeks }} week{{ weeks|pluralize }}{% if quiz_passed %}, {{ quiz_passed }} of them with a passed quiz{% endif %}.</p>
+</section>
+
+<div class="plan-sheet">
+  <section class="plan-overview">
+    <div class="plan-overview-part">
+      <h2>Your goal</h2>
+      <p>{{ profile.goal_text|default:"Learn the basics" }}</p>
+    </div>
+    <div class="plan-overview-part">
+      <h2>What you worked through</h2>
+      <ul class="plan-overview-list">
+        {% for topic in done %}<li>{{ topic.title }}</li>{% endfor %}
+      </ul>
+      {% if skipped %}<p class="plan-overview-note">You skipped {% for topic in skipped %}<a href="{% url 'lesson' topic.slug %}">{{ topic.title }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}. They're still there if you want them.</p>{% endif %}
+    </div>
+  </section>
+
+  {% if project %}
+  <section class="plan-project">
+    <h2>Your project: {{ project.title }}</h2>
+    <p>If you haven't finished it yet, now's the time. It's the best proof of what you can do.</p>
+    <h3>Done when</h3>
+    <ul class="plan-project-checks">
+      {% for check in project.done_when %}<li>{{ check }}</li>{% endfor %}
+    </ul>
+    <p><a class="text-link" href="{% url 'plan' %}#project">See your project steps</a></p>
+  </section>
+  {% endif %}
+
+  <section class="finish-next" aria-labelledby="finish-next-title">
+    <h2 id="finish-next-title">Where to go from here</h2>
+    {% if reviews %}
+    <div class="tile finish-next-part">
+      <h3>Keep it fresh</h3>
+      <p>{{ reviews|length }} topic{{ reviews|length|pluralize }} {{ reviews|length|pluralize:"is,are" }} due for a quick review, starting with {{ reviews.0.title }}.</p>
+      <a class="button" href="{% url 'quiz' reviews.0.slug %}">Take the review quiz</a>
+    </div>
+    {% endif %}
+    {% if new_tracks %}
+    <div class="tile finish-next-part">
+      <h3>Keep going with {% for track in new_tracks %}{{ track.name }}{% if not forloop.last %} and {% endif %}{% endfor %}</h3>
+      <p>It's now open on your path. This builds a new plan, and topics you've finished stay finished.</p>
+      <form method="post" action="{% url 'plan_build' %}">
+        {% csrf_token %}
+        <button type="submit" class="button button-primary no-arrow">Add it to my plan</button>
+      </form>
+    </div>
+    {% endif %}
+    {% if coming_soon %}
+    <div class="tile finish-next-part">
+      <h3>Coming soon on your path</h3>
+      <p>{% for track in coming_soon %}{{ track.name }}{% if not forloop.last %}, {% endif %}{% endfor %} isn't ready yet. Come back to see it here.</p>
+    </div>
+    {% endif %}
+    <div class="tile finish-next-part">
+      <h3>Pick a new goal</h3>
+      <p>Ready for something different? Tell us what you want to make next.</p>
+      <a class="button" href="{% url 'intake' %}?edit=1">Change my answers</a>
+    </div>
+  </section>
+
+  <p class="plan-controls"><a href="{% url 'plan' %}">Back to my plan</a></p>
+</div>
+{% endblock %}

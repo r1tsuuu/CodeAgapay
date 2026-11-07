@@ -17,7 +17,14 @@
 </section>
 
 <div class="plan-sheet">
-{% if next_action %}
+{% if finished and next_action.kind != "review" %}
+<section class="next-action" aria-labelledby="next-action-title">
+  <p class="next-action-label">Plan finished</p>
+  <h2 id="next-action-title">You finished every topic!</h2>
+  <p>See what you did and where you can go from here.</p>
+  <a class="button button-primary" href="{% url 'plan_finish' %}">See what you finished</a>
+</section>
+{% elif next_action %}
 <section class="next-action next-action-{{ next_action.kind }}" aria-labelledby="next-action-title">
   <p class="next-action-label">{% if next_action.kind == "review" %}Review due{% else %}Your next step{% endif %}</p>
   <h2 id="next-action-title">{{ next_action.title }}</h2>
@@ -25,6 +32,17 @@
   <a class="button button-primary" href="{{ next_action.url }}">{{ next_action.button }}</a>
   {% if reviews|length > 1 %}<p class="next-action-more">{{ reviews|length|add:"-1" }} more topic{{ reviews|length|add:"-1"|pluralize }} also due for a quick review.</p>{% endif %}
 </section>
+{% endif %}
+
+{% if not profile.reminders_asked and user.email %}
+<form class="tile reminder-ask" method="post" action="{% url 'reminder_choice' %}">
+  {% csrf_token %}
+  <p><strong>Want a nudge if you've been away for a week?</strong> We'd email {{ user.email }} with your next step, at most once a week. It's up to you.</p>
+  <div class="reminder-ask-buttons">
+    <button type="submit" name="choice" value="yes" class="button">Yes, remind me</button>
+    <button type="submit" name="choice" value="no" class="button">No thanks</button>
+  </div>
+</form>
 {% endif %}
 
 <section class="plan-overview">
@@ -67,6 +85,7 @@
 
 <p class="plan-controls">
   <a href="{% url 'intake' %}?edit=1">Change my answers</a>
+  {% if finished and next_action.kind == "review" %}<a href="{% url 'plan_finish' %}">See what you finished</a>{% endif %}
 </p>
 
 {% if setup.items %}

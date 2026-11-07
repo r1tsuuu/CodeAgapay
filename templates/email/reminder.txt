@@ -1,0 +1,16 @@
+{% autoescape off %}Hi {{ name }},
+
+It's been a little while. Your plan is right where you left it.
+
+Your next step: {{ action.title }}
+
+Pick it up here: {{ plan_url }}
+
+Even 15 minutes counts.
+
+CodeAgapay
+
+--
+You get this because reminders are on in your settings: {{ settings_url }}
+Stop these emails: {{ unsubscribe_url }}
+{% endautoescape %}

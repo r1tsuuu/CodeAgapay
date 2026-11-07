@@ -132,6 +132,11 @@ class Resource(models.Model):
         INTERACTIVE = "interactive", "Interactive"
         DOCS = "docs", "Docs"
 
+    class LinkStatus(models.TextChoices):
+        OK = "ok", "OK"
+        UNSURE = "unsure", "Check by hand"
+        BROKEN = "broken", "Broken"
+
     topic = models.ForeignKey(Topic, on_delete=models.CASCADE, related_name="resources")
     title = models.CharField(max_length=200)
     url = models.URLField(max_length=500)
@@ -139,6 +144,11 @@ class Resource(models.Model):
     estimated_minutes = models.PositiveIntegerField(default=15)
     order = models.PositiveIntegerField(default=0)
     last_checked = models.DateTimeField(null=True, blank=True)
+    link_status = models.CharField(
+        max_length=10, choices=LinkStatus.choices, blank=True, help_text="Set by the check_links command."
+    )
+    link_note = models.CharField(max_length=100, blank=True, help_text="What the last link check saw.")
+    failed_checks = models.PositiveIntegerField(default=0, help_text="Failed link checks in a row.")
     is_active = models.BooleanField(default=True)
 
     class Meta:

@@ -18,7 +18,10 @@
     <section class="quiz-passed">
       <p><strong>{{ topic.title }} is done.</strong>{% if plan_progress is not None and topic_in_plan %} Your plan is now {{ plan_progress }}% done.{% endif %}</p>
       {% if result.band == "perfect" %}<p>Every answer right. Feeling easy? You can take the next topic's quiz to skip it.</p>{% else %}<p>The one you missed comes back as a warm-up in your next topic.</p>{% endif %}
-      {% if next_action and next_action.kind != "project" %}
+      {% if finished and next_action.kind != "review" %}
+      <p>Every topic in your plan is done.</p>
+      <a class="button button-primary" href="{% url 'plan_finish' %}">See what you finished</a>
+      {% elif next_action and next_action.kind != "project" %}
       <p>Next up: <strong>{{ next_action.title }}</strong></p>
       <a class="button button-primary" href="{{ next_action.url }}">{{ next_action.button }}</a>
       <p><a class="text-link" href="{% url 'plan' %}">Back to my plan</a></p>

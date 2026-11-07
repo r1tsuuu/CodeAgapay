@@ -147,10 +147,10 @@ erDiagram
 | Folder | What's in it |
 | --- | --- |
 | `config/` | Settings, root URLs, WSGI |
-| `accounts/` | Learner profile and the first-login redirect |
-| `content/` | Paths, tracks, topics, resources, checks and the AI drafting commands |
+| `accounts/` | Learner profile, the first-login redirect, Settings and unsubscribe |
+| `content/` | Paths, tracks, topics, resources, checks, the link checker and the AI drafting commands |
 | `diagnose/` | Onboarding, the skill check and scoring (`scoring.py`, `onboarding.py`) |
-| `learning/` | Plans, lessons, quizzes and practice (`planner.py`, `grading.py`, `tailoring.py`) |
+| `learning/` | Plans, lessons, quizzes, practice and reminders (`planner.py`, `grading.py`, `tailoring.py`, `reminders.py`) |
 | `assistant/` | AI providers, the help endpoint and daily caps (`service.py`) |
 | `templates/`, `static/` | Server-rendered pages, one stylesheet and small vanilla JS files |
 | `fixtures/` | `content.json`, the sample and backup of curated topics |
@@ -196,6 +196,8 @@ Open http://localhost:8000 for the app and http://localhost:8000/admin for curat
 | `GROQ_API_KEY`, `GROQ_MODEL`, `CF_ACCOUNT_ID`, `CF_API_TOKEN`, `CF_MODEL` | AI helper. Leave blank to turn the AI off |
 | `AI_DAILY_LIMIT` | AI hint messages per learner per day (default 20) |
 | `GROQ_PLAN_MODEL`, `AI_INTAKE_DAILY_LIMIT` | Model for tailored plans, and AI-tailored plans per learner per day (default 2). Past the cap, the plan is built without AI |
+| `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `DEFAULT_FROM_EMAIL` | Reminder emails, on the machine that runs `send_reminders`. SMTP with TLS |
+| `SITE_URL` | Links in emails. Defaults to the live site; set it only to test emails locally |
 
 Ask a teammate for shared keys. Never commit `.env`.
 
@@ -242,6 +244,45 @@ python manage.py draft_topic html "Page structure" "Text and headings" "Links an
 ```bash
 DATABASE_URL="<production database url>" python manage.py dumpdata content --indent 2 > fixtures/content.json
 ```
+
+</details>
+
+## Regular jobs
+
+Render free has no shell or cron, so someone on the team runs these from a laptop against Neon, once a week. We chose this over a scheduler to keep hosting free and to keep the production database URL out of GitHub. Both are safe to run as often as you like.
+
+<details>
+<summary><strong>Check for broken links</strong></summary>
+
+<br>
+
+```bash
+DATABASE_URL="<neon url>" python manage.py check_links
+```
+
+- Add `--track python` to check one track.
+- See the results in admin under **Resources**, using the link status filter.
+- **Broken** means a 404 or 410, or the site failing to connect twice in a row. **Check by hand** means the site refused the script or had an error, which often isn't the link's fault.
+- Links are never hidden automatically. Fix the link, or untick **Active**.
+
+</details>
+
+<details>
+<summary><strong>Send reminder emails</strong></summary>
+
+<br>
+
+```bash
+DATABASE_URL="<neon url>" python manage.py send_reminders --dry-run   # who is due, nothing sent
+DATABASE_URL="<neon url>" python manage.py send_reminders
+```
+
+- Needs the `EMAIL_*` settings. Without `EMAIL_HOST` it refuses to send.
+- A learner gets one after 7 days with no activity, then one a week, and none after 3 in a row with no reply. Coming back starts the count again.
+- Reminders are opt-in. The plan page asks each learner once, and they can change it in Settings.
+- Only learners who said yes, with an unfinished plan or a due review, get one.
+- Every email has an unsubscribe link that works without logging in.
+- If a send fails, it's retried on the next run.
 
 </details>
 
@@ -295,9 +336,9 @@ The credentials live in settings only. Don't add a Google "Social application" i
 | AI helper | ✅ Help panel on lesson, practice and quiz pages |
 | Practice tasks | ✅ Done, with AI feedback. No code editor |
 | AI drafting commands | ✅ `draft_topic`, `draft_intro` and `draft_practice` |
-| Finish screen and Settings | ⬜ Not started |
-| Reminder emails | ⬜ Not started. Only the learner preference exists |
-| Broken-link check | ⬜ Not started. Only the `last_checked` field exists |
+| Finish screen and Settings | ✅ Done, at `/plan/finished/` and `/settings/` |
+| Reminder emails | 🟡 `send_reminders` is done and opt-in. To do: choose the sending email account |
+| Broken-link check | ✅ `check_links`, with results in admin. Run by hand |
 | User testing and handover | 🟡 In progress |
 
 Update this table as parts are finished, and list known bugs below.
@@ -305,7 +346,9 @@ Update this table as parts are finished, and list known bugs below.
 ### Known issues
 
 - Quizzes pass at 70%. With 2 or 3 items per topic, every answer must be right (2 of 3 is 67%). The sample Python topics have 3, so write 4 or more if one mistake should still pass.
-- Passing the quiz on the last topic doesn't lead anywhere special until the Finish screen exists.
+- Reminders and link checks don't run by themselves. Someone runs them weekly by hand (see [Regular jobs](#regular-jobs)).
+- Opening a lesson isn't recorded, so a learner who only reads counts as away for reminders.
+- The link check can't see a page that says "not found" but answers 200.
 - The quick check only covers a path's first track. Later tracks start as "not checked yet" and can be skipped by passing each topic's quiz.
 - Reviews come back on a fixed 7-day rule, not a spaced-repetition schedule.
 - Onboarding answers live in the session until confirmed, so they survive a refresh but not a new device.

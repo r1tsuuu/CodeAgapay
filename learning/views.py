@@ -87,7 +87,29 @@ def plan(request):
             "unchecked_count": len(unchecked),
             "unchecked": unchecked,
             "estimate": journey.estimate(profile, current, items),
+            "finished": journey.is_finished(items),
             "hours_choices": [1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 20],
+        },
+    )
+
+
+def plan_finish(request):
+    """The end of the plan: what the learner did, and where they can go from here."""
+    profile = get_profile(request.user)
+    current = active_plan(profile)
+    if current is None:
+        return redirect("result")
+    items = list(current.items.select_related("topic__track").order_by("order"))
+    if not journey.is_finished(items):
+        return redirect("plan")
+    return render(
+        request,
+        "learning/finish.html",
+        {
+            "profile": profile,
+            "project": getattr(current, "project", None),
+            "reviews": journey.due_reviews(profile, current),
+            **journey.finish_summary(profile, current, items),
         },
     )
 
@@ -272,6 +294,7 @@ def _after_pass(profile):
     items = list(current.items.select_related("topic").order_by("order"))
     return {
         "plan_progress": current.progress_percent(),
+        "finished": journey.is_finished(items),
         "next_action": journey.next_action(profile, current, items, journey.due_reviews(profile, current)),
     }
 

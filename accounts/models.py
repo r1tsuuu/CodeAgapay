@@ -1,3 +1,5 @@
+import uuid
+
 from django.conf import settings
 from django.db import models
 
@@ -33,7 +35,16 @@ class LearnerProfile(models.Model):
     hint_style = models.CharField(
         max_length=20, choices=HintStyle.choices, blank=True, help_text="What helps them most when stuck."
     )
-    email_reminders = models.BooleanField(default=True)
+    email_reminders = models.BooleanField(default=False, help_text="Off until the learner says yes.")
+    reminders_asked = models.BooleanField(
+        default=False, help_text="The learner has answered the reminders question."
+    )
+    last_reminder_at = models.DateTimeField(null=True, blank=True)
+    reminders_unanswered = models.PositiveIntegerField(
+        default=0, help_text="Reminders sent since the learner was last active. Stops at a small limit."
+    )
+    # Stored, not signed: emails go out from a laptop, whose SECRET_KEY differs from the live site's.
+    unsubscribe_key = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     setup_done = models.ManyToManyField(
         "content.Track", blank=True, related_name="+", help_text="Tracks whose setup the learner finished."
     )

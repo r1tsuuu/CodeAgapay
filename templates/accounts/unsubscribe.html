@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Reminder emails · CodeAgapay{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  {% if done %}
+  <h1>Reminders are off</h1>
+  <p class="lead">We won't send you any more reminder emails. Your plan is still here whenever you want it.</p>
+  {% else %}
+  <h1>Stop reminder emails?</h1>
+  <p class="lead">Your plan stays as it is. You can turn reminders back on in Settings.</p>
+  {% endif %}
+</div>
+
+{% if not done %}
+<form method="post">
+  <button type="submit" class="button button-primary no-arrow">Stop reminder emails</button>
+</form>
+{% endif %}
+{% endblock %}

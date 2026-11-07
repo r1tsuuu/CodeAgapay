@@ -5,6 +5,7 @@ check answers, plan statuses), never from guesses. Engagement alone (visits, tim
 on the page) never counts as progress.
 """
 
+import math
 from dataclasses import dataclass
 
 from django.db.models import Max
@@ -87,6 +88,31 @@ def next_action(profile, plan, items, reviews):
             "#project", "See the project steps",
         )
     return None
+
+
+def is_finished(items):
+    """Every topic is done or skipped, and at least one was really done."""
+    return any(i.status == PlanItem.Status.DONE for i in items) and not any(
+        i.status in (PlanItem.Status.TODO, PlanItem.Status.IN_PROGRESS) for i in items
+    )
+
+
+def finish_summary(profile, plan, items):
+    """What the finish page shows. A quiz pass is reported apart from topics marked done by hand."""
+    done = [i.topic for i in items if i.status == PlanItem.Status.DONE]
+    live = plan_tracks(profile)
+    covered = {i.topic.track_id for i in items}
+    return {
+        "done": done,
+        "quiz_passed": TopicMastery.objects.filter(
+            learner=profile, topic__in=done, source=TopicMastery.Source.QUIZ
+        ).count(),
+        "weeks": max(math.ceil((timezone.now() - plan.created_at).days / 7), 1),
+        "skipped": [i.topic for i in items if i.status == PlanItem.Status.SKIPPED and not i.shaky],
+        # Live tracks the plan doesn't have yet, e.g. one that went live after it was built.
+        "new_tracks": [t for t in live if t.pk not in covered],
+        "coming_soon": [t for t in profile.path.ordered_tracks() if t not in live] if profile.path_id else [],
+    }
 
 
 def starting_point(profile, plan):

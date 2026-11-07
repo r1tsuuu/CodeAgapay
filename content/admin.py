@@ -35,8 +35,8 @@ class TrackAdmin(admin.ModelAdmin):
 
 class ResourceInline(admin.TabularInline):
     model = Resource
-    fields = ["title", "url", "kind", "estimated_minutes", "order", "is_active", "last_checked"]
-    readonly_fields = ["last_checked"]
+    fields = ["title", "url", "kind", "estimated_minutes", "order", "is_active", "link_status", "last_checked"]
+    readonly_fields = ["link_status", "last_checked"]
     extra = 0
 
 
@@ -77,9 +77,10 @@ class TopicAdmin(admin.ModelAdmin):
 
 @admin.register(Resource)
 class ResourceAdmin(admin.ModelAdmin):
-    list_display = ["title", "topic", "kind", "is_active", "last_checked"]
-    list_filter = ["kind", "is_active", "topic__track"]
+    list_display = ["title", "topic", "kind", "is_active", "link_status", "link_note", "last_checked"]
+    list_filter = ["link_status", "kind", "is_active", "topic__track"]
     search_fields = ["title", "url"]
+    readonly_fields = ["link_status", "link_note", "failed_checks", "last_checked"]
 
 
 @admin.register(SkillQuestion)

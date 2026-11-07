@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Settings · CodeAgapay{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <h1>Settings</h1>
+  <p class="lead">Change how CodeAgapay fits around you.</p>
+  <img class="mascot" src="{% static 'img/mascots/flower-teal.svg' %}" alt="">
+</div>
+
+<form class="card about-you-form" method="post">
+  {% csrf_token %}
+  {% for error in form.non_field_errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+  {% for field in form %}
+    {% include "partials/form_field.html" %}
+  {% endfor %}
+  <hr class="section-rule">
+  <div class="actions">
+    <a class="text-link" href="{% url 'plan' %}">Back to my plan</a>
+    <button type="submit" class="button button-primary no-arrow">Save settings</button>
+  </div>
+</form>
+
+<section class="card settings-account">
+  <h2>Your goal and path</h2>
+  <p>Want something different? Changing your answers builds you a new plan. Topics you've finished stay finished.</p>
+  <p><a class="text-link" href="{% url 'intake' %}?edit=1">Change my answers</a></p>
+  <h2>Your account</h2>
+  <p>You log in with Google{% if user.email %} as {{ user.email }}{% endif %}.</p>
+</section>
+{% endblock %}

@@ -163,6 +163,18 @@ AI_DAILY_LIMIT = env.int("AI_DAILY_LIMIT", default=20)
 AI_INTAKE_DAILY_LIMIT = env.int("AI_INTAKE_DAILY_LIMIT", default=2)
 
 
+# Reminder emails. The send_reminders command refuses to run until EMAIL_HOST is set.
+# Commands have no request to read the domain from, so links in emails use SITE_URL.
+SITE_URL = env("SITE_URL", default="https://learnpath-l14m.onrender.com").rstrip("/")
+EMAIL_HOST = env("EMAIL_HOST", default="")
+EMAIL_PORT = env.int("EMAIL_PORT", default=587)
+EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
+EMAIL_USE_TLS = True
+EMAIL_TIMEOUT = 20
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default=EMAIL_HOST_USER or "webmaster@localhost")
+
+
 # Render terminates HTTPS at its proxy; without this Google rejects the OAuth callback.
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 if not DEBUG:
