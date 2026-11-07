@@ -1,32 +1,169 @@
-# CodeAgapay
+<div align="center">
 
-A free web app that helps beginner programmers keep learning when no tutor is around. Learners take a short skill check, get a personal learning plan built from free online resources, and can ask an AI helper for hints when they get stuck.
+<a href="https://learnpath-l14m.onrender.com"><img src=".github/assets/banner.svg" width="100%" alt="CodeAgapay: support for beginner programmers, even when no tutor is around"></a>
 
-**Live site:** https://learnpath-l14m.onrender.com (content admin at `/admin/`)
+<br>
 
-Built by Group 5 (ST2A) with CompSAt at Ateneo de Manila University. Open source, so CompSAt can run and extend it after the project ends.
+[![Live site](https://img.shields.io/badge/live_site-open_app-C7366F?style=flat-square)](https://learnpath-l14m.onrender.com)
+[![Python 3.13](https://img.shields.io/badge/python-3.13-0E7C7E?style=flat-square&logo=python&logoColor=white)](.python-version)
+[![Django 5.2](https://img.shields.io/badge/django-5.2-0E7C7E?style=flat-square&logo=django&logoColor=white)](requirements.txt)
+[![Hosting cost](https://img.shields.io/badge/hosting_cost-%E2%82%B10-FFB627?style=flat-square)](#tech-stack)
+[![MIT license](https://img.shields.io/badge/license-MIT-2A1A20?style=flat-square)](LICENSE)
+
+**[How it works](#how-it-works)** · **[Architecture](#architecture)** · **[Run it locally](#run-it-locally)** · **[Curating topics](#curating-topics)** · **[Status](#status)** · **[Contributing](#contributing)**
+
+</div>
+
+## Why CodeAgapay
+
+Beginner programmers get stuck, and there usually isn't a tutor around when it happens. CodeAgapay gives them support at any hour: a plan that starts from what they already know, and hints that keep them thinking instead of handing over the answer.
+
+*Agapay* is Filipino for support. Built by Group 5 (ST2A) with CompSAt at Ateneo de Manila University, and open source so CompSAt can run and extend it after the project ends.
+
+- **Curated, not written.** Like The Odin Project, we don't write tutorials. Each topic points to trusted free resources such as official docs, MDN, freeCodeCamp and W3Schools, then checks understanding.
+- **Goals first.** Learners choose what they want to make, and the path decides the languages.
+- **Hints, never answers.** The AI helper uses only the current topic's material, and quiz answers never leave the server.
+- **Free to run.** Everything sits on free tiers, and the app still works with the AI turned off.
 
 ## How it works
 
-1. **Sign in with Google.** No passwords to manage.
-2. **Tell us what you want to make.** Learners choose a skill path ("Make a website", "Automate boring tasks", "Work with data"...), not a language; the path decides the languages. One question at a time, all tap-to-answer and all allowing "not sure": a real project (curated ideas or their own), experience, the topics they've used, time per week, an optional date they're aiming for and what helps when they're stuck. Typing instead of tapping on the first question uses the AI to match a path; everything else works with the AI off.
-3. **Show where you're starting.** A short check runs only on the topics they ticked ("not sure" checks everything). Every topic gets a status with its evidence: shown, partly there, to work on, or not checked yet. "I don't know yet" means not checked, never a failure.
-4. **Confirm.** A summary shows their answers, what the check showed, and a rough range of weeks at their pace, flagged when it misses their date (with the weekly hours it would take). Any answer can be changed before the plan is built.
-5. **Plan.** The AI picks topics only from our curated list (with a reason for each) and adapts a curated project idea; the app adds prerequisites, orders topics across the path's live tracks and spreads them over weeks. The plan page leads with one next step, then the goal, starting point, time estimate (with a pace control that keeps progress) and the project step to build each week. AI-written parts are labelled, and learners can report problems for curators.
-6. **Learn and review.** Each topic links to vetted free resources, with tips and a short fill-in-the-blank quiz. Topics with no evidence can be skipped by passing their quiz. Passed topics come back for a short review after a week; a missed review marks the topic as needing one. After repeated quiz misses, the result page points to other resources and the topics it builds on.
-7. **Get help.** The AI helper gives hints, never full answers, using only that topic's content, and leans toward what each learner said helps them when stuck. When the daily AI limit runs out, learners still get the tips and links.
+<img src=".github/assets/journey.svg" width="100%" alt="Six steps: sign in with Google, pick a goal, take a quick check, get a plan, learn from curated links, and ask for hints">
 
-Paths (edited in admin): Make a website, Automate boring tasks, Work with data, Make games and fun projects, Get ahead in CS class. A path is offered once its first track is active. Tracks: Python, JavaScript, HTML, CSS, Java, SQL.
+1. **Sign in with Google.** No passwords to manage.
+2. **Tell us what you want to make.** Learners choose a skill path, such as "Make a website" or "Work with data". Questions come one at a time, are tap-to-answer, and all allow "not sure": a project, experience, topics they've used, time per week, an optional target date and what helps when they're stuck.
+3. **Show where you're starting.** A short check runs only on the topics they ticked. Each topic gets a status with its evidence: shown, partly there, to work on, or not checked yet. "I don't know yet" means not checked, never a failure.
+4. **Confirm.** A summary shows their answers, the check results and a rough range of weeks, flagged if it misses their date. Any answer can be changed before the plan is built.
+5. **Get a plan.** The plan page leads with one next step, then the goal, starting point, time estimate and the project step for each week. AI-written parts are labelled, and learners can report problems to curators.
+6. **Learn and review.** Each topic has vetted resources, tips, practice and a short fill-in-the-blank quiz. Passed topics come back for review after a week. After repeated misses, the result page points to other resources and the topics it builds on.
+7. **Get help.** The "Need help?" panel steps through three levels of hints in English or Taglish, leaning toward what each learner said helps them.
+
+Paths, edited in admin: Make a website, Automate boring tasks, Work with data, Make games and fun projects, Get ahead in CS class. A path is offered once its first track is active. Tracks: Python, JavaScript, HTML, CSS, Java, SQL.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    learner(["Learner"]):::person
+    curator(["Curator"]):::person
+
+    subgraph render["Render web service"]
+        direction TB
+        django["Django + Gunicorn<br/>server-rendered pages"]:::app
+        admin["/admin/<br/>topics, links, checks"]:::app
+    end
+
+    db[("Neon Postgres")]:::data
+    google["Google sign-in"]:::external
+    groq["Groq<br/>main AI"]:::external
+    cf["Cloudflare Workers AI<br/>backup AI"]:::external
+
+    learner --> django
+    curator --> admin
+    django --> db
+    admin --> db
+    django --> google
+    django -. "hints and plans" .-> groq
+    django -. "if Groq fails" .-> cf
+
+    classDef person fill:#FBE0EA,stroke:#C7366F,color:#2A1A20
+    classDef app fill:#D6F0EE,stroke:#0E7C7E,color:#2A1A20
+    classDef data fill:#FFEDC2,stroke:#FFB627,color:#2A1A20
+    classDef external fill:#FFF8EF,stroke:#7A6268,color:#2A1A20
+```
+
+### How a plan gets built
+
+The AI can only choose from topics curators have added. The rules decide everything else, and they're what runs when the AI is unavailable.
+
+```mermaid
+flowchart TD
+    answers["Onboarding answers<br/>and check results"]:::app --> candidates["Candidate topics:<br/>the path's tracks, minus what's known"]:::app
+    candidates --> ask{"AI available<br/>and under the daily cap?"}:::decision
+    ask -- yes --> pick["AI picks topics with reasons<br/>and adapts a project idea"]:::ai
+    pick --> valid{"Valid reply?<br/>Unknown topics dropped"}:::decision
+    valid -- yes --> rules
+    ask -- no --> fallback["All candidate topics<br/>and a template project"]:::safe
+    valid -- no --> fallback
+    fallback --> rules["Rule-based planner:<br/>add prerequisites, order, split into weeks"]:::app
+    rules --> plan(["Learning plan"]):::done
+
+    classDef app fill:#D6F0EE,stroke:#0E7C7E,color:#2A1A20
+    classDef ai fill:#FBE0EA,stroke:#C7366F,color:#2A1A20
+    classDef decision fill:#FFEDC2,stroke:#FFB627,color:#2A1A20
+    classDef safe fill:#FFF8EF,stroke:#7A6268,color:#2A1A20
+    classDef done fill:#DBF2DC,stroke:#2FA866,color:#2A1A20
+```
+
+### How a hint gets answered
+
+A learner always gets something useful back. If the AI can't answer, the message isn't counted against their daily limit.
+
+```mermaid
+flowchart LR
+    question(["Learner asks<br/>for help"]):::person --> on{"AI<br/>configured?"}:::decision
+    on -- yes --> cap{"Messages<br/>left today?"}:::decision
+    cap -- yes --> groq["Try Groq"]:::ai
+    groq -- fails --> cf["Try Cloudflare"]:::ai
+    groq -- ok --> hint(["Hint with<br/>tips and links"]):::done
+    cf -- ok --> hint
+    cf -- fails --> refund["Refund the<br/>message"]:::safe
+    refund --> tips(["Topic's tips<br/>and links"]):::safe
+    on -- no --> tips
+    cap -- no --> tips
+
+    classDef person fill:#FBE0EA,stroke:#C7366F,color:#2A1A20
+    classDef decision fill:#FFEDC2,stroke:#FFB627,color:#2A1A20
+    classDef ai fill:#D6F0EE,stroke:#0E7C7E,color:#2A1A20
+    classDef safe fill:#FFF8EF,stroke:#7A6268,color:#2A1A20
+    classDef done fill:#DBF2DC,stroke:#2FA866,color:#2A1A20
+```
+
+### Data model
+
+The main tables. Curators edit paths, tracks, topics and everything attached to them through admin. Profiles, plans and mastery are learner data.
+
+```mermaid
+erDiagram
+    Path }o--o{ Track : "uses, through PathTrack"
+    Track ||--o{ Topic : has
+    Track ||--o{ SetupStep : has
+    Track ||--o{ ProjectIdea : has
+    Topic }o--o{ Topic : "requires"
+    Topic ||--o{ Resource : "links to"
+    Topic ||--o{ Tip : has
+    Topic ||--o{ SkillQuestion : "checked by"
+    Topic ||--o{ QuizItem : "quizzed by"
+    Topic ||--o{ PracticeTask : has
+    LearnerProfile ||--o{ LearningPlan : follows
+    LearnerProfile ||--o{ TopicMastery : earns
+    TopicMastery }o--|| Topic : for
+    LearningPlan ||--o{ PlanItem : contains
+    LearningPlan ||--o| PlanProject : "ends with"
+    PlanItem }o--|| Topic : covers
+```
+
+### Project layout
+
+| Folder | What's in it |
+| --- | --- |
+| `config/` | Settings, root URLs, WSGI |
+| `accounts/` | Learner profile and the first-login redirect |
+| `content/` | Paths, tracks, topics, resources, checks and the AI drafting commands |
+| `diagnose/` | Onboarding, the skill check and scoring (`scoring.py`, `onboarding.py`) |
+| `learning/` | Plans, lessons, quizzes and practice (`planner.py`, `grading.py`, `tailoring.py`) |
+| `assistant/` | AI providers, the help endpoint and daily caps (`service.py`) |
+| `templates/`, `static/` | Server-rendered pages, one stylesheet and small vanilla JS files |
+| `fixtures/` | `content.json`, the sample and backup of curated topics |
 
 ## Tech stack
 
-- Django with server-rendered templates
-- Google login through django-allauth
-- PostgreSQL on Neon, SQLite for local development
-- Hosted on Render
-- AI hints through free tiers of Groq and Cloudflare Workers AI
-
-Everything runs on free tiers. The app costs nothing to host.
+| Layer | Choice | Free tier notes |
+| --- | --- | --- |
+| Framework | Django 5.2, server-rendered templates, vanilla JS | |
+| Auth | django-allauth, Google only | No passwords stored |
+| Database | Neon Postgres in production, SQLite locally | Neon closes idle connections |
+| Hosting | Render with WhiteNoise for static files | Sleeps after 15 idle minutes, so the first visit is slow |
+| AI | Groq, with Cloudflare Workers AI as backup | Optional. Both use the `openai` package with a custom base URL |
 
 ## Run it locally
 
@@ -45,7 +182,7 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
-Open http://localhost:8000 for the app and http://localhost:8000/admin for content editing.
+Open http://localhost:8000 for the app and http://localhost:8000/admin for curating.
 
 ### Environment variables
 
@@ -56,15 +193,66 @@ Open http://localhost:8000 for the app and http://localhost:8000/admin for conte
 | `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS` | Production domain |
 | `DATABASE_URL` | Production database. Leave blank locally to use SQLite |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google login |
-| `GROQ_API_KEY`, `GROQ_MODEL`, `CF_ACCOUNT_ID`, `CF_API_TOKEN`, `CF_MODEL` | AI helper (optional locally) |
-| `AI_DAILY_LIMIT` | AI hint messages per learner per day |
-| `GROQ_PLAN_MODEL`, `AI_INTAKE_DAILY_LIMIT` | Model for tailored plans; AI-tailored plans per learner per day (default 2; past the cap the plan is built without AI) |
+| `GROQ_API_KEY`, `GROQ_MODEL`, `CF_ACCOUNT_ID`, `CF_API_TOKEN`, `CF_MODEL` | AI helper. Leave blank to turn the AI off |
+| `AI_DAILY_LIMIT` | AI hint messages per learner per day (default 20) |
+| `GROQ_PLAN_MODEL`, `AI_INTAKE_DAILY_LIMIT` | Model for tailored plans, and AI-tailored plans per learner per day (default 2). Past the cap, the plan is built without AI |
 
 Ask a teammate for shared keys. Never commit `.env`.
+
+### Run the tests
+
+There is no CI, so run the tests before you merge. All AI calls are mocked.
+
+```bash
+DATABASE_URL="sqlite:///$PWD/db.sqlite3" python manage.py test
+```
+
+> [!WARNING]
+> Keep the `DATABASE_URL` override if your `.env` points at Neon. Without it, the tests run on the production database server: a separate test database, but far slower (about 8 minutes instead of 8 seconds) and it uses up free compute.
+
+## Curating topics
+
+Tracks, topics, links, tips and quiz questions are all edited at `/admin/`, with no coding. Adding a track is curation work, not new code. Ask a developer for an admin account.
+
+<details>
+<summary><strong>Draft topics with AI</strong></summary>
+
+<br>
+
+The AI can draft a topic's checks so curators only review them:
+
+```bash
+python manage.py draft_topic html "Page structure" "Text and headings" "Links and images"
+```
+
+- One Groq call per topic (needs `GROQ_API_KEY` in `.env`). Each draft has a summary, 2 tips, 2 skill check questions and 4 quiz blanks.
+- Titles are added after the track's existing topics, each requiring the one before.
+- The AI never writes links, because models make up URLs. Add 2 real links per topic in admin.
+- It refuses to write into a live track, so unreviewed drafts never reach learners. Draft into an inactive track, review every topic in admin, then tick **Active**.
+- Add `--dry-run` to see a draft without saving it.
+- Point `DATABASE_URL` at production only when you mean to draft into it.
+
+</details>
+
+<details>
+<summary><strong>Back up curated topics from production</strong></summary>
+
+<br>
+
+```bash
+DATABASE_URL="<production database url>" python manage.py dumpdata content --indent 2 > fixtures/content.json
+```
+
+</details>
 
 ## Deploying
 
 `main` deploys to Render automatically.
+
+<details>
+<summary><strong>Render and Neon setup</strong></summary>
+
+<br>
 
 - **Render web service** (free, Singapore): build command `./build.sh`, start command `gunicorn config.wsgi:application`. Python comes from `.python-version`.
 - **Neon Postgres** (free, Singapore): put its connection string in Render as `DATABASE_URL`.
@@ -76,7 +264,12 @@ DATABASE_URL="<neon url>" python manage.py createsuperuser
 DATABASE_URL="<neon url>" python manage.py loaddata fixtures/content.json
 ```
 
-### Google login
+</details>
+
+<details>
+<summary><strong>Google login setup</strong></summary>
+
+<br>
 
 1. In Google Cloud console, create an OAuth client (type: Web application).
 2. Add these authorized redirect URIs:
@@ -87,73 +280,44 @@ DATABASE_URL="<neon url>" python manage.py loaddata fixtures/content.json
 
 The credentials live in settings only. Don't add a Google "Social application" in admin; allauth then finds two and login crashes.
 
-## Adding or editing content
-
-All tracks, topics, links, tips and quiz questions are edited in the admin page (`/admin`) with no coding. Ask a developer for an admin account.
-
-### Drafting topics with AI
-
-CodeAgapay doesn't write tutorials; it points learners to docs, MDN, freeCodeCamp, W3Schools and similar, then checks their understanding. The AI can draft the checks so curators only review:
-
-```bash
-python manage.py draft_topic html "Page structure" "Text and headings" "Links and images"
-```
-
-- One Groq call per topic (needs `GROQ_API_KEY` in `.env`). Each draft has a summary, 2 tips, 2 skill check questions and 4 quiz blanks.
-- Titles are added after the track's existing topics, each requiring the one before.
-- The AI never writes links, because models make up URLs. Add 2 real links per topic in admin.
-- It refuses to write into a live track so unreviewed drafts never reach learners. Draft into an inactive track, review every topic in admin, then tick **Active**.
-- Add `--dry-run` to see a draft without saving it.
-- Point `DATABASE_URL` at production only when you mean to draft into it.
-
-To back up content from production:
-
-```bash
-DATABASE_URL="<production database url>" python manage.py dumpdata content --indent 2 > fixtures/content.json
-```
-
-## Running tests
-
-```bash
-python manage.py test
-```
-
-There is no CI, so run the tests locally before you merge. If `.env` points `DATABASE_URL` at production, run them against SQLite instead:
-
-```bash
-DATABASE_URL="sqlite:///$PWD/db.sqlite3" python manage.py test
-```
-
-## Contributing
-
-1. Create a branch from `main` named `<your-name>/<feature>`.
-2. Open a pull request. One teammate reviews it before merging.
-3. `main` deploys to the live site automatically, so keep it working.
+</details>
 
 ## Status
 
 | Part | Status |
 | --- | --- |
-| Setup and deployment | Done. Live on Render with Neon Postgres |
-| Content admin | Done. Sample Python content in `fixtures/content.json` |
-| Google login | Done |
-| Diagnose | Done. Guided onboarding at `/start/`, with the form at `/about/` as fallback |
-| Learning Plan | Done |
-| Lessons and quiz | Done |
-| AI helper | Service done: `POST /help/ask/` plus a staff test page at `/help/test/`. The help panel on the plan is M8 |
-| Reminder emails | Not started |
-| Finish screen and Settings | Not started (M13) |
+| Setup and deployment | ✅ Live on Render with Neon Postgres |
+| Curation admin | ✅ Done, with sample Python topics in `fixtures/content.json` |
+| Google login | ✅ Done |
+| Onboarding and skill check | ✅ Guided flow at `/start/`, with the form at `/about/` as fallback |
+| Learning plan | ✅ Done |
+| Lessons, setup guides and quizzes | ✅ Done |
+| AI helper | ✅ Help panel on lesson, practice and quiz pages |
+| Practice tasks | ✅ Done, with AI feedback. No code editor |
+| AI drafting commands | ✅ `draft_topic`, `draft_intro` and `draft_practice` |
+| Finish screen and Settings | ⬜ Not started |
+| Reminder emails | ⬜ Not started. Only the learner preference exists |
+| Broken-link check | ⬜ Not started. Only the `last_checked` field exists |
+| User testing and handover | 🟡 In progress |
 
 Update this table as parts are finished, and list known bugs below.
 
 ### Known issues
 
-- Quizzes pass at 70%. With 2 or 3 items per topic that means every answer must be right (2 of 3 is 67%). Write 4 or more items for a topic if one mistake should still pass.
-- The quick check only covers a path's first track; later tracks start as "not checked yet" and can be skipped by passing each topic's quiz.
+- Quizzes pass at 70%. With 2 or 3 items per topic, every answer must be right (2 of 3 is 67%). The sample Python topics have 3, so write 4 or more if one mistake should still pass.
+- Passing the quiz on the last topic doesn't lead anywhere special until the Finish screen exists.
+- The quick check only covers a path's first track. Later tracks start as "not checked yet" and can be skipped by passing each topic's quiz.
 - Reviews come back on a fixed 7-day rule, not a spaced-repetition schedule.
 - Onboarding answers live in the session until confirmed, so they survive a refresh but not a new device.
-- Passing the quiz on the last topic doesn't lead anywhere special yet; the Finish screen is part of M13.
 - Marking a topic done by hand records it as known (source "manual"), so a rebuilt plan skips it. Undo reverses that.
+
+## Contributing
+
+1. Create a branch from `main` named `<your-name>/<feature>`.
+2. Run the tests, then open a pull request. One teammate reviews it before merging.
+3. `main` deploys to the live site automatically, so keep it working.
+
+Keep views thin and put logic in testable modules such as `scoring.py`, `planner.py` and `grading.py`. Mock every external call in tests.
 
 ## Team
 
@@ -162,8 +326,8 @@ Update this table as parts are finished, and list known bugs below.
 | Neil Biason | Critical path build, deployment |
 | Christian | Frontend, integration, QA |
 | Abdul Wahab | Testing, automation, handover, CompSAt contact |
-| Eliza Casey | Content lead |
+| Eliza Casey | Curation lead |
 
 ## License
 
-MIT. See `LICENSE`.
+MIT. See [`LICENSE`](LICENSE).
