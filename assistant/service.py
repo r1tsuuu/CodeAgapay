@@ -320,6 +320,30 @@ def reserve_intake(learner):
     return True
 
 
+def reserve_lesson(learner):
+    """Count one AI-written lesson against today's cap. Returns False if the cap is reached."""
+    with transaction.atomic():
+        usage, _ = AIUsage.objects.get_or_create(learner=learner, date=timezone.localdate())
+        usage = AIUsage.objects.select_for_update().get(pk=usage.pk)
+        if usage.lessons_used >= settings.AI_LESSON_DAILY_LIMIT:
+            return False
+        usage.lessons_used = F("lessons_used") + 1
+        usage.save(update_fields=["lessons_used"])
+    return True
+
+
+def release_lesson(learner):
+    """Give back a reserved lesson when the AI couldn't write it."""
+    AIUsage.objects.filter(
+        learner=learner, date=timezone.localdate(), lessons_used__gt=0
+    ).update(lessons_used=F("lessons_used") - 1)
+
+
+def lessons_left_today(learner):
+    usage = AIUsage.objects.filter(learner=learner, date=timezone.localdate()).first()
+    return max(settings.AI_LESSON_DAILY_LIMIT - (usage.lessons_used if usage else 0), 0)
+
+
 def intakes_left_today(learner):
     usage = AIUsage.objects.filter(learner=learner, date=timezone.localdate()).first()
     return max(settings.AI_INTAKE_DAILY_LIMIT - (usage.intakes_used if usage else 0), 0)

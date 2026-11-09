@@ -7,7 +7,10 @@ from django.shortcuts import redirect, render
 from accounts.models import get_profile
 from assistant.service import ai_available, reserve_intake
 from content.models import Topic
+from learning.ai_plan import activate
+from learning.models import PlanOutline
 from learning.outline import generate_outline
+from learning.planner import plan_tracks
 from learning.tailoring import build_plan_with_template, tailor_plan
 
 from . import onboarding
@@ -117,7 +120,13 @@ def _end_intake(request):
 
 
 def _build_plan(profile, project_idea):
-    """Tailor the plan with AI when it's on and under today's cap; otherwise rules only."""
+    """Tailor the plan with AI when it's on and under today's cap; otherwise rules only.
+
+    Returns True for an AI-tailored plan, False for a rule-based one, and None when no plan
+    could be built (AI plans on, the AI unavailable, and no curated topics to fall back on).
+    """
+    if settings.AI_PLANS:
+        return _build_ai_plan(profile, project_idea)
     if ai_available() and reserve_intake(profile):
         plan, used_ai = tailor_plan(profile, project_idea)
         if settings.AI_OUTLINES:
@@ -130,6 +139,24 @@ def _build_plan(profile, project_idea):
         return used_ai
     build_plan_with_template(profile)
     return False
+
+
+def _build_ai_plan(profile, project_idea):
+    """The AI outline becomes the learner's plan (docs/plan-framework.md, step 2).
+
+    Without one, the curated plan when the path has curated topics. Either way, an earlier
+    AI plan steps aside: it was written for answers the learner has just changed.
+    """
+    if ai_available() and reserve_intake(profile):
+        outline = generate_outline(profile, project_idea)
+        if outline is not None:
+            activate(outline)
+            return True
+    PlanOutline.objects.filter(learner=profile, is_active=True).update(is_active=False)
+    if Topic.objects.filter(track__in=plan_tracks(profile)).exists():
+        build_plan_with_template(profile)
+        return False
+    return None  # No curated topics to fall back on, so no plan: the plan page offers a retry.
 
 
 def intake(request):
@@ -169,7 +196,9 @@ def _intake(request):
             project_idea = onboarding.save_answers(profile, answers)
             used_ai = _build_plan(profile, project_idea)
             _end_intake(request)
-            if used_ai:
+            if used_ai is None:
+                messages.error(request, "We couldn't write your plan just now. Your answers are saved, so try again below.")
+            elif used_ai:
                 messages.success(request, "Your plan is ready, built around your project. Start with the first step below.")
             else:
                 messages.success(request, "Your plan is ready. Start with the first step below.")

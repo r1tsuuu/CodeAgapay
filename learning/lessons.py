@@ -26,10 +26,16 @@ from django.db.models import Max
 from assistant.service import ask_model_json, language_note
 
 from .models import GeneratedLesson
-from .outline import _int, _list, _text, clean_chars, load_prompt, outline_tracks
+from .outline import (
+    _int, _list, _text, all_lessons, clean_chars, learner_setup, load_prompt, outline_tracks,
+)
 
 MAX_TOKENS = 3000  # A lesson is about 1,000 to 1,800 tokens, plus room for short reasoning.
-MAX_EARLIER = 12  # Earlier lesson titles sent, newest first; older ones rarely matter and cost tokens.
+MAX_EARLIER = 12
+# Setup needs enough steps to get a beginner all the way: install, folder, first file, see it work.
+MIN_SETUP_STEPS = 4
+STEPS_GIVEN = "The app shows the install steps"  # In the setup request when built-in guides exist (setup_guides).
+MAX_SETUP_STEPS = 12  # Earlier lesson titles sent, newest first; older ones rarely matter and cost tokens.
 LANGS = {"python", "html", "css", "javascript", "sql", "java"}
 SKILLS = {"recall", "apply", "explain"}
 
@@ -47,13 +53,20 @@ ALLOWED_LINKS = [
     ("theodinproject.com", ""), ("cs50.harvard.edu", ""), ("khanacademy.org", ""), ("kaggle.com", "/learn"),
     ("realpython.com", ""), ("exercism.org", ""), ("colab.research.google.com", ""), ("codepen.io", ""),
     ("nodejs.org", ""), ("code.visualstudio.com", ""), ("git-scm.com", ""), ("stackoverflow.com", ""),
+    # Official language and tool documentation, for what learning sites don't cover.
+    ("dev.java", ""), ("docs.oracle.com", "/en/java/"), ("sqlite.org", ""), ("postgresql.org", "/docs/"),
 ]
+# Official documentation: a link to one of these gets a "how to read it" tip, because beginners
+# find raw reference pages hard to use.
+OFFICIAL_DOCS = ("developer.mozilla.org", "docs.python.org", "code.visualstudio.com", "dev.java",
+                 "docs.oracle.com", "sqlite.org", "postgresql.org", "nodejs.org")
 # Sites with a search page, so a search phrase becomes a link that always works.
 SEARCH_LINKS = {
     "mdn": "https://developer.mozilla.org/en-US/search?q={}",
     "python": "https://docs.python.org/3/search.html?q={}",
 }
-DEFAULT_SITE = {"python": "Python docs", "html": "MDN Web Docs", "css": "MDN Web Docs", "javascript": "MDN Web Docs"}
+DEFAULT_SITE = {"python": "Python docs", "html": "MDN Web Docs", "css": "MDN Web Docs", "javascript": "MDN Web Docs",
+                "java": "dev.java"}
 
 
 @dataclass
@@ -74,11 +87,13 @@ class LessonSpec:
     learns_from: str = ""
     taglish: bool = False
     struggled: list = field(default_factory=list)
+    setup: str = ""  # Setup lesson: its tools and folder. Others: how the learner writes code.
+    computer: str = ""  # What the learner uses, e.g. "A Mac", for shortcuts and app names.
 
 
 def spec_from_outline(outline, key, struggled=()):
     """The request for one lesson of a saved outline. Raises KeyError for an unknown lesson."""
-    lessons = [lesson for module in outline.data.get("modules", []) for lesson in module["lessons"]]
+    lessons = all_lessons(outline)
     by_key = {lesson["key"]: lesson for lesson in lessons}
     lesson = by_key[key]
     position = lessons.index(lesson)
@@ -88,20 +103,32 @@ def spec_from_outline(outline, key, struggled=()):
         kind=lesson["kind"], level=outline.data.get("level", "beginner"),
         path=learner.path.title if learner.path_id else "Learn to code",
         tracks=", ".join(t.name for t in outline_tracks(learner)),
-        earlier=[x["title"] for x in lessons[:position]][-MAX_EARLIER:],
+        earlier=[x["title"] for x in lessons[:position] if x["kind"] != "setup"][-MAX_EARLIER:],
         needs=[by_key[k]["title"] for k in lesson.get("needs", []) if k in by_key],
         project=(outline.data.get("project") or {}).get("title", ""),
         learns_from=learner.get_hint_style_display().lower() if learner.hint_style else "",
         taglish=bool(language_note(f"{learner.goal_text} {outline.data.get('goal', '')}")),
         struggled=[_text(s, 200) for s in struggled if _text(s, 200)][:5],
+        setup=_setup_line(outline, lesson),
+        computer=learner.get_device_display() if learner.device else "",
     )
+
+
+def _setup_line(outline, lesson):
+    if lesson["kind"] == "setup":
+        alternative = f" No-install way: {lesson['alternative']}." if lesson.get("alternative") else " No no-install way."
+        given = f" {STEPS_GIVEN} for both ways, so leave out \"setup\"." if lesson.get("built_in") else ""
+        return f"Main way: {lesson['tool']}.{alternative} Project folder: {lesson['folder']}.{given}"
+    return learner_setup(outline)
 
 
 def build_messages(spec):
     """The fixed system prompt and a short description of this lesson."""
     system, version = load_prompt("lesson")
     limits = LIMITS.get(spec.level, LIMITS["beginner"])
-    if spec.kind == "recap":
+    if spec.kind == "setup":
+        shape = f"This is the setup lesson (see the setup rule). About {spec.minutes} minutes."
+    elif spec.kind == "recap":
         shape = "This is a recap: a 5 to 10 minute summary of something they partly know, then 3 check questions."
     else:
         shape = (f"Limits: {limits['ideas']}, up to {limits['terms']} key terms, {limits['examples']}, "
@@ -116,6 +143,8 @@ def build_messages(spec):
         f"Project: {spec.project}" if spec.project else "",
         f"Learns best from: {spec.learns_from}" if spec.learns_from else "",
         "Language: Taglish" if spec.taglish else "",
+        f"Computer: {spec.computer}" if spec.computer else "",
+        (spec.setup if spec.kind == "setup" else f"Learner's setup: {spec.setup}") if spec.setup else "",
         f"Struggled with: {'; '.join(spec.struggled)}. Teach it a different way." if spec.struggled else "",
     ]
     user = "\n".join(line for line in lines if line)
@@ -128,9 +157,72 @@ def _code(value, limit=1500):
     return "\n".join(line.rstrip() for line in lines)[:limit]
 
 
+# A paragraph longer than this is split into shorter ones of a few sentences (framework: one idea at a time).
+MAX_PARAGRAPH = 320
+SENTENCE_END = re.compile(r"(?<=[.!?])\s+(?=[A-Z`<\"'(])")
+
+
+def split_long(paragraph):
+    """Break a long paragraph at sentence ends into pieces of up to about MAX_PARAGRAPH characters."""
+    if len(paragraph) <= MAX_PARAGRAPH:
+        return [paragraph]
+    pieces, current = [], ""
+    for sentence in SENTENCE_END.split(paragraph):
+        if current and len(current) + len(sentence) > MAX_PARAGRAPH:
+            pieces.append(current)
+            current = sentence
+        else:
+            current = f"{current} {sentence}".strip()
+    return [*pieces, current] if current else pieces
+
+
+# List lines: "- item" (or "* ", "• ") for parts and options, "1. item" for steps in order.
+BULLET = re.compile(r"^\s*(?:[-*•]|\d+[.)])\s+")
+NUMBERED = re.compile(r"^\s*\d+[.)]\s+")
+
+
+def blocks(text):
+    """Text as blocks: ("p", paragraph), ("ul", [items]) or ("ol", [items]).
+
+    Consecutive list lines become one list; everything else is prose, split into short
+    paragraphs. Used when a lesson is saved and again when it's shown.
+    """
+    result, prose, items, numbered = [], [], [], False
+
+    def flush():
+        nonlocal prose, items
+        if prose:
+            result.extend(("p", piece) for piece in split_long(_text(" ".join(prose), 2500)) if piece)
+        if items:
+            result.append(("ol" if numbered else "ul", items))
+        prose, items = [], []
+
+    for line in str(text or "").split("\n"):
+        if not line.strip():
+            flush()
+        elif BULLET.match(line):
+            if prose:
+                flush()
+            if not items:
+                numbered = bool(NUMBERED.match(line))
+            items.append(_text(BULLET.sub("", line, count=1), 300))
+        else:
+            if items:
+                flush()
+            prose.append(line)
+    flush()
+    return result
+
+
 def _paragraphs(value, limit=2500):
-    parts = [_text(p, limit) for p in str(value or "").split("\n\n")]
-    return "\n\n".join(p for p in parts if p)[:limit]
+    """Prose and lists as stored: blank lines between blocks, list items on their own lines."""
+    out = []
+    for kind, content in blocks(value):
+        if kind == "p":
+            out.append(content)
+        else:
+            out.append("\n".join(f"{n}. {item}" if kind == "ol" else f"- {item}" for n, item in enumerate(content, 1)))
+    return "\n\n".join(out)[:limit]
 
 
 def allowed_link(url):
@@ -140,6 +232,13 @@ def allowed_link(url):
         (host == domain or host.endswith("." + domain)) and parts.path.startswith(prefix)
         for domain, prefix in ALLOWED_LINKS
     )
+
+
+def _official_page(url):
+    """A page of official documentation (not a search page we built), which beginners need help reading."""
+    parts = urlparse(url)
+    host = (parts.hostname or "").removeprefix("www.")
+    return "search" not in parts.path and any(host == d or host.endswith("." + d) for d in OFFICIAL_DOCS)
 
 
 def search_link(name, phrase):
@@ -161,11 +260,13 @@ def _resources(items, spec, lang, repairs):
             repairs.append(f"Dropped a link not on the allowed list: {urlparse(url).hostname or url[:40]}")
             url = ""
         wanted = "primary" if _text(item.get("role"), 10).lower() == "primary" else "optional"
-        resources.append({"name": name, "role": wanted, "url": url or search_link(name, search), "search": search})
+        resources.append({"name": name, "role": wanted, "url": url or search_link(name, search), "search": search,
+                          "how": _text(item.get("how"), 250)})
     resources = resources[:3]
     if not resources:
         site = DEFAULT_SITE.get(lang, "W3Schools")
-        resources = [{"name": site, "role": "primary", "url": search_link(site, spec.title), "search": spec.title}]
+        resources = [{"name": site, "role": "primary", "url": search_link(site, spec.title), "search": spec.title,
+                      "how": ""}]
         repairs.append(f"No usable resources; added {site}")
     # Exactly one primary (framework section 6): the first the model marked, else the first.
     primary = next((i for i, x in enumerate(resources) if x["role"] == "primary"), 0)
@@ -220,7 +321,9 @@ def _question(item, n, repairs, flags):
             return {**base, "choices": choices, "correct": correct}
         reason = "choices or answer unusable"
     elif kind == "blank":
-        accepted = _tag_variants([_text(a, 100) for a in _list(item.get("accept")) if _text(a, 100)], prompt)
+        # Backticks mark code in sentences; in an answer they'd make the learner's typing never match.
+        accepted = _tag_variants([_text(a, 100).strip("`*") for a in _list(item.get("accept"))
+                                  if _text(a, 100).strip("`*")], prompt)
         if "___" in prompt and accepted:
             if any(len(a.split()) > 3 for a in accepted):
                 flags.append(f"Check {n}: a blank's answer is long, so learners may type it differently")
@@ -260,6 +363,15 @@ def _only_comments(code, lang):
 def _explained(tag, taught):
     """The tag, or its everyday name, appears in what the lesson (or an earlier one) teaches."""
     return bool(re.search(rf"(?<![a-z0-9]){tag}(?![a-z0-9])", taught)) or TAG_NAMES.get(tag, "@") in taught
+
+
+FILE_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,40}\.[A-Za-z0-9]{1,5}")
+
+
+def _file_name(value):
+    """The task's file name as the AI gave it, if it's a plain file name (no folders or spaces)."""
+    name = _text(value, 60).strip("`*")
+    return name if FILE_NAME.fullmatch(name) else ""
 
 
 def _syntax_problem(code):
@@ -302,16 +414,24 @@ def parse_lesson(data, spec):
 
     task = data.get("try") if isinstance(data.get("try"), dict) else {}
     try_it = {"prompt": _paragraphs(task.get("prompt"), 800), "starter_code": _code(task.get("starter")),
-              "sample_answer": _code(task.get("answer")),
+              "file": _file_name(task.get("file")), "sample_answer": _code(task.get("answer")),
               "checklist": [_text(c, 200) for c in _list(task.get("checks"))[:4] if _text(c, 200)]}
 
     check = [q for n, item in enumerate(_list(data.get("check"))[:6], 1)
              if (q := _question(item, n, repairs, flags)) is not None][:5]
     graded = [q for q in check if q["type"] in ("mc", "blank")]
 
+    # A setup lesson ends with its task (the step that proves it works) instead of a check,
+    # and has steps for the main way and, where there is one, the no-install way.
+    setup = spec.kind == "setup"
+    steps = data.get("setup") if isinstance(data.get("setup"), dict) else {}
+    setup_steps = {way: [_text(s, 400) for s in _list(steps.get(way))[:MAX_SETUP_STEPS] if _text(s, 400)]
+                   for way in ("main", "alternative")}
     missing = [name for name, ok in [
-        ("an explanation", _paragraphs(data.get("explain"))), ("an example", examples),
-        ("a task", try_it["prompt"]), ("2 gradable check questions", len(graded) >= 2),
+        ("an explanation", _paragraphs(data.get("explain"))), ("an example", examples or setup),
+        ("a task", try_it["prompt"]), ("2 gradable check questions", len(graded) >= 2 or setup),
+        (f"{MIN_SETUP_STEPS} setup steps",
+         not setup or STEPS_GIVEN in spec.setup or len(setup_steps["main"]) >= MIN_SETUP_STEPS),
     ] if not ok]
     if missing:
         repairs.append(f"Unusable: missing {', '.join(missing)}")
@@ -342,6 +462,12 @@ def parse_lesson(data, spec):
         "check": check,
         "lang": lang,
     }
+    if setup:
+        lesson["setup"] = setup_steps
+        lesson["check"] = []  # The learner confirms setup by choosing it, not by a quiz.
+    for resource in lesson["resources"]:
+        if _official_page(resource["url"]) and not resource["how"]:
+            flags.append(f"Official docs without a how-to-read tip: {resource['name']}")
     return lesson, repairs, flags
 
 
@@ -370,6 +496,8 @@ def generate_lesson(spec, outline=None, save=True):
     else:
         return None
     repairs = earlier_problems + repairs
+    if spec.kind != "setup":
+        lesson["setup_used"] = spec.setup  # So a later change of setup can find lessons written for the old one.
     record = GeneratedLesson(
         outline=outline, key=spec.key, title=spec.title, data=lesson, repairs=repairs, flags=flags,
         prompt_version=version, model=usage.get("model", ""),
@@ -403,8 +531,7 @@ def regenerate_lesson(outline, key, struggled=()):
 
 def glossary(outline):
     """Every key term from the outline's current lessons, in lesson order (framework section 5)."""
-    order = {lesson["key"]: n for n, lesson in enumerate(
-        (x for module in outline.data.get("modules", []) for x in module["lessons"]))}
+    order = {lesson["key"]: n for n, lesson in enumerate(all_lessons(outline))}
     lessons = sorted(outline.lessons.filter(is_current=True), key=lambda x: order.get(x.key, len(order)))
     seen, terms = set(), []
     for lesson in lessons:
@@ -413,17 +540,3 @@ def glossary(outline):
                 seen.add(term["term"].lower())
                 terms.append(term)
     return terms
-
-
-def warm_up(outline, key):
-    """Up to 2 ungraded questions from the previous lesson's check, so warm-ups cost no tokens.
-
-    Preferring questions the learner missed comes with the lesson page, which records answers.
-    """
-    keys = [x["key"] for module in outline.data.get("modules", []) for x in module["lessons"]]
-    if key not in keys or keys.index(key) == 0:
-        return []
-    previous = current_lesson(outline, keys[keys.index(key) - 1])
-    if previous is None:
-        return []
-    return [q for q in previous.data.get("check", []) if q["type"] in ("mc", "blank")][:2]

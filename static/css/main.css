@@ -652,6 +652,30 @@ input[type="radio"] {
   overflow-x: auto;
 }
 
+/* Syntax colors for AI lesson code (Pygments classes), like a dark editor theme. */
+.code .k, .code .kc, .code .kd, .code .kn, .code .kr, .code .kt, .code .ow { color: #C586C0; } /* keywords */
+.code .nt { color: #569CD6; }                         /* HTML tags */
+.code .na { color: #9CDCFE; }                         /* attributes, CSS properties */
+.code .s, .code .s1, .code .s2, .code .sa, .code .sd, .code .se, .code .si, .code .dl { color: #CE9178; } /* strings */
+.code .m, .code .mi, .code .mf, .code .mh { color: #B5CEA8; } /* numbers */
+.code .c, .code .c1, .code .cm, .code .cs, .code .cp { color: #6A9955; font-style: italic; } /* comments, doctype */
+.code .nf, .code .fm, .code .nb, .code .bp { color: #DCDCAA; } /* functions, built-ins */
+.code .nc, .code .nn { color: #4EC9B0; }              /* classes, modules */
+.code .nv, .code .vi, .code .nx { color: #9CDCFE; }   /* variables */
+.code .nd, .code .nl { color: #D7BA7D; }              /* decorators, CSS selectors */
+.code .o, .code .p { color: #D4D4D4; }                /* operators, punctuation */
+
+/* A code word inside a sentence: bold and colored so it stands apart from ordinary words. */
+.inline-code {
+  padding: 0.05rem 0.35rem;
+  border-radius: var(--radius-sm);
+  background: var(--teal-soft);
+  color: var(--teal-deep);
+  font-family: var(--font-code);
+  font-size: 0.92em;
+  font-weight: 700;
+}
+
 /* ---------- Status and resource labels ---------- */
 
 .status,
@@ -3319,4 +3343,89 @@ summary:focus-visible {
 
 .settings-account h2:not(:first-child) {
   margin-top: 1.5rem;
+}
+
+/* Lists inside AI lesson text: parts, options, or steps in order. */
+.lesson-list {
+  margin: 0.5rem 0 1.25rem;
+  padding: 0;
+  list-style: none;
+  counter-reset: lesson-step;
+}
+
+.lesson-list li {
+  position: relative;
+  margin-bottom: 0.85rem;
+  padding-left: 2.4rem;
+  line-height: 1.65;
+  counter-increment: lesson-step;
+}
+
+.lesson-list li:last-child {
+  margin-bottom: 0;
+}
+
+/* Bullets: small tilted candy shapes in the theme colors, cycling like the mascots. */
+ul.lesson-list li::before {
+  content: "";
+  position: absolute;
+  left: 0.55rem;
+  top: 0.5rem;
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 0.3rem;
+  background: var(--berry);
+  transform: rotate(12deg);
+}
+
+/* Steps in order: round number badges in the display font, like the setup guide. */
+ol.lesson-list li::before {
+  content: counter(lesson-step);
+  position: absolute;
+  left: 0;
+  top: 0.05rem;
+  display: grid;
+  place-items: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 50%;
+  background: var(--berry);
+  color: var(--white);
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.lesson-list li:nth-child(4n + 2)::before { background: var(--teal); }
+.lesson-list li:nth-child(4n + 3)::before { background: var(--marigold); color: var(--ink); }
+.lesson-list li:nth-child(4n + 4)::before { background: var(--tangerine); color: var(--ink); }
+ul.lesson-list li:nth-child(even)::before { transform: rotate(-12deg); }
+
+/* Lists of 5 or more stay one calm color (berry, like the setup guide); the four colors are for
+   short lists only. Browsers without :has() keep the four colors, which still reads fine. */
+.lesson-list:has(> li:nth-child(5)) > li::before {
+  background: var(--berry);
+  color: var(--white);
+}
+
+/* Something to click or choose in a lesson step: bold in the normal text color, so it stands
+   out without competing with code (which has the color). */
+.ui-item {
+  font-weight: 800;
+  color: var(--ink);
+}
+
+/* A keyboard shortcut, shown as small key caps: Ctrl + S. */
+kbd {
+  display: inline-block;
+  padding: 0 0.4rem;
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  border-radius: 0.35rem;
+  background: var(--white);
+  color: var(--ink);
+  font-family: var(--font-code);
+  font-size: 0.85em;
+  line-height: 1.5;
 }

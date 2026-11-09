@@ -1,6 +1,6 @@
 # CodeAgapay AI Learning Plan Framework
 
-Version 2.1, accepted by the team on 9 November 2026. Outline step (prompt `outline-2`) and lesson generation (prompt `lesson-6`) built; learners don't see them until the lesson page is wired up.
+Version 2.1, accepted by the team on 9 November 2026. Steps 2 to 5 are built behind `AI_PLANS` (prompts `outline-2` and `lesson-15`); with it off, learners get the curated plan.
 
 This is the source of truth for how CodeAgapay's AI builds learning plans and lessons. The AI prompts and the code follow it. When a rule changes here, change the prompt or code that carries it out (see **Where** in each table) in the same pull request.
 
@@ -40,13 +40,13 @@ Two small AI steps instead of one large one. They fit the free AI tiers, are fas
 | Step | When | What happens | Status | Where |
 | --- | --- | --- | --- | --- |
 | 1. Onboarding | Sign-up | Path, project, experience, topics used, hours per week, optional date, what helps when stuck; then the skill check | Built | `diagnose/onboarding.py`, `diagnose/views.py` |
-| 2. Outline | After the learner confirms | One AI call writes the outline (section 5). Code checks and saves it. Code assigns weeks from hours per week | Built in shadow mode: saved for review in admin when `AI_OUTLINES` is on; learners don't see it until step 3 ships | `learning/outline.py`, `learning/prompts/outline.md` |
-| 3. Lesson | First open of a lesson | One AI call writes it (section 6). Code checks and saves it; later visits show the saved lesson | Built, not shown to learners yet (`lessons.lesson_for`). Using the latest quiz results comes with the lesson page | `learning/lessons.py`, `learning/prompts/lesson.md` |
-| 4. Check | End of each lesson | Code grades the mini-check and applies the score bands (section 7) | v1 | `learning/grading.py` |
-| 5. Adapt | After a low score | The lesson is regenerated with a different explanation, examples and questions; the old version is kept for review | Built (`lessons.regenerate_lesson`); triggering it from a score comes with the lesson page | `learning/lessons.py` |
-| Fallback | AI off, over its limit, or two bad replies | Today's curated plan: curated topics, rule-based order and weeks, template project | Built | `learning/tailoring.py` `build_plan_with_template` |
+| 2. Outline | After the learner confirms | One AI call writes the outline (section 5). Code checks and saves it. Code assigns weeks from hours per week | Built. With `AI_PLANS` it becomes the learner's plan; otherwise `AI_OUTLINES` saves it for review only | `learning/outline.py`, `learning/prompts/outline.md`, `diagnose/views.py` |
+| 3. Lesson | First open of a lesson | One AI call writes it (section 6). Code checks and saves it; later visits show the saved lesson | Built behind `AI_PLANS`: a "writing your lesson" page, then the saved lesson. Counted against `AI_LESSON_DAILY_LIMIT` | `learning/lessons.py`, `learning/ai_views.py` |
+| 4. Check | End of each lesson | Code grades the mini-check and applies the score bands (section 7) | Built behind `AI_PLANS` | `learning/ai_plan.py` `grade_check` |
+| 5. Adapt | After a low score | The lesson is regenerated with a different explanation, examples and questions; the old version is kept for review | Built: after a miss the learner can ask for it explained another way, aimed at the questions they missed | `learning/lessons.py`, `learning/ai_views.py` |
+| Fallback | AI off, over its limit, or two bad replies | Today's curated plan when the path has curated topics; otherwise a page to try again | Built | `diagnose/views.py` `_build_ai_plan` |
 
-**Fallback gap:** only Python has curated topics today (HTML and CSS are drafted in `content/drafts/`). On other tracks the fallback can only show setup steps and ask the learner to try again later. The team still has to decide what learners see (section 14).
+**Fallback on paths without curated topics:** only Python has curated topics (HTML and CSS are drafted in `content/drafts/`). When the AI can't write a plan for another path, the plan page offers to try again. With `AI_PLANS` on, a path needs no curated topics to be offered.
 
 ## 3. Learner inputs
 
@@ -59,6 +59,7 @@ Two small AI steps instead of one large one. They fit the free AI tiers, are fas
 | Total time or deadline | Hours per week, optional target date | Built | The app flags a plan that misses the date |
 | Prior knowledge | Skill check statuses: shown, partly there, to work on, not checked | Built | Shown topics are skipped or become recaps |
 | Preferred format | "What helps when stuck" (`LearnerProfile.hint_style`) | Built | Used for hints today; v1 also passes it to lesson generation |
+| Computer (new in v2) | "What will you use to learn?": Windows, Mac, Linux, Chromebook, phone or tablet, or not sure (`LearnerProfile.device`) | Built | Setup guides use its shortcuts, file manager, install steps and commands; lessons get "Computer: A Mac". On a phone or Chromebook, install-based options say they need a computer, and the no-install way is recommended when there's no curated guide |
 
 Missing inputs: assume a complete beginner with 30-minute sessions and list every assumption at the top of the plan so the learner can correct it. *Prompt. v1.*
 
@@ -86,7 +87,7 @@ Every plan has these parts, in this order.
 | Part | What it holds | Status |
 | --- | --- | --- |
 | Overview | Goal, assumed level, total lessons and hours, assumptions, any conflict (for example, a big goal and a close date) with a realistic version | v1 |
-| Setup | The track's curated `SetupStep`s ending with `Track.setup_check`. Not written by the AI | Built |
+| Setup | Every AI plan opens with a required setup step (`outline.setup_lesson`); no lesson opens until the learner chooses an option. The options, in order: the track's curated guide (`SetupStep`s and `Track.setup_check`), always tagged Recommended; VS Code step by step, with one project folder named from the project (`codeagapay-event-page`), tagged Recommended only when there is no curated guide; and a no-install way (CodePen for web, Google Colab for Python) where one exists. The code picks the tools, and the install steps for VS Code (web, Python, Java), CodePen and Google Colab are built-in guides with official links (`learning/setup_guides.py`): downloading, extensions, the folder, opening it, the first file, saving, running it and reopening the project. The AI writes only the why and the first-file check for the learner's project, and writes install steps only for tracks without a built-in guide. The learner's choice (`PlanOutline.setup_choice`) is sent with every later lesson, which follows it. When the AI can't write the setup page, the curated guide can still be chosen. Learners can change their setup method at any time from the plan page; lessons not yet opened follow the new setup, and the learner can ask to update lessons already written, each rewritten the next time it's opened (one daily lesson each, with a warning; done one at a time so no page waits on many AI calls) | Built |
 | Foundations | Basic building blocks; recaps when the skill check showed them | v1 |
 | Modules | 3 to 5 lessons each, simple to complex, each with a one-sentence goal, a milestone ("you can now...") and a stuck path | v1 |
 | Lessons (titles only) | Title, "You will be able to", minutes, core or optional, lessons it needs | v1 |
@@ -117,11 +118,13 @@ Every lesson has the same parts. Code rejects a lesson missing a required part.
 | Warm-up | 1 to 2 ungraded questions on the previous lesson, preferring ones the learner missed; none in the first lesson | Built for curated topics (`journey.warm_up`) and generated lessons (`lessons.warm_up`, taken from the previous lesson's saved questions, so no tokens). Preferring missed ones comes with the lesson page |
 | Key terms | Up to 3 for beginners (5 intermediate, 7 advanced), each with a plain definition. A definition uses only everyday words and terms already taught; a new idea it needs gets one short plain clause, never a chain of new terms (not "declares the document as HTML5", but "tells the browser this is a modern HTML page") | Built (`Topic.clean` allows 3; the rule is in `prompts/lesson.md`) |
 | Why it matters | The problem this solves, before the how | Built |
-| Explanation | At the depth for the level; no internals or history for beginners | Built |
+| Explanation | At the depth for the level; no internals or history for beginners. Paragraphs of 2 or 3 sentences, one idea each; longer ones are split at sentence ends in code. Several parts, steps or options become a list (bullets, or numbers for steps in order) | Built |
+| Formatting | Code is colored like an editor, by each example's language (Pygments, in `learning/templatetags/lesson_format.py`). Code words in sentences are wrapped in backticks by the AI, and HTML tags are found in code; both show bold and colored. Things to click or choose (buttons, menus, settings) are wrapped in double asterisks and show in bold, in the normal text colour; keyboard shortcuts (Ctrl+S, Cmd+Shift+X) are found in code and show as key caps. No tokens are spent on either | Built |
 | Example | Worked code with its exact output. Two at beginner level: one simple, one real-world, ideally from the learner's path | v1 (curated topics have one) |
 | Try it yourself | Copy an example, change it, then build something small; no files, internet or installs for beginners | Built (`PracticeTask`) |
+| How to try it | The AI names the one file the task uses (`try.file`). The app adds the steps to create, save and see it in the learner's setup and on their computer (VS Code with Live Server or Run, the team's guide, CodePen or Colab), from `setup_guides.try_steps`. Open for beginners, a collapsed reminder for others; examples point to the same steps | Built |
 | Resources | 1 primary and up to 2 optional, from section 9 only | v1 |
-| Mini-check | 2 to 3 auto-graded questions (1 if sessions are under 20 minutes) | v1 |
+| Mini-check | 2 to 3 auto-graded questions (1 if sessions are under 20 minutes) | Built |
 
 "Built" here means curated topics already follow the rule and the drafting prompts in `content/drafting.py` enforce it. v1 moves the same rules into the lesson prompt.
 
@@ -169,7 +172,7 @@ This is about the language the AI writes in (outline, lessons, hints, feedback),
 | Checkpoint | Where | Status |
 | --- | --- | --- |
 | Setup check | End of setup, instead of a quiz | Built |
-| Mini-check | End of every lesson | v1 |
+| Mini-check | End of every lesson | Built (AI lessons) |
 | Topic quiz | Curated fill-in-the-blank quiz per topic, used by fallback plans | Built |
 | Module quiz | After every 3 lessons (beginner), 4 (intermediate), 5 (advanced); 5 to 8 questions, at least 2 from earlier modules | Later |
 | Final check | Before the project; 10 to 15 questions across all modules | Later |
@@ -184,8 +187,8 @@ Code: `learning/grading.py` (`PASS_PERCENT`, `ALMOST_PERCENT`, `QuizResult.band`
 | Pass mark | 70%, compared as exact fractions so 69.5% never passes | Built |
 | 100% | Continue | Built |
 | 70% to 99% | Continue; missed ideas come back in the next warm-up | Built |
-| 50% to 69% | Suggest another resource and retake. v1: the retake has new questions | Built (new questions v1) |
-| Below 50% | Re-teach. v1: regenerate the lesson with a different explanation and example, and check no needed lesson was skipped | Built (regeneration v1) |
+| 50% to 69% | Suggest another resource and retake. On AI lessons, the same questions can be retried, or the lesson rewritten with new questions | Built |
+| Below 50% | Re-teach: the lesson rewritten with a different explanation and examples, aimed at the missed questions | Built (AI lessons, on request). Checking for a skipped earlier lesson is Later |
 | Two misses | Mark shaky, continue the plan, bring it back as a review | Built |
 | 85% before a lesson | Skip it but still show its key terms (today a curated topic is skipped by passing its quiz at 70%) | Later |
 
@@ -197,7 +200,7 @@ A failed check never blocks the learner for good; there is always a next step. *
 | --- | --- | --- |
 | Skill check result | Shown topics are skipped; partly-there topics become recaps | Built |
 | Experience and results | Pick the depth table column | v1 |
-| Low score on a lesson | Regenerate it: new explanation, new example, a different resource type | v1 |
+| Low score on a lesson | Rewrite it: new explanation, new examples, new questions, aimed at what was missed | Built |
 | Missed questions | Come back first in the next warm-up (`journey.warm_up`) and the retake | Built for curated topics; v1 for generated lessons |
 | What helps when stuck | Shapes hints today; v1 also shapes lesson examples and resource types | Built |
 | Pace change | Weeks recomputed, progress kept (`planner.repace_plan`) | Built |
@@ -214,7 +217,8 @@ A failed check never blocks the learner for good; there is always a next step. *
 | Free resources only; paid ones are not on the list | Team | v1 |
 | Match the learner's level; no advanced docs for beginners | Prompt | v1 |
 | Setup uses official sources and stays curated | Team | Built |
-| Resources support the lesson; they never replace its explanation | Prompt | v1 |
+| Resources support the lesson; they never replace its explanation | Prompt | Built |
+| Official documentation (Python docs, MDN, VS Code docs, Java docs, SQLite and PostgreSQL docs) is used when learning sites don't cover something well. Each official-docs link comes with a one-line "how to read it" tip (which part of the page to look at, what to skip); one without a tip is flagged for review | Prompt + Code | Built (`lessons.OFFICIAL_DOCS`) |
 | Weekly link check marks broken curated links (`check_links`) | Team | Built; checking AI-chosen links is Later |
 
 ### Allowed list
@@ -237,6 +241,9 @@ Trimmed from version 1's resource dictionary to free coding resources. The team 
 | CodePen | codepen.io | HTML, CSS, JS with no install | Beginner | |
 | Official installers | python.org, nodejs.org, code.visualstudio.com, git-scm.com | Setup only | Beginner | |
 | Stack Overflow | stackoverflow.com | Searching error messages | Beginner to advanced | |
+| VS Code docs | code.visualstudio.com/docs | The editor: settings, extensions, running code | Beginner to advanced | |
+| Java docs | dev.java, docs.oracle.com/en/java | Learning Java (dev.java) and the Java API reference | Beginner to advanced | |
+| SQL docs | sqlite.org, postgresql.org/docs | SQL statements and functions | Intermediate to advanced | |
 
 Removed from version 1: paid or mostly paid (Brilliant, Udemy, Google certificates, Codecademy Pro, LeetCode premium) and non-coding (Duolingo, Forvo, Easy Languages, language exchange apps, Kahoot, Investopedia, Desmos, Wolfram Alpha, OpenStax, Project Gutenberg, Open Library). YouTube is allowed by channel plus a search phrase until specific videos are checked.
 
@@ -253,7 +260,7 @@ These run in code before anything is saved or shown. They are what make AI-writt
 | Every question is gradable: a multiple choice with distinct choices and a valid answer, or a blank with ___ and accepted answers | Drop it; ask again if fewer than 2 remain | Built |
 | Every link is on the allowed list | Remove the URL, keep the name and search phrase | Built |
 | Text within length limits; no HTML or scripts | Trim or strip | Built for trimming |
-| Daily limits per learner | Plans: build without AI (`AI_INTAKE_DAILY_LIMIT`). Lessons: show a try-later message (`AI_LESSON_DAILY_LIMIT`, v1) | Built for plans; v1 for lessons |
+| Daily limits per learner | Plans: build without AI (`AI_INTAKE_DAILY_LIMIT`). Lessons: show a try-tomorrow message (`AI_LESSON_DAILY_LIMIT`, default 12) | Built |
 
 AI providers: Groq first (`GROQ_PLAN_MODEL`, then `GROQ_MODEL`), Cloudflare Workers AI as backup. *Code. Built.* Each saved outline records the model, prompt version and token counts (`PlanOutline`). *Code. Built.* Lessons will too. *v1.*
 
@@ -282,9 +289,9 @@ Generated plans and lessons reach learners without approval. Review happens afte
 
 | Layer | What it does | Enforced by | Status |
 | --- | --- | --- | --- |
-| 1. Labels and reports | AI-written parts are labelled. Learners can report a problem with their plan (`PlanFeedback`); v1 adds reporting a single lesson | Code | Built (plan); v1 (lesson) |
+| 1. Labels and reports | AI-written parts are labelled. Learners report a problem with a curated plan (`PlanFeedback`) or, on an AI lesson, with a thumbs down and an optional note | Code | Built |
 | 2. Automatic flags | Flag a lesson when a Python example or task answer doesn't parse (checked with `ast`; code is never run on the server) or a blank's answer is long or shown in its own question, or an HTML example or task uses a tag the lesson doesn't explain. Built (`GeneratedLesson.flags`, filter **Flagged**). With the lesson page: when almost every learner misses the same question, or it was regenerated many times | Code | Built (parse, long blank); v1 (the rest) |
-| 3. Lesson feedback | Thumbs up or down at the end of each lesson; thumbs down flags it | Code | v1 |
+| 3. Lesson feedback | Thumbs up or down at the end of each lesson; thumbs down flags it, with the learner's note (`LessonProgress.rating`) | Code | Built |
 | 4. Weekly review | A person reviews every flagged or reported lesson plus about 10 random ones, using the checklist | Team | v1 |
 
 ### The review page (Django admin)
@@ -321,18 +328,18 @@ Generated plans and lessons reach learners without approval. Review happens afte
 | Area | Change |
 | --- | --- |
 | `docs/plan-framework.md` | This file |
-| `learning/prompts/` | `outline.md` (built, `outline-2`) and `lesson.md` (built, `lesson-6`): the short prompts, each naming the sections it follows, with a version |
+| `learning/prompts/` | `outline.md` (built, `outline-2`) and `lesson.md` (built, `lesson-15`): the short prompts, each naming the sections it follows, with a version |
 | `learning/outline.py` | Built: builds the outline request, checks and repairs the reply, saves it. Shadow mode (`AI_OUTLINES`) saves one with each AI-tailored plan |
 | `learning/tailoring.py` | When lessons ship: the outline replaces topic selection; the curated plan stays as the fallback |
 | New models | Built: `PlanOutline` and `GeneratedLesson` (versions, current flag, flags), sharing `AIRecord` (JSON, repairs, model, prompt version, tokens, review fields). Modules stay inside the outline's JSON; a `PlanModule` table is only needed if the lesson page wants it |
 | `draft_outline`, `draft_lesson` commands | Built: try each prompt on saved data or typed-in answers, see the repairs, flags and token counts |
 | `learning/lessons.py` | Built: lesson request, checks and repairs, saving versions, regeneration, warm-ups and glossary from saved lessons |
-| Lesson page | Generate on first open, then show the saved lesson; regenerate after a low score |
-| Quiz and grading | Grade the lesson's own questions with today's grading rules and score bands |
+| Lesson page | Built: `learning/ai_views.py` and `templates/learning/ai_*.html`, behind `AI_PLANS` |
+| Quiz and grading | Built: `ai_plan.grade_check` uses the curated quiz's matching, pass mark and bands; progress in `LessonProgress` |
 | Review (admin) | Built for outlines and lessons: readable view with answers, review status, notes, reviewer, filters (incl. **Flagged**), 10 random sample, Mark OK / Mark problem, and Regenerate for lessons (up to 5 at a time) |
 | Flags and feedback | Example parse check, most-missed question, regeneration count; thumbs up or down and report on each lesson |
-| Finish screen | Glossary from the saved lessons' key terms |
-| Settings | `AI_LESSON_DAILY_LIMIT` next to `AI_DAILY_LIMIT` and `AI_INTAKE_DAILY_LIMIT` |
+| Glossary | Built: on the AI plan page, from the saved lessons' key terms |
+| Settings | Built: `AI_PLANS` and `AI_LESSON_DAILY_LIMIT` next to `AI_DAILY_LIMIT` and `AI_INTAKE_DAILY_LIMIT` |
 | README | Replace "CodeAgapay doesn't write tutorials", update the plan diagram, add the weekly review to Regular jobs |
 
 ## 13. Later
@@ -360,7 +367,7 @@ Generated plans and lessons reach learners without approval. Review happens afte
 
 1. Confirm the allowed list (section 9) and who checks each row.
 2. Set the review rotation.
-3. Choose the daily lesson-generation limit per learner.
+3. Confirm the daily lesson limit (default 12).
 4. Decide what learners see on non-Python tracks when the AI is unavailable.
 5. Keep 30 minutes as the default session length, or add the question to onboarding.
 

@@ -1,0 +1,30 @@
+{% load lesson_format %}
+{# The setup options in order, all collapsed, so learners see every choice before opening one. #}
+{% for option in setup_info.options %}
+<details class="plan-week plan-week-setup">
+  <summary class="plan-week-summary">
+    <h2>Option {{ forloop.counter }}: {{ option.name }}</h2>
+    <p class="plan-overview-note">{{ option.summary }}</p>
+    <span class="plan-week-count">{% if option.recommended %}<span class="status status-done">Recommended</span>{% endif %}</span>
+  </summary>
+  {% if option.note %}<p class="review-warning">{{ option.note }}</p>{% endif %}
+
+  {% if option.way == "curated" %}
+  <p class="field-help">Checked by the CodeAgapay team.</p>
+  <ol class="lesson-list">
+    {% for step in setup_info.curated_steps %}
+    <li><strong>{{ step.title }}.</strong> {{ step.body|inline_code }}{% if step.link %} <a class="external" href="{{ step.link }}" target="_blank" rel="noopener">Open<span class="visually-hidden"> {{ step.title }} (opens in a new tab)</span></a>{% endif %}</li>
+    {% endfor %}
+  </ol>
+  {% if setup_info.setup_check %}<p><strong>Check it works:</strong> {{ setup_info.setup_check|inline_code }}</p>{% endif %}
+
+  {% elif option.way == "main" %}
+  <p>Your project folder: <code class="inline-code">{{ setup_info.folder }}</code>. Every lesson saves its files here.</p>
+  {% include "learning/partials/setup_steps.html" with steps=setup_info.main_steps %}
+
+  {% else %}
+  <p class="field-help">For a phone, or a computer where you can't install apps.</p>
+  {% include "learning/partials/setup_steps.html" with steps=setup_info.alternative_steps %}
+  {% endif %}
+</details>
+{% endfor %}

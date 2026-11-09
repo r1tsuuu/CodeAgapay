@@ -185,9 +185,23 @@ class PlanOutline(AIRecord):
         LearningPlan, on_delete=models.SET_NULL, null=True, blank=True, related_name="outlines",
         help_text="The plan the learner got at the same time, if any.",
     )
+    is_active = models.BooleanField(
+        default=False, help_text="The learner's plan (AI plans on). Shadow-mode outlines stay inactive."
+    )
+    setup_choice = models.CharField(
+        max_length=20, blank=True,
+        choices=[("curated", "CodeAgapay setup guide"), ("main", "VS Code, step by step"), ("alternative", "No-install way")],
+        help_text="The setup option the learner chose. Required before any lesson opens; later lessons follow it.",
+    )
+    update_for_setup = models.BooleanField(
+        default=False,
+        help_text="After a setup change, the learner asked to rewrite lessons for it: each is rewritten when next opened.",
+    )
 
     class Meta(AIRecord.Meta):
-        pass
+        constraints = [
+            models.UniqueConstraint(fields=["learner"], condition=Q(is_active=True), name="one_active_outline")
+        ]
 
     def __str__(self):
         return f"Outline for {self.learner.user} ({self.created_at:%Y-%m-%d})"
@@ -223,3 +237,30 @@ class GeneratedLesson(AIRecord):
     def save(self, *args, **kwargs):
         self.flagged = bool(self.flags)
         super().save(*args, **kwargs)
+
+
+class LessonProgress(models.Model):
+    """A learner's progress on one lesson of their AI plan (framework sections 7 and 8)."""
+
+    class Status(models.TextChoices):
+        TODO = "todo", "To do"
+        IN_PROGRESS = "in_progress", "In progress"
+        DONE = "done", "Done"
+        SKIPPED = "skipped", "Skipped"
+
+    outline = models.ForeignKey(PlanOutline, on_delete=models.CASCADE, related_name="progress")
+    key = models.CharField(max_length=10)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.TODO)
+    shaky = models.BooleanField(default=False, help_text="Moved on after missing the check twice.")
+    tries = models.PositiveIntegerField(default=0, help_text="Check attempts on the current version.")
+    last_answers = models.JSONField(default=list, blank=True, help_text="The latest check answers, in order.")
+    last_correct = models.JSONField(default=list, blank=True, help_text="Which of those were right.")
+    rating = models.SmallIntegerField(default=0, help_text="1 helpful, -1 not helpful, 0 not rated.")
+    completed_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["outline", "key"], name="one_progress_per_lesson")]
+
+    def __str__(self):
+        return f"{self.outline.learner.user} · {self.key} · {self.get_status_display()}"

@@ -1,0 +1,10 @@
+{% load lesson_format %}
+{% if steps %}
+<ol class="lesson-list">
+  {% for step in steps %}
+  <li>{{ step.text|inline_code }}{% if step.link %} <a class="external" href="{{ step.link }}" target="_blank" rel="noopener">{{ step.link_text|default:"Open" }}<span class="visually-hidden"> (opens in a new tab)</span></a>{% endif %}</li>
+  {% endfor %}
+</ol>
+{% else %}
+<p>The steps for this way aren't ready yet. Pick another option, or try again in a few minutes.</p>
+{% endif %}

@@ -17,9 +17,10 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from assistant.service import ask_model_json, language_note
-from content.models import ProjectIdea
+from content.models import ProjectIdea, Track
 from diagnose.models import TopicMastery
 
+from . import setup_guides
 from .models import PlanOutline
 from .planner import assign_weeks, milestone_weeks
 
@@ -64,6 +65,94 @@ def outline_tracks(profile):
     if profile.track and profile.track not in tracks:
         tracks.insert(0, profile.track)
     return tracks
+
+
+SETUP_KEY = "S1"
+
+
+def setup_lesson(outline):
+    """The setup step that opens every AI plan (framework section 5, Setup).
+
+    It offers options: the team's curated guide when the track has one (recommended), VS Code
+    step by step (written by the AI, with the project folder), and a no-install way where one
+    exists. The learner must choose one before any lesson opens; lessons then follow it.
+    Added here rather than asked of the outline, so it costs no outline tokens.
+    """
+    tracks = [t for t in outline_tracks(outline.learner) if t.is_active]
+    if not tracks:
+        return None
+    track = tracks[0]
+    tool, alternative = SETUP_TOOLS.get(track.slug, DEFAULT_TOOLS)
+    folder = project_folder(outline)
+    return {"key": SETUP_KEY, "title": f"Get ready to write {track.name}", "kind": "setup", "minutes": 25, "week": 1,
+            "can": f"Choose how you'll write {track.name}, set it up, and see your first file work", "needs": [],
+            "tool": tool, "alternative": alternative, "folder": folder,
+            "track_id": track.pk, "track_slug": track.slug, "curated": track.setup_steps.exists(),
+            "built_in": bool(setup_guides.guide(track.slug, "main", folder)),
+            "device": outline.learner.device}
+
+
+def setup_options(setup):
+    """The ways to set up, in order. The curated guide, checked by the team, is always recommended."""
+    # On a phone or Chromebook the no-install way fits best, unless the team's guide is there to recommend.
+    phone = setup_guides.needs_a_computer(setup.get("device", ""))
+    note = "Needs a Windows, Mac or Linux computer." if phone else ""
+    options = []
+    if setup["curated"]:
+        options.append({"way": "curated", "name": "The CodeAgapay setup guide", "recommended": True, "note": note,
+                        "summary": "The team's checked steps for installing what you need."})
+    no_install_first = phone and bool(setup["alternative"]) and not setup["curated"]
+    options.append({"way": "main", "name": f"{setup['tool']}, step by step", "note": note,
+                    "recommended": not setup["curated"] and not no_install_first,
+                    "summary": f"Install {setup['tool']} and keep every lesson in one project folder. "
+                               "Best on a Windows, Mac or Linux computer."})
+    if setup["alternative"]:
+        options.append({"way": "alternative", "name": f"No install: {setup['alternative']}", "note": "",
+                        "recommended": no_install_first,
+                        "summary": f"Use {setup['alternative']} in your browser. Nothing to install, so it works on a "
+                                   "phone or a shared computer."})
+    return options
+
+
+MAX_CURATED_SUMMARY = 450  # Characters of the curated guide sent with each lesson, so lessons can follow it.
+
+
+# The tools setup teaches, chosen in code so every plan for a track sets up the same, reliable way:
+# VS Code for everything, plus a no-install option where a good free one exists (phones, shared PCs).
+DEFAULT_TOOLS = ("VS Code", "")
+SETUP_TOOLS = {
+    "html": ("VS Code", "CodePen"), "css": ("VS Code", "CodePen"), "javascript": ("VS Code", "CodePen"),
+    "python": ("VS Code with the Python extension", "Google Colab"),
+    "java": ("VS Code with the Extension Pack for Java", ""),
+}
+
+
+def project_folder(outline):
+    """The folder every lesson saves into, named from the project, e.g. "codeagapay-event-page"."""
+    title = (outline.data.get("project") or {}).get("title", "") or "my-project"
+    slug = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")[:30].strip("-")
+    return f"codeagapay-{slug or 'my-project'}"
+
+
+def learner_setup(outline):
+    """How the learner writes code, from the setup option they chose, for every later lesson to follow."""
+    setup = setup_lesson(outline)
+    if setup is None or not outline.setup_choice:
+        return ""
+    if outline.setup_choice == "curated" and setup["curated"]:
+        track = Track.objects.get(pk=setup["track_id"])
+        steps = "; ".join(f"{step.title}: {step.body}" for step in track.setup_steps.all())
+        return f"the CodeAgapay setup guide ({' '.join(steps.split())})"[:MAX_CURATED_SUMMARY]
+    if outline.setup_choice == "alternative" and setup["alternative"]:
+        return f"{setup['alternative']} in the browser (no project folder)"
+    return f"{setup['tool']}, with every file in the project folder {setup['folder']}"
+
+
+def all_lessons(outline):
+    """Every lesson in order: the setup lesson (if any), then the outline's modules."""
+    setup = setup_lesson(outline)
+    lessons = [lesson for module in outline.data.get("modules", []) for lesson in module["lessons"]]
+    return [setup, *lessons] if setup else lessons
 
 
 def lesson_limit(profile, level):

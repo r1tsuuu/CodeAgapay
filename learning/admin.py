@@ -4,7 +4,8 @@ from django.utils.html import format_html, format_html_join
 
 from .lessons import regenerate_lesson
 from .models import (
-    GeneratedLesson, LearningPlan, PlanFeedback, PlanItem, PlanOutline, PracticeSubmission, QuizAttempt,
+    GeneratedLesson, LearningPlan, LessonProgress, PlanFeedback, PlanItem, PlanOutline, PracticeSubmission,
+    QuizAttempt,
 )
 
 
@@ -94,12 +95,14 @@ class AIRecordAdmin(admin.ModelAdmin):
 
 @admin.register(PlanOutline)
 class PlanOutlineAdmin(AIRecordAdmin):
-    list_display = ["learner", "created_at", "lesson_count", "repair_count", "tokens", "prompt_version", "review"]
-    list_filter = ["review", "prompt_version", RandomSampleFilter]
+    list_display = ["learner", "created_at", "is_active", "lesson_count", "repair_count", "tokens", "prompt_version",
+                    "review"]
+    list_filter = ["review", "is_active", "prompt_version", RandomSampleFilter]
     search_fields = ["learner__user__username", "learner__user__email"]
-    readonly_fields = ["learner", "plan", "repairs", "outline", "reviewed_by", "reviewed_at", *AIRecordAdmin.record_fields]
+    readonly_fields = ["learner", "plan", "is_active", "repairs", "outline", "reviewed_by", "reviewed_at",
+                       *AIRecordAdmin.record_fields]
     fields = ["review", "review_notes", "reviewed_by", "reviewed_at", "outline", "repairs", "learner", "plan",
-              *AIRecordAdmin.record_fields]
+              "is_active", *AIRecordAdmin.record_fields]
 
     @admin.display(description="Lessons")
     def lesson_count(self, obj):
@@ -195,3 +198,16 @@ def _answer(question):
     if question["type"] == "blank":
         return " / ".join(question["accepted_answers"])
     return question.get("sample_answer", "")
+
+
+@admin.register(LessonProgress)
+class LessonProgressAdmin(admin.ModelAdmin):
+    """How learners are doing on AI lessons. Thumbs down also flags the lesson under Generated lessons."""
+
+    list_display = ["outline", "key", "status", "shaky", "tries", "rating", "updated_at"]
+    list_filter = ["status", "shaky", "rating"]
+    readonly_fields = ["outline", "key", "status", "shaky", "tries", "last_answers", "last_correct", "rating",
+                       "completed_at", "updated_at"]
+
+    def has_add_permission(self, request):
+        return False

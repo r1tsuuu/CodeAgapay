@@ -30,7 +30,7 @@ Beginner programmers get stuck, and there usually isn't a tutor around when it h
 <img src=".github/assets/journey.svg" width="100%" alt="Six steps: sign in with Google, pick a goal, take a quick check, get a plan, learn from curated links, and ask for hints">
 
 1. **Sign in with Google.** No passwords to manage.
-2. **Tell us what you want to make.** Learners choose a skill path, such as "Make a website" or "Work with data". Questions come one at a time, are tap-to-answer, and all allow "not sure": a project, experience, topics they've used, time per week, an optional target date and what helps when they're stuck.
+2. **Tell us what you want to make.** Learners choose a skill path, such as "Make a website" or "Work with data". Questions come one at a time, are tap-to-answer, and all allow "not sure": a project, experience, topics they've used, time per week, an optional target date, the computer they'll learn on, and what helps when they're stuck.
 3. **Show where you're starting.** A short check runs only on the topics they ticked. Each topic gets a status with its evidence: shown, partly there, to work on, or not checked yet. "I don't know yet" means not checked, never a failure.
 4. **Confirm.** A summary shows their answers, the check results and a rough range of weeks, flagged if it misses their date. Any answer can be changed before the plan is built.
 5. **Get a plan.** The plan page leads with one next step, then the goal, starting point, time estimate and the project step for each week. AI-written parts are labelled, and learners can report problems to curators.
@@ -197,6 +197,7 @@ Open http://localhost:8000 for the app and http://localhost:8000/admin for curat
 | `AI_DAILY_LIMIT` | AI hint messages per learner per day (default 20) |
 | `GROQ_PLAN_MODEL`, `AI_INTAKE_DAILY_LIMIT` | Model for tailored plans, and AI-tailored plans per learner per day (default 2). Past the cap, the plan is built without AI |
 | `AI_OUTLINES` | `True` saves an AI-written outline with each AI-tailored plan, for review in admin. Default `False` |
+| `AI_PLANS`, `AI_LESSON_DAILY_LIMIT` | `True` gives learners AI-written plans and lessons instead of the curated plan (default `False`), and how many lessons the AI may write or rewrite per learner per day (default 12) |
 | `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `DEFAULT_FROM_EMAIL` | Reminder emails, on the machine that runs `send_reminders`. SMTP with TLS |
 | `SITE_URL` | Links in emails. Defaults to the live site; set it only to test emails locally |
 
@@ -245,9 +246,10 @@ python manage.py draft_topic html "Page structure" "Text and headings" "Links an
 The AI will curate each learner's plan and lesson flow, following the rules in [`docs/plan-framework.md`](docs/plan-framework.md). It works in two steps:
 
 - **Outline.** The AI writes modules, lesson titles, minutes and a project from the learner's onboarding answers and check results. The code adds weeks, totals, module progress and the deadline check.
-- **Lesson.** The AI writes an explanation, examples, a task, links and check questions the first time a learner opens a lesson. The code keeps only links on the allowed list, keeps only questions it can grade, and flags code that doesn't parse.
+- **Lesson.** The AI writes an explanation, examples, a task, links and check questions the first time a learner opens a lesson. The code keeps only links on the allowed list, keeps only questions it can grade, and flags code that doesn't parse. The page colors code like an editor, shows code words in sentences bold and colored, and keeps paragraphs short.
+- **Setup.** Every AI plan opens with setup options, and the learner chooses one before any lesson opens: the team's curated guide (recommended) when the track has one, VS Code step by step (a built-in guide with official links) with one project folder for the whole plan, or a no-install way (CodePen or Google Colab). Every later lesson follows the chosen setup. Learners can change their setup method from the plan page, and choose to update lessons already written for the old one; each is rewritten the next time it's opened and counts against the daily lesson limit.
 
-The plan and lesson pages will show AI-written plans and grade each lesson's check questions. Until then, learners keep their curated plan, and with `AI_OUTLINES=True` each AI-tailored plan also saves an outline for review in admin.
+With `AI_PLANS=True`, the outline becomes the learner's plan at the end of onboarding. Each lesson ends with a check graded like the curated quizzes: a pass marks it done, a miss offers the lesson explained another way, and two misses let the learner move on and review it later. Learners rate each lesson, and a thumbs down flags it for review. A path needs no curated topics, and when the AI is unavailable learners get the curated plan, or a page to try again. With `AI_PLANS=False`, learners get the curated plan, and `AI_OUTLINES=True` saves an outline next to it for review in admin.
 
 The prompts live in `learning/prompts/`. Every outline and lesson records the prompt version, model and token counts.
 
@@ -261,7 +263,7 @@ python manage.py draft_lesson --outline 3 --lesson L2 --save
 ```
 
 - Each command is one AI call. An outline is about 700 tokens in and 1,000 to 2,000 out; a lesson about 1,000 to 1,800 out. The command prints the result, what the code repaired, anything flagged for review, and the token counts.
-- `--save` stores the result (with `--learner` for outlines, `--outline` for lessons). `--show-prompt` prints exactly what is sent, without calling the AI. `--raw` also prints the model's reply before the code's checks. `draft_lesson --struggled "..."` asks for a lesson taught a different way.
+- `--save` stores the result (with `--learner` for outlines, `--outline` for lessons). `--show-prompt` prints exactly what is sent, without calling the AI. `--raw` also prints the model's reply before the code's checks. `draft_lesson --struggled "..."` asks for a lesson taught a different way. `draft_lesson --setup main|alternative|curated --device mac` writes it for that setup and computer, and prints the "How to try it" steps the page adds.
 - Review outlines and lessons in admin under **Plan outlines** and **Generated lessons**: set **Review** to OK or Problem with a note, filter by **Flagged**, or pick **10 random** for the weekly sample. **Regenerate** writes a new version of a lesson and keeps the old one.
 
 </details>
@@ -388,7 +390,7 @@ The credentials live in settings only. Don't add a Google "Social application" i
 | AI helper | ✅ Help panel on lesson, practice and quiz pages |
 | Practice tasks | ✅ Done, with AI feedback. No code editor |
 | AI drafting commands | ✅ `draft_topic`, `draft_intro` and `draft_practice` |
-| AI-written plans and lessons | 🟡 Outlines and lessons are generated, checked and reviewed in admin. To do: show them on the plan and lesson pages, grade the lesson checks |
+| AI-written plans and lessons | 🟡 Plan page, lesson pages, checks, rewrites and review are done behind `AI_PLANS`. To do: test with learners, then turn it on. The Agapay help panel will come to AI lessons |
 | HTML and CSS tracks | 🟡 Drafted in `content/drafts/`. To do: review, load and activate. No practice tasks yet |
 | JavaScript, SQL and Java tracks | ⬜ Not started |
 | Finish screen and Settings | ✅ Done, at `/plan/finished/` and `/settings/` |

@@ -6,8 +6,8 @@ none is asked twice:
 1. Goal: what they want to make (a path, not a language), then a real project.
 2. Starting point: their experience, the topics they've used, and a short check on
    those topics, so the plan rests on evidence rather than self-rating alone.
-3. Constraints: time per week, an optional date they're aiming for, and what helps
-   when they're stuck.
+3. Constraints: time per week, an optional date they're aiming for, the computer
+   (or phone) they'll learn on, and what helps when they're stuck.
 
 Every question can be answered with "not sure", and beginners skip what doesn't apply.
 The learner then reviews a summary (with what the check showed and whether the goal
@@ -36,13 +36,13 @@ MAX_TEXT = 300
 MAX_IDEAS = 3
 DEFAULT_HOURS = 3
 
-STEPS = ["path", "project", "experience", "known", "check", "hours", "deadline", "stuck"]
+STEPS = ["path", "project", "experience", "known", "check", "hours", "deadline", "device", "stuck"]
 # Shown above each question instead of a step count, since beginners skip steps.
 PHASE_NAMES = ["Your goal", "Where you're starting", "Fitting it to you", "Review"]
 PHASES = {
     "path": PHASE_NAMES[0], "project": PHASE_NAMES[0],
     "experience": PHASE_NAMES[1], "known": PHASE_NAMES[1], "check": PHASE_NAMES[1],
-    "hours": PHASE_NAMES[2], "deadline": PHASE_NAMES[2], "stuck": PHASE_NAMES[2],
+    "hours": PHASE_NAMES[2], "deadline": PHASE_NAMES[2], "device": PHASE_NAMES[2], "stuck": PHASE_NAMES[2],
     "review": PHASE_NAMES[3],
 }
 
@@ -78,6 +78,7 @@ DEADLINE_CHOICES = [
     ("16", "By the end of this semester"),
 ]
 STUCK_CHOICES = list(LearnerProfile.HintStyle.choices) + [(NOT_SURE, "Not sure, mix it up")]
+DEVICE_CHOICES = list(LearnerProfile.Device.choices) + [(NOT_SURE, "Not sure yet")]
 
 
 @dataclass
@@ -259,6 +260,12 @@ def question_for(step, answers):
             "Only if you have one, like a class or an event. We'll tell you if the plan doesn't fit.",
             [Choice(value, label) for value, label in DEADLINE_CHOICES],
         )
+    if step == "device":
+        return Question(
+            "device", "What will you use to learn?",
+            "Your setup steps and shortcuts will match it. You can change it later.",
+            [Choice(value, label) for value, label in DEVICE_CHOICES],
+        )
     if step == "stuck":
         return Question(
             "stuck", "When you get stuck, what helps you most?",
@@ -350,6 +357,10 @@ def apply_answer(answers, step, choice="", text="", picked=()):
         answers["deadline"] = int(_pick(choice, DEADLINE_CHOICES))
         return answers
 
+    if step == "device":
+        answers["device"] = _pick(choice, DEVICE_CHOICES)
+        return answers
+
     if step == "stuck":
         answers["stuck"] = _pick(choice, STUCK_CHOICES)
         return answers
@@ -414,6 +425,8 @@ def answer_label(step, answers):
         return dict(HOURS_CHOICES).get(value) or f"{value} hours"
     if step == "deadline":
         return dict(DEADLINE_CHOICES).get(str(value)) or f"In about {value} weeks"
+    if step == "device":
+        return dict(DEVICE_CHOICES).get(value, "")
     if step == "stuck":
         return dict(STUCK_CHOICES).get(value, "")
     return ""
@@ -477,6 +490,7 @@ def save_answers(profile, answers):
     profile.hours_per_week = hours_per_week(answers)
     profile.target_weeks = answers.get("deadline") or None
     profile.hint_style = "" if answers["stuck"] == NOT_SURE else answers["stuck"]
+    profile.device = "" if answers.get("device", NOT_SURE) == NOT_SURE else answers["device"]
     profile.goal_text = (f"{path.title}: {project['text']}" if project["text"] else path.title)[:300]
     profile.onboarded = True
     profile.save()
@@ -503,6 +517,7 @@ def answers_from_profile(profile):
         "experience": profile.experience or NOT_SURE,
         "hours": str(profile.hours_per_week) if profile.hours_per_week else NOT_SURE,
         "deadline": profile.target_weeks or 0,
+        "device": profile.device or NOT_SURE,
         "stuck": profile.hint_style or NOT_SURE,
     }
     if answers["experience"] != LearnerProfile.Experience.NONE:

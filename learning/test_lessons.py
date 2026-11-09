@@ -8,8 +8,9 @@ from django.urls import reverse
 
 from .lessons import (
     LessonSpec, allowed_link, build_messages, generate_lesson, glossary, lesson_for, parse_lesson,
-    regenerate_lesson, spec_from_outline, warm_up,
+    regenerate_lesson, spec_from_outline,
 )
+from .ai_plan import warm_up
 from .models import GeneratedLesson, PlanOutline
 from .outline import load_prompt, parse_outline
 from .test_outline import AI_ON, OutlineContentMixin, reply as outline_reply
@@ -30,7 +31,7 @@ def lesson_reply(**extra):
         "try": {"prompt": "Change the heading to your org's name.", "starter": "<h1>Hi</h1>",
                 "answer": "<h1>CompSAt</h1>", "checks": ["Uses h1"]},
         "resources": [{"name": "MDN Web Docs", "role": "primary", "url": "https://developer.mozilla.org/en-US/docs/Web/HTML",
-                       "search": "html basics"}],
+                       "search": "html basics", "how": "Read the first section and its examples; skip the rest."}],
         "check": [
             {"type": "mc", "skill": "recall", "q": "Which tag is the biggest heading?", "choices": ["h1", "h6"],
              "correct": 0, "why": "h1 is level 1."},
@@ -143,6 +144,31 @@ class ParseLessonTests(TestCase):
         data = lesson_reply(examples=examples, explain="A form collects answers.", **{"try": task})
         _, _, flags = parse_lesson(data, spec)
         self.assertEqual(flags, [])
+
+    def test_long_paragraphs_are_split_at_sentence_ends(self):
+        long = " ".join(f"Sentence number {i} explains one more small thing about tags." for i in range(1, 13))
+        lesson, _, _ = parse_lesson(lesson_reply(explain=long), SPEC)
+        parts = lesson["explanation"].split("\n\n")
+        self.assertGreater(len(parts), 1)
+        self.assertTrue(all(len(p) <= 330 for p in parts))
+        self.assertEqual(" ".join(parts), long)  # Nothing lost or reworded.
+
+    def test_lists_are_kept_as_lists(self):
+        explain = ("A page has two main sections:\n- `<head>`: information about the page\n"
+                   "- `<body>`: what you see\n\nTo make one:\n1. Open your editor\n2. Save index.html")
+        lesson, _, _ = parse_lesson(lesson_reply(explain=explain), SPEC)
+        # Not flattened into one paragraph; stored with a blank line between each block.
+        self.assertEqual(lesson["explanation"], (
+            "A page has two main sections:\n\n- `<head>`: information about the page\n- `<body>`: what you see"
+            "\n\nTo make one:\n\n1. Open your editor\n2. Save index.html"))
+
+    def test_backticks_never_reach_accepted_answers(self):
+        check = [lesson_reply()["check"][0], {"type": "blank", "q": "Make a list item with ___", "accept": ["`li`"]}]
+        lesson, _, _ = parse_lesson(lesson_reply(check=check), SPEC)
+        self.assertEqual(lesson["check"][1]["accepted_answers"][0], "li")
+        check[1]["accept"] = ["**li**"]
+        lesson, _, _ = parse_lesson(lesson_reply(check=check), SPEC)
+        self.assertEqual(lesson["check"][1]["accepted_answers"][0], "li")
 
     def test_html_tag_answers_accept_both_spellings(self):
         check = [lesson_reply()["check"][0],
@@ -407,3 +433,27 @@ class DraftLessonCommandTests(OutlineContentMixin, TestCase):
             call_command("draft_lesson", "--outline", str(outline.pk), "--lesson", "L2", "--save", stdout=out)
         self.assertIn("saved as version 1", out.getvalue())
         self.assertEqual(GeneratedLesson.objects.get().title, "Headings")
+
+
+class OfficialDocsTests(TestCase):
+    def test_official_language_and_tool_docs_are_allowed(self):
+        for url in ["https://code.visualstudio.com/docs/editor/codebasics",
+                    "https://dev.java/learn/getting-started/",
+                    "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html",
+                    "https://www.sqlite.org/lang_select.html",
+                    "https://www.postgresql.org/docs/current/sql-select.html",
+                    "https://docs.python.org/3/library/functions.html"]:
+            self.assertTrue(allowed_link(url), url)
+        self.assertFalse(allowed_link("https://docs.oracle.com/cd/E11882_01/"))  # Oracle's non-Java docs.
+
+    def test_official_docs_carry_a_reading_tip_or_get_flagged(self):
+        resources = [
+            {"name": "Python docs: functions", "role": "primary",
+             "url": "https://docs.python.org/3/library/functions.html", "search": "print",
+             "how": "Find print() in the list; read its first line and example, skip the parameter details."},
+            {"name": "Java String API", "url": "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html"},
+            {"name": "MDN Web Docs", "url": "", "search": "html tags"},  # A search link we build: no tip needed.
+        ]
+        lesson, _, flags = parse_lesson(lesson_reply(resources=resources), SPEC)
+        self.assertTrue(lesson["resources"][0]["how"].startswith("Find print()"))
+        self.assertEqual(flags, ["Official docs without a how-to-read tip: Java String API"])

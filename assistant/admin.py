@@ -5,5 +5,5 @@ from .models import AIUsage
 
 @admin.register(AIUsage)
 class AIUsageAdmin(admin.ModelAdmin):
-    list_display = ["learner", "date", "messages_used"]
+    list_display = ["learner", "date", "messages_used", "intakes_used", "lessons_used"]
     list_filter = ["date"]

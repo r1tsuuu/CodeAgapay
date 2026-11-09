@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% load static lesson_format %}
+
+{% block title %}Your learning plan · CodeAgapay{% endblock %}
+
+{% block content %}
+<section class="plan-hero">
+  <img class="mascot plan-mascot-1" src="{% static 'img/mascots/star-pink.svg' %}" alt="">
+  <img class="mascot plan-mascot-2" src="{% static 'img/mascots/star-yellow.svg' %}" alt="">
+  <img class="mascot plan-mascot-3" src="{% static 'img/mascots/flower-teal.svg' %}" alt="">
+  <h1>Your {% if profile.path %}{{ profile.path.title }} {% endif %}learning plan</h1>
+  <p class="plan-percent" aria-hidden="true">{{ progress }}%</p>
+  {% include "partials/progress_bar.html" %}
+  <p class="plan-progress-note">{{ done_count }} of {{ total }} lesson{{ total|pluralize }} done</p>
+</section>
+
+<div class="plan-sheet">
+{% if next_lesson %}
+<section class="next-action" aria-labelledby="next-action-title">
+  <p class="next-action-label">Your next step</p>
+  <h2 id="next-action-title">{{ next_lesson.title|inline_code }}</h2>
+  <p>{{ next_lesson.can|default:"Keep going with your plan." }}</p>
+  <a class="button button-primary" href="{% url 'ai_lesson' next_lesson.key %}">Open lesson</a>
+</section>
+{% else %}
+<section class="next-action" aria-labelledby="next-action-title">
+  <p class="next-action-label">Plan finished</p>
+  <h2 id="next-action-title">You finished every lesson!</h2>
+  <p>Finish your project, then see what to learn next below.</p>
+  <a class="button button-primary" href="#project">See your project</a>
+</section>
+{% endif %}
+
+<section class="plan-overview">
+  <div class="plan-overview-part">
+    <h2>Your goal</h2>
+    <p>{{ data.goal|default:profile.goal_text }}</p>
+  </div>
+  <div class="plan-overview-part">
+    <h2>Your time</h2>
+    <p>{{ data.lessons_total }} lesson{{ data.lessons_total|pluralize }}, about <strong>{{ data.weeks_total }} week{{ data.weeks_total|pluralize }}</strong> at {{ profile.hours_per_week|default:2 }} hour{{ profile.hours_per_week|default:2|pluralize }} a week.</p>
+    {% if data.conflict %}<p class="review-warning">{{ data.conflict|inline_code }}</p>{% endif %}
+  </div>
+  {% if data.assumptions %}
+  <div class="plan-overview-part">
+    <h2>What we assumed</h2>
+    <ul class="lesson-list">{% for a in data.assumptions %}<li>{{ a|inline_code }}</li>{% endfor %}</ul>
+    <p class="plan-overview-note"><a href="{% url 'intake' %}?edit=1">Change my answers</a> if any of this is wrong.</p>
+  </div>
+  {% endif %}
+</section>
+
+<p class="ai-note">Your lessons are written by AI from your answers and checked by the app. If something looks wrong, tell us from the lesson page.</p>
+
+{% if setup_lesson %}
+<details class="plan-week plan-week-setup"{% if not setup_ready %} open{% endif %}>
+  <summary class="plan-week-summary">
+    <h2>Setup</h2>
+    <span class="plan-week-count">{% if setup_ready %}Done · {{ outline.get_setup_choice_display }}{% else %}Choose your setup to unlock your lessons{% endif %}</span>
+  </summary>
+  <ol class="plan-items">
+    <li class="plan-item plan-item-setup plan-item-{% if setup_ready %}done{% else %}todo{% endif %}{% if next_lesson.key == setup_lesson.key %} plan-item-current{% endif %}">
+      <h3 class="plan-item-title"><a href="{% url 'ai_lesson' setup_lesson.key %}">{{ setup_lesson.title }}</a> <span class="plan-item-minutes">· {{ setup_lesson.minutes }} min</span></h3>
+      <p class="plan-item-summary">{{ setup_lesson.can|inline_code }}</p>
+      <p class="plan-item-meta"><span class="status status-{% if setup_ready %}done{% else %}todo{% endif %}">{% if setup_ready %}Set up{% else %}Required first{% endif %}</span></p>
+      <a class="button button-lagoon button-small plan-item-open" href="{% url 'ai_lesson' setup_lesson.key %}">{% if setup_ready %}Open guide{% else %}Choose your setup{% endif %}</a>
+      {% if setup_ready %}<a class="button button-small" href="{% url 'ai_lesson' setup_lesson.key %}#setup-choice">Change setup method</a>{% endif %}
+    </li>
+  </ol>
+</details>
+{% endif %}
+
+{% for module in modules %}
+<details class="plan-week"{% if module.number == current_module or not current_module %} open{% endif %}>
+  <summary class="plan-week-summary">
+    <h2>{{ module.progress }}: {{ module.title }}</h2>
+    <span class="plan-week-count">{{ module.done }} of {{ module.lessons|length }} done{% if module.number == current_module %} · you're here{% endif %}</span>
+  </summary>
+  {% if module.goal %}<p class="plan-overview-note">{{ module.goal|inline_code }}</p>{% endif %}
+  <ol class="plan-items">
+    {% for lesson in module.lessons %}
+    {% with status=lesson.progress.status|default:"todo" %}
+    <li class="plan-item plan-item-{{ status }}{% if next_lesson.key == lesson.key %} plan-item-current{% endif %}">
+      <h3 class="plan-item-title"><a href="{% url 'ai_lesson' lesson.key %}">{{ lesson.title|inline_code }}</a> <span class="plan-item-minutes">· {{ lesson.minutes }} min · week {{ lesson.week }}</span></h3>
+      {% if lesson.can %}<p class="plan-item-summary">{{ lesson.can|inline_code }}</p>{% endif %}
+      <p class="plan-item-meta">{% if lesson.progress.shaky %}<span class="status status-shaky">Shaky · review later</span>{% else %}<span class="status status-{{ status }}">{% if lesson.progress %}{{ lesson.progress.get_status_display }}{% else %}To do{% endif %}</span>{% endif %}{% if lesson.kind == "optional" %} Optional{% elif lesson.kind == "recap" %} Quick recap{% endif %}</p>
+      <a class="button button-lagoon button-small plan-item-open" href="{% url 'ai_lesson' lesson.key %}">Open lesson</a>
+      <form class="plan-item-actions" method="post" action="{% url 'ai_lesson_status' lesson.key %}">
+        {% csrf_token %}
+        {% if status == "done" or status == "skipped" %}
+        <button type="submit" name="status" value="todo" class="button">Undo</button>
+        {% else %}
+        <button type="submit" name="status" value="done" class="button">Mark done</button>
+        <button type="submit" name="status" value="skipped" class="button">Skip</button>
+        {% endif %}
+      </form>
+    </li>
+    {% endwith %}
+    {% endfor %}
+  </ol>
+  {% if module.milestone %}
+  <div class="plan-week-milestone{% if module.finished %} plan-week-milestone-done{% endif %}">
+    <p class="plan-week-milestone-label">{% if module.finished %}Module done!{% else %}By the end of this module:{% endif %}</p>
+    <p>{{ module.milestone|inline_code }}</p>
+  </div>
+  {% endif %}
+  <details class="plan-item-details">
+    <summary>Stuck in this module?</summary>
+    <ul class="lesson-list">{% for tip in module.stuck_path %}<li>{{ tip|inline_code }}</li>{% endfor %}</ul>
+  </details>
+</details>
+{% endfor %}
+
+{% if project %}
+<section class="plan-project" id="project">
+  <h2>Your project: {{ project.title }}</h2>
+  <p class="ai-note">Drafted by AI from your answers. Change it however you like; it's yours.</p>
+  <div class="plan-project-description">{{ project.description|paragraphs }}</div>
+  <h3>Steps</h3>
+  <ol class="lesson-list">
+    {% for milestone in project.milestones %}<li><span class="milestone-week">Week {{ milestone.week }}:</span> {{ milestone.text|inline_code }}</li>{% endfor %}
+  </ol>
+  <h3>Done when</h3>
+  <ul class="lesson-list">{% for check in project.done_when %}<li>{{ check|inline_code }}</li>{% endfor %}</ul>
+</section>
+{% endif %}
+
+{% if data.next_steps %}
+<section class="plan-project">
+  <h2>After this plan</h2>
+  <ul class="lesson-list">{% for step in data.next_steps %}<li>{{ step|inline_code }}</li>{% endfor %}</ul>
+</section>
+{% endif %}
+
+{% if glossary %}
+<details class="plan-report">
+  <summary>Glossary: {{ glossary|length }} term{{ glossary|length|pluralize }} so far</summary>
+  <dl class="lesson-terms">
+    {% for t in glossary %}<div><dt>{{ t.term }}</dt><dd>{{ t.definition|inline_code }}</dd></div>{% endfor %}
+  </dl>
+</details>
+{% endif %}
+</div>
+{% endblock %}

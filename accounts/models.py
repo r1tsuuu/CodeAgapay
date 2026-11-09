@@ -12,6 +12,13 @@ class LearnerProfile(models.Model):
         A_LITTLE = "a_little", "I've tried a little"
         COMFORTABLE = "comfortable", "I'm fairly comfortable"
 
+    class Device(models.TextChoices):
+        WINDOWS = "windows", "A Windows computer"
+        MAC = "mac", "A Mac"
+        LINUX = "linux", "A Linux computer"
+        CHROMEBOOK = "chromebook", "A Chromebook"
+        PHONE = "phone", "A phone or tablet"
+
     class HintStyle(models.TextChoices):
         THINK = "think", "A hint that makes me think"
         EXPLAIN = "explain", "A clear explanation"
@@ -31,6 +38,10 @@ class LearnerProfile(models.Model):
     )
     target_weeks = models.PositiveIntegerField(
         null=True, blank=True, help_text="Weeks until a date they're aiming for, if any."
+    )
+    device = models.CharField(
+        max_length=20, choices=Device.choices, blank=True,
+        help_text="What they'll learn on. Setup and lessons use its shortcuts and app names. Blank: not sure.",
     )
     hint_style = models.CharField(
         max_length=20, choices=HintStyle.choices, blank=True, help_text="What helps them most when stuck."

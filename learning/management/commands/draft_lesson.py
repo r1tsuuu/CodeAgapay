@@ -4,6 +4,7 @@
         --can "Create a page with headings and a list" --earlier "What is a web page?"
     python manage.py draft_lesson --outline 3 --lesson L2
     python manage.py draft_lesson --outline 3 --lesson L2 --struggled "nesting tags" --save
+    python manage.py draft_lesson --title "Headings" --track HTML --setup alternative --device mac
 
 One AI call (two if the first reply is unusable). Nothing is saved unless --save is
 given with --outline; saved lessons appear in admin for review, as a new version.
@@ -14,9 +15,11 @@ import json
 from django.core.management.base import BaseCommand, CommandError
 
 from assistant.service import ai_available
+from accounts.models import LearnerProfile
+from learning import setup_guides
 from learning.lessons import LessonSpec, build_messages, generate_lesson, spec_from_outline
 from learning.models import PlanOutline
-from learning.outline import load_prompt
+from learning.outline import SETUP_TOOLS, DEFAULT_TOOLS, load_prompt, setup_lesson
 
 
 class Command(BaseCommand):
@@ -34,6 +37,12 @@ class Command(BaseCommand):
         parser.add_argument("--earlier", default="", help='Earlier lesson titles, separated by "|"')
         parser.add_argument("--project", default="")
         parser.add_argument("--taglish", action="store_true")
+        parser.add_argument("--setup", choices=["main", "alternative", "curated"],
+                            help="Pretend the learner chose this setup: main (VS Code), alternative (no install) "
+                                 "or curated (the team's guide)")
+        parser.add_argument("--device", choices=[c for c, _ in LearnerProfile.Device.choices], default="",
+                            help="Pretend the learner uses this computer")
+        parser.add_argument("--folder", default="codeagapay-my-project", help="Project folder name for --setup main")
         parser.add_argument("--struggled", action="append", default=[],
                             help="What the learner struggled with (repeatable); asks for a different way of teaching")
         parser.add_argument("--save", action="store_true", help="Save as the lesson's new version (needs --outline)")
@@ -66,6 +75,7 @@ class Command(BaseCommand):
         self.stdout.write(json.dumps(record.data, indent=2, ensure_ascii=False))
         for repair in record.repairs:
             self.stdout.write(self.style.WARNING(f"Repaired: {repair}"))
+        self._show_try_steps(record.data, opts, outline)
         for flag in record.flags:
             self.stdout.write(self.style.ERROR(f"Flagged for review: {flag}"))
         saved = f" · saved as version {record.version}" if opts["save"] else " · not saved"
@@ -89,4 +99,36 @@ class Command(BaseCommand):
             level=opts["level"], path="Learn to code", tracks=opts["track"],
             earlier=[t.strip() for t in opts["earlier"].split("|") if t.strip()],
             project=opts["project"], taglish=opts["taglish"], struggled=opts["struggled"],
+            setup=self._setup_line(opts), computer=dict(LearnerProfile.Device.choices).get(opts["device"], ""),
         )
+
+    def _track_slug(self, opts):
+        first = opts["track"].split(",")[0].strip().lower()
+        return {"js": "javascript"}.get(first, first)
+
+    def _setup_line(self, opts):
+        """What a real lesson request says about the learner's setup (learning.outline.learner_setup)."""
+        if not opts["setup"]:
+            return ""
+        tool, alternative = SETUP_TOOLS.get(self._track_slug(opts), DEFAULT_TOOLS)
+        if opts["setup"] == "alternative" and alternative:
+            return f"{alternative} in the browser (no project folder)"
+        if opts["setup"] == "curated":
+            return "the CodeAgapay setup guide (the team's checked steps for installing the editor)"
+        return f"{tool}, with every file in the project folder {opts['folder']}"
+
+    def _show_try_steps(self, lesson, opts, outline):
+        """The "How to try it" steps the lesson page adds under the task, written by the app, not the AI."""
+        if outline is not None:
+            setup = setup_lesson(outline)
+            way, folder, device = outline.setup_choice, setup["folder"] if setup else "", outline.learner.device
+        else:
+            way, folder, device = opts["setup"], opts["folder"], opts["device"]
+        if not way:
+            return
+        steps = setup_guides.try_steps(way, lesson.get("lang", ""), lesson.get("try_it", {}).get("file", ""),
+                                       folder, device)
+        self.stdout.write(self.style.MIGRATE_HEADING(
+            f"--- How to try it, as the page shows it (file from the AI: {lesson.get('try_it', {}).get('file') or 'none'})"))
+        for n, step in enumerate(steps, 1):
+            self.stdout.write(f"{n}. {step['text']}" + (f"  [{step['link']}]" if step["link"] else ""))
