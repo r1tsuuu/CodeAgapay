@@ -195,3 +195,6 @@ if not DEBUG:
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+
+# Tests start from safe defaults (AI plans off, no real AI keys), whatever the shell or .env says.
+TEST_RUNNER = "config.test_runner.Runner"
