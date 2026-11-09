@@ -1,9 +1,13 @@
+import logging
+
+from django.conf import settings
 from django.contrib import messages
 from django.shortcuts import redirect, render
 
 from accounts.models import get_profile
 from assistant.service import ai_available, reserve_intake
 from content.models import Topic
+from learning.outline import generate_outline
 from learning.tailoring import build_plan_with_template, tailor_plan
 
 from . import onboarding
@@ -15,6 +19,8 @@ from .scoring import (
     results_for_attempt,
     track_topics_and_questions,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def about_you(request):
@@ -113,7 +119,14 @@ def _end_intake(request):
 def _build_plan(profile, project_idea):
     """Tailor the plan with AI when it's on and under today's cap; otherwise rules only."""
     if ai_available() and reserve_intake(profile):
-        _, used_ai = tailor_plan(profile, project_idea)
+        plan, used_ai = tailor_plan(profile, project_idea)
+        if settings.AI_OUTLINES:
+            # Shadow mode: saved for review in admin only (docs/plan-framework.md, section 11).
+            # Learners never see it, so a failure here must not stop their plan.
+            try:
+                generate_outline(profile, project_idea, plan=plan)
+            except Exception:
+                logger.exception("Shadow outline failed")
         return used_ai
     build_plan_with_template(profile)
     return False

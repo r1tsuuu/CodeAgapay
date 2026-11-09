@@ -161,6 +161,10 @@ CF_MODEL = env("CF_MODEL", default="@cf/meta/llama-3.1-8b-instruct")
 AI_DAILY_LIMIT = env.int("AI_DAILY_LIMIT", default=20)
 # Plan conversations (AI intake) per learner per day. Each one costs about 6-10k tokens.
 AI_INTAKE_DAILY_LIMIT = env.int("AI_INTAKE_DAILY_LIMIT", default=2)
+# Shadow mode for AI-written plan outlines (docs/plan-framework.md): when on, each AI-tailored
+# plan also saves an outline for review in admin. Learners don't see it. Costs one more AI call
+# (about 1-3k tokens) per new plan, and adds that call's wait to the confirm step.
+AI_OUTLINES = env.bool("AI_OUTLINES", default=False)
 
 
 # Reminder emails. The send_reminders command refuses to run until EMAIL_HOST is set.

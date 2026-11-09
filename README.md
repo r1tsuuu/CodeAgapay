@@ -196,6 +196,7 @@ Open http://localhost:8000 for the app and http://localhost:8000/admin for curat
 | `GROQ_API_KEY`, `GROQ_MODEL`, `CF_ACCOUNT_ID`, `CF_API_TOKEN`, `CF_MODEL` | AI helper. Leave blank to turn the AI off |
 | `AI_DAILY_LIMIT` | AI hint messages per learner per day (default 20) |
 | `GROQ_PLAN_MODEL`, `AI_INTAKE_DAILY_LIMIT` | Model for tailored plans, and AI-tailored plans per learner per day (default 2). Past the cap, the plan is built without AI |
+| `AI_OUTLINES` | `True` saves an AI-written plan outline with each AI-tailored plan, for review in admin. Learners don't see it yet. Default `False` |
 | `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `DEFAULT_FROM_EMAIL` | Reminder emails, on the machine that runs `send_reminders`. SMTP with TLS |
 | `SITE_URL` | Links in emails. Defaults to the live site; set it only to test emails locally |
 
@@ -233,6 +234,24 @@ python manage.py draft_topic html "Page structure" "Text and headings" "Links an
 - It refuses to write into a live track, so unreviewed drafts never reach learners. Draft into an inactive track, review every topic in admin, then tick **Active**.
 - Add `--dry-run` to see a draft without saving it.
 - Point `DATABASE_URL` at production only when you mean to draft into it.
+
+</details>
+
+<details>
+<summary><strong>Try AI-written plan outlines</strong></summary>
+
+<br>
+
+The team decided the AI will write whole plans and lessons, following [`docs/plan-framework.md`](docs/plan-framework.md). The first piece is the plan outline: modules, lesson titles, weeks and a project. Learners don't see outlines until lesson generation is built, so for now they're for trying and reviewing the prompt in `learning/prompts/outline.md`.
+
+```bash
+python manage.py draft_outline --path website --experience none --hours 4 --weeks 6     --goal "an event page for our org" --project "the schedule and a sign-up link"
+python manage.py draft_outline --learner ana@example.com --save
+```
+
+- One AI call, about 600 tokens in and up to about 2,000 out. It prints the outline, what the code repaired and the token counts.
+- Nothing is saved unless you add `--save` with `--learner`. Add `--show-prompt` to see exactly what is sent, without calling the AI.
+- With `AI_OUTLINES=True`, every AI-tailored plan also saves an outline. Review them in admin under **Plan outlines**: open one, set **Review** to OK or Problem with a note, or use the **10 random** filter for the weekly sample.
 
 </details>
 
