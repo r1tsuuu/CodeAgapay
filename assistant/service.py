@@ -41,9 +41,14 @@ HINT_STYLES = {
     "example": "They learn from examples, so include a short, different example when you can.",
 }
 
-LANGUAGE_RULES = (
+# Only the help panel (Need help) may answer in Taglish; lessons, plans and feedback are in English.
+HELP_LANGUAGE_RULES = (
     "- Match the learner's language. If their message has any Tagalog words, reply in Taglish\n"
     "  (everyday Tagalog mixed with English, the way they wrote). Otherwise reply in English.\n"
+    "- Plain text only: no markdown, no backticks, no asterisks, no headings."
+)
+ENGLISH_RULES = (
+    "- Reply in plain English, even if the learner wrote in Taglish or Tagalog.\n"
     "- Plain text only: no markdown, no backticks, no asterisks, no headings."
 )
 
@@ -185,7 +190,7 @@ def build_messages(request):
         f"{style}"
         "- Keep the reply under 120 words.\n"
         "- If the question is not about programming, gently steer back to the topic.\n"
-        f"{LANGUAGE_RULES}"
+        f"{HELP_LANGUAGE_RULES}"
     )
     user = f"My question: {request.question}{language_note(request.question)}"
     if request.screen == "quiz" and request.quiz_item is not None:
@@ -436,7 +441,7 @@ def build_practice_messages(task, answer, hint_style=""):
         "- If it already meets every check, say so and suggest one small way to stretch it.\n"
         f"{style}"
         "- Keep it under 120 words.\n"
-        f"{LANGUAGE_RULES}"
+        f"{ENGLISH_RULES}"
     )
     user = f"My answer:\n{answer}"
     return [{"role": "system", "content": system}, {"role": "user", "content": user}]

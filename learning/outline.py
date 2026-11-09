@@ -19,7 +19,7 @@ from types import SimpleNamespace
 
 from django.conf import settings
 
-from assistant.service import ask_model_json, language_note
+from assistant.service import ask_model_json
 from content.models import ProjectIdea, Track
 from diagnose.models import TopicMastery
 
@@ -202,8 +202,6 @@ def build_messages(profile, project_idea, ideas=()):
     ]
     if profile.hint_style:
         lines.append(f"Learns best from: {profile.get_hint_style_display().lower()}")
-    if language_note(f"{profile.goal_text} {project_idea}"):
-        lines.append("Language: Taglish")
     skills = _skill_summary(profile)
     Status = TopicMastery.Status
     for status, label in [

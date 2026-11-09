@@ -1,6 +1,6 @@
 # CodeAgapay AI Learning Plan Framework
 
-Version 2.1, accepted by the team on 9 November 2026. Steps 2 to 5 are built behind `AI_PLANS` (prompts `outline-2` and `lesson-16`); with it off, learners get the curated plan.
+Version 2.1, accepted by the team on 9 November 2026. Steps 2 to 5 are built behind `AI_PLANS` (prompts `outline-3` and `lesson-17`); with it off, learners get the curated plan.
 
 This is the source of truth for how CodeAgapay's AI builds learning plans and lessons. The AI prompts and the code follow it. When a rule changes here, change the prompt or code that carries it out (see **Where** in each table) in the same pull request.
 
@@ -141,19 +141,16 @@ Every lesson has the same parts. Code rejects a lesson missing a required part.
 
 Change from today: curated topics run 45 to 120 minutes and the drafting prompt allows 30 to 120. Generated lessons follow the table, so one curated topic may become two or three lessons.
 
-### Taglish and English
+### Language: English lessons, Taglish help
 
-This is about the language the AI writes in (outline, lessons, hints, feedback), not teaching spoken languages.
+Lessons, outlines, plans, projects and feedback are always in plain English, so every learner gets the same reviewed wording. Only the "Need help" panel (Agapay) answers in Taglish, when the learner asks in Taglish.
 
 | Rule | Enforced by | Status | Where |
 | --- | --- | --- | --- |
-| Match the learner: Taglish if they write in Taglish, otherwise plain English | Prompt + Code | Built | `assistant/service.py` hint prompt |
-| Detect common Tagalog words and add an explicit "reply in Taglish" note, because models drift back to English | Code | Built | `assistant/service.py` `language_note` |
-| Plans are written in Taglish when the learner used Taglish | Prompt | Built | `learning/tailoring.py` `SYSTEM_PROMPT` |
-| Same rule for generated lessons, detected from the learner's goal | Prompt + Code | Built | `lessons.spec_from_outline`, `prompts/lesson.md` |
-| Code, keywords, function names and error messages stay in English | Prompt | Built | `prompts/lesson.md` |
-| Taglish the way Filipino students mix it, not formal Tagalog; 2 or 3 sample explanations in the prompt | Prompt | Built (2 samples) | `prompts/lesson.md` |
-| Tests: a Taglish learner gets a Taglish lesson, an English learner gets English | Code | v1 | tests |
+| Lessons, outlines, curated plan reasons and projects, and practice feedback are written in plain English, even when the learner's goal is in Taglish or Tagalog | Prompt | Built | `prompts/lesson.md`, `prompts/outline.md`, `tailoring.SYSTEM_PROMPT`, `service.ENGLISH_RULES` |
+| Agapay hints match the learner: Taglish if they ask in Taglish, otherwise plain English | Prompt + Code | Built | `service.HELP_LANGUAGE_RULES` |
+| Detect common Tagalog words in a help question and add an explicit "reply in Taglish" note, because models drift back to English | Code | Built | `service.language_note` |
+| Code, keywords and error messages stay in English | Prompt | Built | prompts |
 
 ## 7. Checks, quizzes and score bands
 
@@ -322,14 +319,14 @@ Generated plans and lessons reach learners without approval. Review happens afte
 - Quiz answers are right, and questions only cover what was taught.
 - Resources are on the allowed list and fit the level.
 - The project uses what the plan taught and matches the learner's goal.
-- Tone is plain and encouraging; English or Taglish matches the learner.
+- Tone is plain and encouraging, in plain English.
 
 ## 12. What changes in the app (v1)
 
 | Area | Change |
 | --- | --- |
 | `docs/plan-framework.md` | This file |
-| `learning/prompts/` | `outline.md` (built, `outline-2`) and `lesson.md` (built, `lesson-16`): the short prompts, each naming the sections it follows, with a version |
+| `learning/prompts/` | `outline.md` (built, `outline-3`) and `lesson.md` (built, `lesson-17`): the short prompts, each naming the sections it follows, with a version |
 | `learning/outline.py` | Built: builds the outline request, checks and repairs the reply, saves it. Shadow mode (`AI_OUTLINES`) saves one with each AI-tailored plan |
 | `learning/tailoring.py` | When lessons ship: the outline replaces topic selection; the curated plan stays as the fallback |
 | New models | Built: `PlanOutline` and `GeneratedLesson` (versions, current flag, flags), sharing `AIRecord` (JSON, repairs, model, prompt version, tokens, review fields). Modules stay inside the outline's JSON; a `PlanModule` table is only needed if the lesson page wants it |
@@ -365,7 +362,7 @@ Generated plans and lessons reach learners without approval. Review happens afte
 1. The AI creates the whole learning plan and its lessons, guided by this framework. Pre-approved content blocks are not used in v1.
 2. This framework and its v1 plan are the implementation plan.
 3. Generated lessons reach learners before anyone reviews them, labelled as AI-written. Review happens afterwards, weekly, in the Django admin page (section 11).
-4. The language-learning parts of version 1 stay removed. Only Taglish compatibility is kept (section 6).
+4. The language-learning parts of version 1 stay removed. Lessons are in English; only the Need help panel answers in Taglish (section 6).
 
 ### Still open
 
@@ -440,7 +437,7 @@ A question:
 | Any topic | CodeAgapay's coding paths and tracks only |
 | One AI call writes the whole plan | Outline at sign-up; each lesson when first opened |
 | Rules enforced by the prompt | Each rule says whether the prompt, the code or the team enforces it |
-| Five topic types, including spoken languages | One: tool or technical skill. Setup stays curated. Only Taglish compatibility kept |
+| Five topic types, including spoken languages | One: tool or technical skill. Setup stays curated. English lessons; Taglish only in Need help |
 | Any question format | Only auto-gradable formats; "explain" is an ungraded self-check |
 | 40+ general resources, some paid | Allowed list of free coding resources, checked in code |
 | camelCase JSON schema | Shorter shapes in appendix A, matched to the app |

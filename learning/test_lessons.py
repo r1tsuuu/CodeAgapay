@@ -53,12 +53,13 @@ class PromptTests(TestCase):
 
     def test_system_prompt_is_fixed_and_the_request_is_short(self):
         mine = build_messages(SPEC)[0]
-        theirs = build_messages(LessonSpec(key="L9", title="Loops", level="intermediate", taglish=True))[0]
+        theirs = build_messages(LessonSpec(key="L9", title="Loops", level="intermediate"))[0]
         self.assertEqual(mine[0], theirs[0])
         self.assertIn("Limits: 1 main idea, up to 3 key terms", mine[1]["content"])
         self.assertIn("Earlier lessons: none, this is the first.", mine[1]["content"])
         self.assertIn("up to 5 key terms", theirs[1]["content"])
-        self.assertIn("Language: Taglish", theirs[1]["content"])
+        self.assertIn("Write in plain English, even if the learner's goal or project is written in Taglish",
+                      mine[0]["content"])
         self.assertLess(len(mine[1]["content"]), 400)
 
     def test_recap_and_struggle_change_the_request(self):
@@ -409,10 +410,9 @@ class DraftLessonCommandTests(OutlineContentMixin, TestCase):
 
     def test_show_prompt_for_a_typed_in_lesson(self):
         out = StringIO()
-        call_command("draft_lesson", "--title", "Lists", "--earlier", "Variables|Loops", "--taglish",
-                     "--show-prompt", stdout=out)
+        call_command("draft_lesson", "--title", "Lists", "--earlier", "Variables|Loops", "--show-prompt", stdout=out)
         self.assertIn("Earlier lessons: Variables, Loops", out.getvalue())
-        self.assertIn("Language: Taglish", out.getvalue())
+        self.assertNotIn("Taglish", out.getvalue().split("--- user")[-1])
 
     @override_settings(**AI_ON)
     def test_raw_shows_hidden_characters_before_cleaning(self):

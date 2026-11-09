@@ -844,3 +844,38 @@ class EarlyAccessTests(AIPlanMixin, TestCase):
         self.client.post(url, {"action": "take_ai_plans_early", "_selected_action": [self.profile.pk]})
         self.profile.refresh_from_db()
         self.assertFalse(self.profile.ai_plans_early)
+
+
+@override_settings(**AI_PLANS)
+class EnglishLessonsTests(AIPlanMixin, TestCase):
+    """Lessons are always English; only the Need help panel answers in Taglish."""
+
+    def setUp(self):
+        self.make_plan()
+        self.profile.goal_text = "Make a website: gusto ko po gumawa ng page para sa org namin"
+        self.profile.save()
+
+    def test_a_taglish_goal_still_gets_an_english_lesson(self):
+        with mock.patch("learning.lessons.ask_model_json", return_value=lesson_reply()) as ask:
+            self.client.get(self.lesson_url("L1") + "?write=1")
+        system, user = (m["content"] for m in ask.call_args.args[0])
+        self.assertNotIn("Taglish", user)
+        self.assertIn("Write in plain English", system)
+
+    def test_need_help_still_answers_in_taglish(self):
+        import json
+        self.write()
+        body = {"lesson": "L1", "question": "bakit hindi gumagana yung tag ko?", "hint_level": 1}
+        with mock.patch("assistant.service.call_provider", return_value="Tingnan mo yung closing tag.") as call:
+            self.client.post(reverse("help_ask"), json.dumps(body), content_type="application/json")
+        system, user = (m["content"] for m in call.call_args.args[1])
+        self.assertIn("reply in Taglish", system)
+        self.assertIn("(I wrote in Taglish. Please reply in Taglish too.)", user)
+
+    def test_practice_feedback_is_in_english(self):
+        from types import SimpleNamespace
+        from assistant.service import build_practice_messages
+        task = SimpleNamespace(topic=SimpleNamespace(title="Tags", track=SimpleNamespace(name="HTML"), summary=""),
+                               prompt="Write a heading.", checklist=["Uses h1"], sample_answer="<h1>Hi</h1>")
+        system = build_practice_messages(task, "gusto ko po ng heading")[0]["content"]
+        self.assertIn("Reply in plain English, even if the learner wrote in Taglish", system)
