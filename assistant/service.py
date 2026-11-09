@@ -165,7 +165,8 @@ def build_messages(request):
     return [{"role": "system", "content": system}, {"role": "user", "content": user}]
 
 
-def call_provider(provider, messages, max_tokens=MAX_TOKENS, json_mode=False, reasoning="low"):
+def call_provider(provider, messages, max_tokens=MAX_TOKENS, json_mode=False, reasoning="low", usage=None):
+    """One chat call. With `usage` (a dict), records the model and token counts there."""
     client = OpenAI(api_key=provider.api_key, base_url=provider.base_url,
                     timeout=TIMEOUT_SECONDS, max_retries=0)
     extra = {}
@@ -177,6 +178,13 @@ def call_provider(provider, messages, max_tokens=MAX_TOKENS, json_mode=False, re
     response = client.chat.completions.create(
         model=provider.model, messages=messages, max_tokens=max_tokens, temperature=0.4, **extra,
     )
+    if usage is not None:
+        counts = getattr(response, "usage", None)
+        usage.update(
+            model=provider.model,
+            prompt_tokens=getattr(counts, "prompt_tokens", None),
+            completion_tokens=getattr(counts, "completion_tokens", None),
+        )
     text = (response.choices[0].message.content or "").strip()
     if not text:
         raise ValueError("empty reply")
@@ -242,17 +250,18 @@ def _failed_generation(error):
     return ""
 
 
-def ask_model_json(messages, max_tokens=1500, text_ok=False):
+def ask_model_json(messages, max_tokens=1500, text_ok=False, usage=None):
     """Like ask_model, but with the planning model and a parsed JSON object back.
 
     A provider that replies with broken JSON counts as failed, so the next one is tried.
     With `text_ok`, a plain-text reply is returned as {"reply": text} instead (used by
     the intake chat, where a plain follow-up question is still useful).
+    With `usage` (a dict), records the model and token counts of the call that answered.
     Returns None if all fail.
     """
     for provider in providers(purpose="plan"):
         try:
-            text = call_with_retry(provider, messages, max_tokens=max_tokens, json_mode=True)
+            text = call_with_retry(provider, messages, max_tokens=max_tokens, json_mode=True, usage=usage)
         except Exception as error:
             text = _failed_generation(error)
             if not text:

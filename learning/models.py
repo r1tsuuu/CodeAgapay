@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from django.db.models import Q
 
@@ -138,3 +139,43 @@ class PlanFeedback(models.Model):
 
     def __str__(self):
         return self.text[:60]
+
+
+class PlanOutline(models.Model):
+    """An AI-written plan outline (docs/plan-framework.md, section 5), kept for review in admin.
+
+    Learners don't see outlines yet: they arrive with lesson generation. Until then the
+    team reviews them here to tune the prompt (framework section 11).
+    """
+
+    class Review(models.TextChoices):
+        NOT_REVIEWED = "not_reviewed", "Not reviewed"
+        OK = "ok", "OK"
+        PROBLEM = "problem", "Problem"
+
+    learner = models.ForeignKey(
+        "accounts.LearnerProfile", on_delete=models.CASCADE, related_name="plan_outlines"
+    )
+    plan = models.ForeignKey(
+        LearningPlan, on_delete=models.SET_NULL, null=True, blank=True, related_name="outlines",
+        help_text="The plan the learner got at the same time, if any.",
+    )
+    data = models.JSONField(help_text="The checked outline: modules, lessons, weeks, project.")
+    repairs = models.JSONField(default=list, blank=True, help_text="What the code fixed in the AI's reply.")
+    prompt_version = models.CharField(max_length=40)
+    model = models.CharField(max_length=100, blank=True)
+    prompt_tokens = models.PositiveIntegerField(null=True, blank=True)
+    completion_tokens = models.PositiveIntegerField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    review = models.CharField(max_length=20, choices=Review.choices, default=Review.NOT_REVIEWED)
+    review_notes = models.TextField(blank=True)
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="+"
+    )
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Outline for {self.learner.user} ({self.created_at:%Y-%m-%d})"

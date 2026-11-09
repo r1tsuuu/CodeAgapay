@@ -166,3 +166,42 @@ class ReplyTextTests(TestCase):
         from .service import language_note
         self.assertIn("Taglish", language_note("bakit hindi tumitigil yung loop ko?"))
         self.assertEqual(language_note("why does my loop never stop?"), "")
+
+
+class UsageTests(TestCase):
+    """Token counts are recorded so the team can see what each AI-written outline costs."""
+
+    def fake_client(self, content, usage):
+        client = mock.Mock()
+        client.chat.completions.create.return_value = mock.Mock(
+            choices=[mock.Mock(message=mock.Mock(content=content))], usage=usage,
+        )
+        return mock.patch("assistant.service.OpenAI", return_value=client)
+
+    def test_call_records_model_and_tokens(self):
+        from .service import Provider, call_provider
+        usage = {}
+        with self.fake_client("hi", mock.Mock(prompt_tokens=700, completion_tokens=900)):
+            call_provider(Provider("groq", "k", "url", "openai/gpt-oss-120b"), [], usage=usage)
+        self.assertEqual(usage, {"model": "openai/gpt-oss-120b", "prompt_tokens": 700, "completion_tokens": 900})
+
+    def test_missing_usage_from_provider_is_fine(self):
+        from .service import Provider, call_provider
+        usage = {}
+        with self.fake_client("hi", None):
+            self.assertEqual(call_provider(Provider("cloudflare", "k", "url", "llama"), [], usage=usage), "hi")
+        self.assertEqual((usage["prompt_tokens"], usage["completion_tokens"]), (None, None))
+
+    @override_settings(GROQ_API_KEY="test", GROQ_PLAN_MODEL="big", GROQ_MODEL="small", CF_ACCOUNT_ID="", CF_API_TOKEN="")
+    def test_json_call_reports_the_model_that_answered(self):
+        from .service import ask_model_json
+
+        def call(provider, messages, **kwargs):
+            if provider.model == "big":
+                raise RuntimeError("busy")
+            kwargs["usage"].update(model=provider.model, prompt_tokens=1, completion_tokens=2)
+            return '{"ok": true}'
+        usage = {}
+        with mock.patch("assistant.service.call_provider", side_effect=call):
+            self.assertEqual(ask_model_json([], usage=usage), {"ok": True})
+        self.assertEqual(usage["model"], "small")
