@@ -386,15 +386,6 @@ Update this table as parts are finished, and list known bugs below.
 
 Keep views thin and put logic in testable modules such as `scoring.py`, `planner.py` and `grading.py`. Mock every external call in tests.
 
-## Team
-
-| Name | Role |
-| --- | --- |
-| Neil Biason | Critical path build, deployment |
-| Christian | Frontend, integration, QA |
-| Abdul Wahab | Testing, automation, handover, CompSAt contact |
-| Eliza Casey | Curation lead |
-
 ## License
 
 MIT. See [`LICENSE`](LICENSE).
