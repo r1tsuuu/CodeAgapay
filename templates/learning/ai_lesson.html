@@ -195,6 +195,7 @@
         <p class="quiz-hint">{% if x.result.correct is False %}Answer: <code class="inline-code">{{ x.answer }}</code>. {% elif x.result.correct is None %}One good answer: {{ x.answer|inline_code }} {% endif %}{{ x.q.explanation|inline_code }}</p>
         {% else %}
         <p class="quiz-hint">Not quite. Try again, or ask for it explained another way below.</p>
+        <button type="button" class="help-inline" data-help-ask="Why is my answer wrong?" data-quiz-item="{{ x.n }}" data-answer="{{ x.given }}">Why is this wrong?</button>
         {% endif %}
         {% endif %}
       </li>
@@ -247,4 +248,5 @@
   {% endif %}
 </section>
 </div>
+{% include "partials/help_panel.html" %}
 {% endblock %}

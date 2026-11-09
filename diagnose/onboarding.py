@@ -107,16 +107,22 @@ class AnswerError(Exception):
 
 
 _paths_cache = ContextVar("onboarding_paths", default=None)
+_ai_plans = ContextVar("onboarding_ai_plans", default=None)
 
 
 @contextmanager
-def cached_paths():
-    """Look the paths up once for a whole request instead of on every question and label."""
-    token = _paths_cache.set([])
+def cached_paths(ai_plans=None):
+    """Look the paths up once for a whole request instead of on every question and label.
+
+    `ai_plans` says whether this learner gets AI plans (profile.gets_ai_plans), which decides
+    whether paths without curated topics are offered.
+    """
+    token, flag = _paths_cache.set([]), _ai_plans.set(ai_plans)
     try:
         yield
     finally:
         _paths_cache.reset(token)
+        _ai_plans.reset(flag)
 
 
 def offered_paths():
@@ -125,7 +131,7 @@ def offered_paths():
     if cache:
         return cache[0]
     paths = Path.objects.filter(is_active=True).prefetch_related("path_tracks__track__topics")
-    result = [(p, p.is_available()) for p in paths]
+    result = [(p, p.is_available(_ai_plans.get())) for p in paths]
     if cache is not None:
         cache.append(result)
     return result
@@ -501,7 +507,7 @@ def answers_from_profile(profile):
     """Rebuild a finished set of answers from a saved profile, so a learner can change one
     answer and rebuild their plan without starting over."""
     path = profile.path
-    if path is None or not path.is_available():
+    if path is None or not path.is_available(profile.gets_ai_plans()):
         return {}
     track = path.first_track()
     prefix = f"{path.title}: "

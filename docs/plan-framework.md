@@ -341,6 +341,9 @@ Generated plans and lessons reach learners without approval. Review happens afte
 | Flags and feedback | Example parse check, most-missed question, regeneration count; thumbs up or down and report on each lesson |
 | Glossary | Built: on the AI plan page, from the saved lessons' key terms |
 | Settings | Built: `AI_PLANS` and `AI_LESSON_DAILY_LIMIT` next to `AI_DAILY_LIMIT` and `AI_INTAKE_DAILY_LIMIT` |
+| Gradual rollout | Built: **Gets AI plans early** on a learner's profile (`LearnerProfile.ai_plans_early`, with admin actions) gives AI plans to chosen learners while `AI_PLANS` is off; `AI_PLANS=True` then turns them on for everyone (`LearnerProfile.gets_ai_plans`) |
+| Help panel on AI lessons | Built: hints grounded in the lesson's key terms and explanation; "Why is this wrong?" on missed check questions, never sending answers (`ai_plan.help_topic`) |
+| Reminders and finish screen | Built for AI plans: reminders point to the next AI lesson (or setup); the finish page shows lessons done, moved on and skipped, the project, what to learn next and the glossary |
 | README | Replace "CodeAgapay doesn't write tutorials", update the plan diagram, add the weekly review to Regular jobs |
 
 ## 13. Later

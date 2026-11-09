@@ -125,7 +125,7 @@ def _build_plan(profile, project_idea):
     Returns True for an AI-tailored plan, False for a rule-based one, and None when no plan
     could be built (AI plans on, the AI unavailable, and no curated topics to fall back on).
     """
-    if settings.AI_PLANS:
+    if profile.gets_ai_plans():
         return _build_ai_plan(profile, project_idea)
     if ai_available() and reserve_intake(profile):
         plan, used_ai = tailor_plan(profile, project_idea)
@@ -161,7 +161,7 @@ def _build_ai_plan(profile, project_idea):
 
 def intake(request):
     """Guided onboarding: one question at a time with tappable choices, then a review."""
-    with onboarding.cached_paths():
+    with onboarding.cached_paths(get_profile(request.user).gets_ai_plans()):
         return _intake(request)
 
 
@@ -249,7 +249,7 @@ def _intake(request):
 
 def intake_check(request):
     """The quick check, inside onboarding: questions only on the topics the learner ticked."""
-    with onboarding.cached_paths():
+    with onboarding.cached_paths(get_profile(request.user).gets_ai_plans()):
         return _intake_check(request)
 
 

@@ -108,6 +108,7 @@
       credentials: "same-origin",
       body: JSON.stringify({
         topic: panel.dataset.topic,
+        lesson: panel.dataset.lesson || "",
         screen: quizItem ? "quiz" : panel.dataset.screen,
         question: question,
         hint_level: level,

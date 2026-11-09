@@ -14,7 +14,9 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from accounts.models import get_profile
-from assistant.service import ai_available, lessons_left_today, release_lesson, reserve_intake, reserve_lesson
+from assistant.service import (
+    ai_available, daily_limit, lessons_left_today, release_lesson, remaining_today, reserve_intake, reserve_lesson,
+)
 
 from content.models import Track
 
@@ -36,6 +38,16 @@ def _outline_and_lesson(request, key):
     return profile, outline, by_key[key]
 
 
+def _given(question, result):
+    """The learner's answer as they'd read it: the chosen option's words for multiple choice."""
+    if result is None:
+        return ""
+    answer = str(result["answer"])
+    if question["type"] == "mc" and answer.isdigit() and int(answer) < len(question["choices"]):
+        return question["choices"][int(answer)]
+    return answer
+
+
 def _locked(outline, item):
     """Lessons stay locked until the learner chooses a setup option, so every lesson knows their setup."""
     return item["kind"] != "setup" and not outline.setup_choice and setup_lesson(outline) is not None
@@ -44,6 +56,16 @@ def _locked(outline, item):
 def _to_setup(request):
     messages.info(request, "Choose how you'll set up first. Your lessons follow the way you pick.")
     return redirect("ai_lesson", key=SETUP_KEY)
+
+
+def _help(profile, outline, key):
+    """What the Agapay panel needs on an AI lesson (templates/partials/help_panel.html)."""
+    topic = ai_plan.help_topic(outline, key)
+    return {
+        "help_screen": "lesson", "help_lesson": key, "help_title": topic.title if topic else "",
+        "help_remaining": remaining_today(profile), "help_limit": daily_limit(),
+        "help_tips": topic.help_tips if topic else [], "help_resources": topic.help_resources if topic else [],
+    }
 
 
 def _try_steps(outline, lesson):
@@ -94,11 +116,25 @@ def plan(request, profile, outline):
         "done_count": done,
         "total": total,
         "next_lesson": upcoming,
+        "finished": ai_plan.plan_finished(outline),
         "current_module": next((m["number"] for m in modules if not m["finished"]), None),
         "project": project,
         "setup_lesson": setup,
         "setup_ready": bool(outline.setup_choice) or not setup,
         "glossary": glossary(outline),
+    })
+
+
+def finish(request, profile, outline):
+    """The AI plan's finish page. Called by learning.views.plan_finish."""
+    if not ai_plan.plan_finished(outline):
+        return redirect("plan")
+    return render(request, "learning/ai_finish.html", {
+        "profile": profile,
+        "data": outline.data,
+        "project": outline.data.get("project") or {},
+        "glossary": glossary(outline),
+        **ai_plan.finish_summary(outline),
     })
 
 
@@ -163,7 +199,8 @@ def lesson(request, key):
         "score": score,
         # Each question with its number (the form field is q<number>) and, after a try, its result.
         "questions": [{"q": q, "n": i, "result": score["results"][i] if score else None,
-                       "answer": ai_plan.answer_text(q)} for i, q in enumerate(check)],
+                       "answer": ai_plan.answer_text(q), "given": _given(q, score["results"][i] if score else None)}
+                      for i, q in enumerate(check)],
         "can_move_on": score is not None and not score["passed"] and progress.tries >= ai_plan.MOVE_ON_AFTER
         and progress.status != LessonProgress.Status.DONE,
         "next_key": keys[position + 1] if position + 1 < len(keys) else None,
@@ -174,6 +211,7 @@ def lesson(request, key):
         "outdated_count": len(ai_plan.outdated_lessons(outline)) if setup_info and outline.setup_choice else 0,
         "lessons_left": lessons_left_today(profile),
         "lesson_number": position + 1,
+        **_help(profile, outline, key),
         "lesson_total": len(keys),
     })
 

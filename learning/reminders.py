@@ -15,8 +15,8 @@ from django.utils import timezone
 
 from accounts.models import LearnerProfile
 
-from . import journey
-from .models import PracticeSubmission, QuizAttempt
+from . import ai_plan, journey
+from .models import PlanOutline, PracticeSubmission, QuizAttempt
 from .planner import active_plan
 
 REMIND_AFTER_DAYS = 7
@@ -49,13 +49,29 @@ def last_activity(profile, plan):
     return max(t for t in times if t)
 
 
+def _plan_and_activity(profile):
+    """The learner's plan (an AI plan when AI_PLANS is on and they have one) and their latest activity."""
+    outline = ai_plan.active_outline(profile) if profile.gets_ai_plans() else None
+    if outline is not None:
+        times = [outline.created_at, profile.user.last_login, ai_plan.last_activity(outline)]
+        return outline, max(t for t in times if t)
+    plan = active_plan(profile)
+    return plan, (last_activity(profile, plan) if plan else None)
+
+
+def _next_action(profile, plan):
+    if isinstance(plan, PlanOutline):
+        return ai_plan.next_action(plan)
+    items = list(plan.items.select_related("topic").order_by("order"))
+    return journey.next_action(profile, plan, items, journey.due_reviews(profile, plan))
+
+
 def reminder_for(profile, now=None):
     """The reminder this learner is due, or None."""
     now = now or timezone.now()
-    plan = active_plan(profile)
+    plan, activity = _plan_and_activity(profile)
     if plan is None:
         return None
-    activity = last_activity(profile, plan)
     sent = profile.last_reminder_at
     came_back = sent is None or activity > sent
     unanswered = 0 if came_back else profile.reminders_unanswered
@@ -64,8 +80,7 @@ def reminder_for(profile, now=None):
     quiet_since = activity if came_back else sent
     if now - quiet_since < timezone.timedelta(days=REMIND_AFTER_DAYS):
         return None
-    items = list(plan.items.select_related("topic").order_by("order"))
-    action = journey.next_action(profile, plan, items, journey.due_reviews(profile, plan))
+    action = _next_action(profile, plan)
     if action is None or action.kind == "project":
         return None  # Nothing left that a nudge helps with.
     return Reminder(profile, action, unanswered)
