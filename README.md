@@ -196,7 +196,7 @@ Open http://localhost:8000 for the app and http://localhost:8000/admin for curat
 | `GROQ_API_KEY`, `GROQ_MODEL`, `CF_ACCOUNT_ID`, `CF_API_TOKEN`, `CF_MODEL` | AI helper. Leave blank to turn the AI off |
 | `AI_DAILY_LIMIT` | AI hint messages per learner per day (default 20) |
 | `GROQ_PLAN_MODEL`, `AI_INTAKE_DAILY_LIMIT` | Model for tailored plans, and AI-tailored plans per learner per day (default 2). Past the cap, the plan is built without AI |
-| `AI_OUTLINES` | `True` saves an AI-written plan outline with each AI-tailored plan, for review in admin. Learners don't see it yet. Default `False` |
+| `AI_OUTLINES` | `True` saves an AI-written outline with each AI-tailored plan, for review in admin. Default `False` |
 | `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `DEFAULT_FROM_EMAIL` | Reminder emails, on the machine that runs `send_reminders`. SMTP with TLS |
 | `SITE_URL` | Links in emails. Defaults to the live site; set it only to test emails locally |
 
@@ -238,20 +238,31 @@ python manage.py draft_topic html "Page structure" "Text and headings" "Links an
 </details>
 
 <details>
-<summary><strong>Try AI-written plan outlines</strong></summary>
+<summary><strong>AI-written plans and lessons</strong></summary>
 
 <br>
 
-The team decided the AI will write whole plans and lessons, following [`docs/plan-framework.md`](docs/plan-framework.md). The first piece is the plan outline: modules, lesson titles, weeks and a project. Learners don't see outlines until lesson generation is built, so for now they're for trying and reviewing the prompt in `learning/prompts/outline.md`.
+The AI will curate each learner's plan and lesson flow, following the rules in [`docs/plan-framework.md`](docs/plan-framework.md). It works in two steps:
+
+- **Outline.** The AI writes modules, lesson titles, minutes and a project from the learner's onboarding answers and check results. The code adds weeks, totals, module progress and the deadline check.
+- **Lesson.** The AI writes an explanation, examples, a task, links and check questions the first time a learner opens a lesson. The code keeps only links on the allowed list, keeps only questions it can grade, and flags code that doesn't parse.
+
+The plan and lesson pages will show AI-written plans and grade each lesson's check questions. Until then, learners keep their curated plan, and with `AI_OUTLINES=True` each AI-tailored plan also saves an outline for review in admin.
+
+The prompts live in `learning/prompts/`. Every outline and lesson records the prompt version, model and token counts.
+
+Try a prompt:
 
 ```bash
-python manage.py draft_outline --path website --experience none --hours 4 --weeks 6     --goal "an event page for our org" --project "the schedule and a sign-up link"
+python manage.py draft_outline --path website --experience none --hours 4 --weeks 6 --goal "an event page for our org"
 python manage.py draft_outline --learner ana@example.com --save
+python manage.py draft_lesson --title "Your first HTML page" --track HTML --earlier "What is a web page?"
+python manage.py draft_lesson --outline 3 --lesson L2 --save
 ```
 
-- One AI call, about 600 tokens in and up to about 2,000 out. It prints the outline, what the code repaired and the token counts.
-- Nothing is saved unless you add `--save` with `--learner`. Add `--show-prompt` to see exactly what is sent, without calling the AI.
-- With `AI_OUTLINES=True`, every AI-tailored plan also saves an outline. Review them in admin under **Plan outlines**: open one, set **Review** to OK or Problem with a note, or use the **10 random** filter for the weekly sample.
+- Each command is one AI call. An outline is about 700 tokens in and 1,000 to 2,000 out; a lesson about 1,000 to 1,800 out. The command prints the result, what the code repaired, anything flagged for review, and the token counts.
+- `--save` stores the result (with `--learner` for outlines, `--outline` for lessons). `--show-prompt` prints exactly what is sent, without calling the AI. `--raw` also prints the model's reply before the code's checks. `draft_lesson --struggled "..."` asks for a lesson taught a different way.
+- Review outlines and lessons in admin under **Plan outlines** and **Generated lessons**: set **Review** to OK or Problem with a note, filter by **Flagged**, or pick **10 random** for the weekly sample. **Regenerate** writes a new version of a lesson and keeps the old one.
 
 </details>
 
@@ -377,6 +388,7 @@ The credentials live in settings only. Don't add a Google "Social application" i
 | AI helper | ✅ Help panel on lesson, practice and quiz pages |
 | Practice tasks | ✅ Done, with AI feedback. No code editor |
 | AI drafting commands | ✅ `draft_topic`, `draft_intro` and `draft_practice` |
+| AI-written plans and lessons | 🟡 Outlines and lessons are generated, checked and reviewed in admin. To do: show them on the plan and lesson pages, grade the lesson checks |
 | HTML and CSS tracks | 🟡 Drafted in `content/drafts/`. To do: review, load and activate. No practice tasks yet |
 | JavaScript, SQL and Java tracks | ⬜ Not started |
 | Finish screen and Settings | ✅ Done, at `/plan/finished/` and `/settings/` |

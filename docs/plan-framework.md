@@ -1,6 +1,6 @@
 # CodeAgapay AI Learning Plan Framework
 
-Version 2.1, accepted by the team on 9 November 2026. Outline step built in shadow mode (prompt `outline-2`).
+Version 2.1, accepted by the team on 9 November 2026. Outline step (prompt `outline-2`) and lesson generation (prompt `lesson-6`) built; learners don't see them until the lesson page is wired up.
 
 This is the source of truth for how CodeAgapay's AI builds learning plans and lessons. The AI prompts and the code follow it. When a rule changes here, change the prompt or code that carries it out (see **Where** in each table) in the same pull request.
 
@@ -41,9 +41,9 @@ Two small AI steps instead of one large one. They fit the free AI tiers, are fas
 | --- | --- | --- | --- | --- |
 | 1. Onboarding | Sign-up | Path, project, experience, topics used, hours per week, optional date, what helps when stuck; then the skill check | Built | `diagnose/onboarding.py`, `diagnose/views.py` |
 | 2. Outline | After the learner confirms | One AI call writes the outline (section 5). Code checks and saves it. Code assigns weeks from hours per week | Built in shadow mode: saved for review in admin when `AI_OUTLINES` is on; learners don't see it until step 3 ships | `learning/outline.py`, `learning/prompts/outline.md` |
-| 3. Lesson | First open of a lesson | One AI call writes it (section 6) using the learner's latest quiz results. Code checks and saves it; later visits show the saved lesson | v1 | new lesson generation module |
+| 3. Lesson | First open of a lesson | One AI call writes it (section 6). Code checks and saves it; later visits show the saved lesson | Built, not shown to learners yet (`lessons.lesson_for`). Using the latest quiz results comes with the lesson page | `learning/lessons.py`, `learning/prompts/lesson.md` |
 | 4. Check | End of each lesson | Code grades the mini-check and applies the score bands (section 7) | v1 | `learning/grading.py` |
-| 5. Adapt | After a low score | The lesson is regenerated with a different explanation and example; retakes use new questions | v1 | lesson generation |
+| 5. Adapt | After a low score | The lesson is regenerated with a different explanation, examples and questions; the old version is kept for review | Built (`lessons.regenerate_lesson`); triggering it from a score comes with the lesson page | `learning/lessons.py` |
 | Fallback | AI off, over its limit, or two bad replies | Today's curated plan: curated topics, rule-based order and weeks, template project | Built | `learning/tailoring.py` `build_plan_with_template` |
 
 **Fallback gap:** only Python has curated topics today (HTML and CSS are drafted in `content/drafts/`). On other tracks the fallback can only show setup steps and ask the learner to try again later. The team still has to decide what learners see (section 14).
@@ -91,7 +91,7 @@ Every plan has these parts, in this order.
 | Modules | 3 to 5 lessons each, simple to complex, each with a one-sentence goal, a milestone ("you can now...") and a stuck path | v1 |
 | Lessons (titles only) | Title, "You will be able to", minutes, core or optional, lessons it needs | v1 |
 | Project | One project tied to the goal, with weekly steps and "done when" checks, adapted from a curated `ProjectIdea` when one fits | Built |
-| Next steps and glossary | What to learn next; every key term from the saved lessons, in order, on the finish screen | v1 |
+| Next steps and glossary | What to learn next; every key term from the saved lessons, in order, on the finish screen | Built (`lessons.glossary`); the finish screen shows it with the lesson page |
 
 ### Sequencing
 
@@ -114,8 +114,8 @@ Every lesson has the same parts. Code rejects a lesson missing a required part.
 | --- | --- | --- |
 | You will be able to | One sentence | v1 |
 | Time | Within the depth table's range for the level | v1 |
-| Warm-up | 1 to 2 ungraded questions on the previous lesson, preferring ones the learner missed; none in the first lesson | Built for curated topics (`journey.warm_up`); v1 for generated lessons |
-| Key terms | Up to 3 for beginners (5 intermediate, 7 advanced), each with a plain definition | Built (`Topic.clean` allows 3) |
+| Warm-up | 1 to 2 ungraded questions on the previous lesson, preferring ones the learner missed; none in the first lesson | Built for curated topics (`journey.warm_up`) and generated lessons (`lessons.warm_up`, taken from the previous lesson's saved questions, so no tokens). Preferring missed ones comes with the lesson page |
+| Key terms | Up to 3 for beginners (5 intermediate, 7 advanced), each with a plain definition. A definition uses only everyday words and terms already taught; a new idea it needs gets one short plain clause, never a chain of new terms (not "declares the document as HTML5", but "tells the browser this is a modern HTML page") | Built (`Topic.clean` allows 3; the rule is in `prompts/lesson.md`) |
 | Why it matters | The problem this solves, before the how | Built |
 | Explanation | At the depth for the level; no internals or history for beginners | Built |
 | Example | Worked code with its exact output. Two at beginner level: one simple, one real-world, ideally from the learner's path | v1 (curated topics have one) |
@@ -147,9 +147,9 @@ This is about the language the AI writes in (outline, lessons, hints, feedback),
 | Match the learner: Taglish if they write in Taglish, otherwise plain English | Prompt + Code | Built | `assistant/service.py` hint prompt |
 | Detect common Tagalog words and add an explicit "reply in Taglish" note, because models drift back to English | Code | Built | `assistant/service.py` `language_note` |
 | Plans are written in Taglish when the learner used Taglish | Prompt | Built | `learning/tailoring.py` `SYSTEM_PROMPT` |
-| Same rule for generated lessons, using the learner's onboarding and help messages | Prompt + Code | v1 | lesson prompt |
-| Code, keywords, function names and error messages stay in English | Prompt | v1 | lesson prompt |
-| Taglish the way Filipino students mix it, not formal Tagalog; 2 or 3 sample explanations in the prompt | Prompt | v1 | lesson prompt |
+| Same rule for generated lessons, detected from the learner's goal | Prompt + Code | Built | `lessons.spec_from_outline`, `prompts/lesson.md` |
+| Code, keywords, function names and error messages stay in English | Prompt | Built | `prompts/lesson.md` |
+| Taglish the way Filipino students mix it, not formal Tagalog; 2 or 3 sample explanations in the prompt | Prompt | Built (2 samples) | `prompts/lesson.md` |
 | Tests: a Taglish learner gets a Taglish lesson, an English learner gets English | Code | v1 | tests |
 
 ## 7. Checks, quizzes and score bands
@@ -209,7 +209,7 @@ A failed check never blocks the learner for good; there is always a next step. *
 
 | Rule | Enforced by | Status |
 | --- | --- | --- |
-| Keep a link only if its site is on the allowed list; otherwise drop the URL and keep the name and a search phrase | Code | v1 |
+| Keep a link only if its site is on the allowed list; otherwise drop the URL and keep the name and a search phrase. MDN and the Python docs get a site search link, which always works | Code | Built (`lessons.allowed_link`, `ALLOWED_LINKS`) |
 | Give the AI the curated links the app already has for the subject, and prefer them | Prompt | v1 |
 | Free resources only; paid ones are not on the list | Team | v1 |
 | Match the learner's level; no advanced docs for beginners | Prompt | v1 |
@@ -248,10 +248,10 @@ These run in code before anything is saved or shown. They are what make AI-writt
 | --- | --- | --- |
 | Valid JSON in the expected shape (appendix A) | Try the next provider; for an outline with no usable lessons, ask once more, then fall back | Built (`ask_model_json`, `outline.generate_outline`) |
 | Outline: lessons have titles; minutes within the depth table; known kinds | Repair in code (drop, clamp, default) and record the repair; no extra AI call | Built (`outline.parse_outline`) |
-| Lesson: required parts present (section 6) | Retry once, then fall back | v1 |
+| Lesson: an explanation, an example, a task and 2 gradable questions | Ask once more, then give up (the learner sees a try-later message) | Built (`lessons.parse_lesson`) |
 | Lessons only need earlier lessons | Drop references to later or unknown lessons | Built (outline) |
-| Every question is gradable | Drop it; retry if fewer than 2 remain | v1 |
-| Every link is on the allowed list | Remove the URL, keep the name and search phrase | v1 |
+| Every question is gradable: a multiple choice with distinct choices and a valid answer, or a blank with ___ and accepted answers | Drop it; ask again if fewer than 2 remain | Built |
+| Every link is on the allowed list | Remove the URL, keep the name and search phrase | Built |
 | Text within length limits; no HTML or scripts | Trim or strip | Built for trimming |
 | Daily limits per learner | Plans: build without AI (`AI_INTAKE_DAILY_LIMIT`). Lessons: show a try-later message (`AI_LESSON_DAILY_LIMIT`, v1) | Built for plans; v1 for lessons |
 
@@ -283,7 +283,7 @@ Generated plans and lessons reach learners without approval. Review happens afte
 | Layer | What it does | Enforced by | Status |
 | --- | --- | --- | --- |
 | 1. Labels and reports | AI-written parts are labelled. Learners can report a problem with their plan (`PlanFeedback`); v1 adds reporting a single lesson | Code | Built (plan); v1 (lesson) |
-| 2. Automatic flags | Flag a lesson when a Python example doesn't parse (checked with `ast`; AI or learner code is never run on the server), when almost every learner misses the same question (its answer is likely wrong), or when it was regenerated many times | Code | v1 |
+| 2. Automatic flags | Flag a lesson when a Python example or task answer doesn't parse (checked with `ast`; code is never run on the server) or a blank's answer is long or shown in its own question, or an HTML example or task uses a tag the lesson doesn't explain. Built (`GeneratedLesson.flags`, filter **Flagged**). With the lesson page: when almost every learner misses the same question, or it was regenerated many times | Code | Built (parse, long blank); v1 (the rest) |
 | 3. Lesson feedback | Thumbs up or down at the end of each lesson; thumbs down flags it | Code | v1 |
 | 4. Weekly review | A person reviews every flagged or reported lesson plus about 10 random ones, using the checklist | Team | v1 |
 
@@ -308,6 +308,7 @@ Generated plans and lessons reach learners without approval. Review happens afte
 - Setup comes first and ends with its check.
 - No lesson needs an idea that hasn't been taught yet.
 - Lessons fit the depth table: ideas, key terms, minutes.
+- Key term definitions and the explanation bring in no new term without a short plain meaning.
 - Every lesson has an example, a try-it task, resources and a mini-check.
 - Explanations and examples are correct. Run every code example.
 - Quiz answers are right, and questions only cover what was taught.
@@ -320,14 +321,15 @@ Generated plans and lessons reach learners without approval. Review happens afte
 | Area | Change |
 | --- | --- |
 | `docs/plan-framework.md` | This file |
-| `learning/prompts/` | `outline.md` (built, `outline-2`) and `lesson.md`: the short prompts, each naming the sections it follows, with a version |
+| `learning/prompts/` | `outline.md` (built, `outline-2`) and `lesson.md` (built, `lesson-6`): the short prompts, each naming the sections it follows, with a version |
 | `learning/outline.py` | Built: builds the outline request, checks and repairs the reply, saves it. Shadow mode (`AI_OUTLINES`) saves one with each AI-tailored plan |
 | `learning/tailoring.py` | When lessons ship: the outline replaces topic selection; the curated plan stays as the fallback |
-| New models | Built: `PlanOutline` (outline JSON, repairs, model, prompt version, tokens, review fields). With lessons: `PlanModule` and `GeneratedLesson` (lesson JSON, links, model, prompt version, level, review fields) |
-| `draft_outline` command | Built: try the outline prompt on a learner or made-up answers, see the repairs and token counts |
+| New models | Built: `PlanOutline` and `GeneratedLesson` (versions, current flag, flags), sharing `AIRecord` (JSON, repairs, model, prompt version, tokens, review fields). Modules stay inside the outline's JSON; a `PlanModule` table is only needed if the lesson page wants it |
+| `draft_outline`, `draft_lesson` commands | Built: try each prompt on saved data or typed-in answers, see the repairs, flags and token counts |
+| `learning/lessons.py` | Built: lesson request, checks and repairs, saving versions, regeneration, warm-ups and glossary from saved lessons |
 | Lesson page | Generate on first open, then show the saved lesson; regenerate after a low score |
 | Quiz and grading | Grade the lesson's own questions with today's grading rules and score bands |
-| Review (admin) | Built for outlines: readable outline, review status, notes, reviewer, filters, 10 random sample, Mark OK / Mark problem. With lessons: flag reason and a Regenerate action |
+| Review (admin) | Built for outlines and lessons: readable view with answers, review status, notes, reviewer, filters (incl. **Flagged**), 10 random sample, Mark OK / Mark problem, and Regenerate for lessons (up to 5 at a time) |
 | Flags and feedback | Example parse check, most-missed question, regeneration count; thumbs up or down and report on each lesson |
 | Finish screen | Glossary from the saved lessons' key terms |
 | Settings | `AI_LESSON_DAILY_LIMIT` next to `AI_DAILY_LIMIT` and `AI_INTAKE_DAILY_LIMIT` |

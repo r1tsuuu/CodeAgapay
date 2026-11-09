@@ -141,11 +141,10 @@ class PlanFeedback(models.Model):
         return self.text[:60]
 
 
-class PlanOutline(models.Model):
-    """An AI-written plan outline (docs/plan-framework.md, section 5), kept for review in admin.
+class AIRecord(models.Model):
+    """What every AI-written plan part keeps: the checked reply, what produced it, and its review.
 
-    Learners don't see outlines yet: they arrive with lesson generation. Until then the
-    team reviews them here to tune the prompt (framework section 11).
+    Reviewed afterwards in admin, not approved first (docs/plan-framework.md, section 11).
     """
 
     class Review(models.TextChoices):
@@ -153,14 +152,7 @@ class PlanOutline(models.Model):
         OK = "ok", "OK"
         PROBLEM = "problem", "Problem"
 
-    learner = models.ForeignKey(
-        "accounts.LearnerProfile", on_delete=models.CASCADE, related_name="plan_outlines"
-    )
-    plan = models.ForeignKey(
-        LearningPlan, on_delete=models.SET_NULL, null=True, blank=True, related_name="outlines",
-        help_text="The plan the learner got at the same time, if any.",
-    )
-    data = models.JSONField(help_text="The checked outline: modules, lessons, weeks, project.")
+    data = models.JSONField(help_text="The checked reply, as the app uses it.")
     repairs = models.JSONField(default=list, blank=True, help_text="What the code fixed in the AI's reply.")
     prompt_version = models.CharField(max_length=40)
     model = models.CharField(max_length=100, blank=True)
@@ -175,7 +167,59 @@ class PlanOutline(models.Model):
     reviewed_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
+        abstract = True
         ordering = ["-created_at"]
+
+
+class PlanOutline(AIRecord):
+    """An AI-written plan outline (docs/plan-framework.md, section 5), kept for review in admin.
+
+    Learners don't see outlines yet: they arrive with lesson generation. Until then the
+    team reviews them here to tune the prompt (framework section 11).
+    """
+
+    learner = models.ForeignKey(
+        "accounts.LearnerProfile", on_delete=models.CASCADE, related_name="plan_outlines"
+    )
+    plan = models.ForeignKey(
+        LearningPlan, on_delete=models.SET_NULL, null=True, blank=True, related_name="outlines",
+        help_text="The plan the learner got at the same time, if any.",
+    )
+
+    class Meta(AIRecord.Meta):
+        pass
 
     def __str__(self):
         return f"Outline for {self.learner.user} ({self.created_at:%Y-%m-%d})"
+
+
+class GeneratedLesson(AIRecord):
+    """One AI-written lesson of an outline (framework section 6), written when first opened.
+
+    Regenerating (after a low score, or from admin) adds a new version and keeps the old
+    ones for review; only the current version is shown.
+    """
+
+    outline = models.ForeignKey(PlanOutline, on_delete=models.CASCADE, related_name="lessons")
+    key = models.CharField(max_length=10, help_text='The outline lesson it writes, e.g. "L3".')
+    title = models.CharField(max_length=150)
+    version = models.PositiveIntegerField(default=1)
+    is_current = models.BooleanField(default=True)
+    flags = models.JSONField(
+        default=list, blank=True, help_text="Problems found automatically, for a person to check."
+    )
+    flagged = models.BooleanField(default=False, help_text="Has flags. Kept as a field so admin can filter on it.")
+
+    class Meta(AIRecord.Meta):
+        constraints = [
+            models.UniqueConstraint(
+                fields=["outline", "key"], condition=Q(is_current=True), name="one_current_lesson_per_key",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.key} {self.title} (v{self.version})"
+
+    def save(self, *args, **kwargs):
+        self.flagged = bool(self.flags)
+        super().save(*args, **kwargs)

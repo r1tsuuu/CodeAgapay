@@ -12,6 +12,7 @@ usable lessons is asked for again, once.
 """
 
 import re
+import unicodedata
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -22,7 +23,7 @@ from diagnose.models import TopicMastery
 from .models import PlanOutline
 from .planner import assign_weeks, milestone_weeks
 
-PROMPT_PATH = Path(__file__).parent / "prompts" / "outline.md"
+PROMPTS = Path(__file__).parent / "prompts"
 
 LEVEL_MINUTES = {"beginner": (15, 30), "intermediate": (25, 45), "advanced": (30, 60)}
 KINDS = {"foundation", "recap", "core", "optional"}
@@ -42,9 +43,9 @@ STUCK_PATH = [
 ]
 
 
-def load_prompt():
-    """The system prompt and its version, from learning/prompts/outline.md."""
-    text = PROMPT_PATH.read_text(encoding="utf-8")
+def load_prompt(name="outline"):
+    """A system prompt and its version, from learning/prompts/<name>.md."""
+    text = (PROMPTS / f"{name}.md").read_text(encoding="utf-8")
     header, _, body = text.partition("\n\n")
     match = re.search(r"^version:\s*(\S+)", header, re.MULTILINE)
     return body.strip(), match.group(1) if match else "unknown"
@@ -128,12 +129,24 @@ def build_messages(profile, project_idea, ideas=()):
     return messages, version
 
 
-# Non-breaking and other Unicode hyphens look the same but break copying and search.
-HYPHENS = str.maketrans({"‐": "-", "‑": "-"})
+def clean_chars(text):
+    """Replace characters models emit that look right but break copying, search and grading.
+
+    Unicode hyphens become "-". Invisible format characters (zero-width spaces and the like,
+    Unicode category Cf) become spaces: models put them where a space belongs, so the words
+    otherwise show up glued together ("needfor").
+    """
+    return "".join(
+        "-" if ch in "\u2010\u2011" else " " if unicodedata.category(ch) == "Cf" else ch for ch in str(text)
+    )
 
 
 def _text(value, limit):
-    return " ".join(str(value or "").translate(HYPHENS).split())[:limit]
+    """Prose from the model on one line. Never used for code."""
+    text = " ".join(clean_chars(value or "").split())
+    # A full stop with no space before the next sentence ("activities.I-save"). Only lowercase
+    # then uppercase, so file names and versions ("page.html", "3.13") are left alone.
+    return re.sub(r"(?<=[a-z])\.(?=[A-Z])", ". ", text)[:limit]
 
 
 def _list(value):
@@ -323,6 +336,7 @@ def generate_outline(profile, project_idea="", plan=None, save=True):
     ideas = project_ideas(profile)
     messages, version = build_messages(profile, project_idea, ideas)
     repairs, usage = [], {}
+    earlier_problems = []
     for attempt in range(2):
         attempt_usage = {}
         data = ask_model_json(messages, max_tokens=MAX_TOKENS, usage=attempt_usage)
@@ -334,13 +348,16 @@ def generate_outline(profile, project_idea="", plan=None, save=True):
         outline, repairs = parse_outline(data, profile, ideas)
         if outline is not None:
             break
+        earlier_problems = ["Asked again: the first reply had no usable lessons"]
     else:
         return None
+    repairs = earlier_problems + repairs
     record = PlanOutline(
         learner=profile, plan=plan, data=outline, repairs=repairs,
         prompt_version=version, model=usage.get("model", ""),
         prompt_tokens=usage.get("prompt_tokens") or None, completion_tokens=usage.get("completion_tokens") or None,
     )
+    record.raw = data  # The model's reply before checks, for draft_outline --raw. Not saved.
     if save:
         record.save()
     return record
