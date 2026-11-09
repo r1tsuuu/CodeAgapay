@@ -68,7 +68,7 @@ class PromptTests(OutlineContentMixin, TestCase):
 
     def test_prompt_file_has_a_version(self):
         system, version = load_prompt()
-        self.assertEqual(version, "outline-2")
+        self.assertTrue(version.startswith("outline-"))
         self.assertIn("Return only a JSON object", system)
         self.assertNotIn("version:", system)
 
@@ -93,9 +93,10 @@ class PromptTests(OutlineContentMixin, TestCase):
         self.assertNotIn("Taglish", user)
         self.assertLess(len(user), 600)
 
-    def test_taglish_learner_is_flagged(self):
-        user = build_messages(self.profile, "gusto ko po gumawa ng page para sa org namin")[0][1]["content"]
-        self.assertIn("Language: Taglish", user)
+    def test_outlines_stay_in_english_for_a_taglish_goal(self):
+        system, user = (m["content"] for m in build_messages(self.profile, "gusto ko po gumawa ng page para sa org")[0])
+        self.assertNotIn("Language: Taglish", user)
+        self.assertIn("Plain English, even if the learner's goal or project is written in Taglish", system)
 
     def test_project_ideas_are_numbered_and_short(self):
         idea = ProjectIdea(track=self.html, title="Org page", brief="x" * 400)

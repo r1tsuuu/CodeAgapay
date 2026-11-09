@@ -13,6 +13,7 @@ import logging
 import re
 import time
 from dataclasses import dataclass, field
+from types import SimpleNamespace
 
 from django.conf import settings
 from django.db import transaction
@@ -40,9 +41,14 @@ HINT_STYLES = {
     "example": "They learn from examples, so include a short, different example when you can.",
 }
 
-LANGUAGE_RULES = (
+# Only the help panel (Need help) may answer in Taglish; lessons, plans and feedback are in English.
+HELP_LANGUAGE_RULES = (
     "- Match the learner's language. If their message has any Tagalog words, reply in Taglish\n"
     "  (everyday Tagalog mixed with English, the way they wrote). Otherwise reply in English.\n"
+    "- Plain text only: no markdown, no backticks, no asterisks, no headings."
+)
+ENGLISH_RULES = (
+    "- Reply in plain English, even if the learner wrote in Taglish or Tagalog.\n"
     "- Plain text only: no markdown, no backticks, no asterisks, no headings."
 )
 
@@ -100,6 +106,26 @@ def providers(purpose="hint"):
 
 
 @dataclass
+class StudyTopic:
+    """What the learner is studying when it isn't a curated Topic: an AI-written lesson.
+
+    Hints are grounded in the lesson's own content (notes), the same way curated hints use
+    the topic's summary and tips.
+    """
+
+    title: str
+    language: str
+    summary: str = ""
+    notes: str = ""  # Key terms and the start of the explanation.
+    help_tips: list = field(default_factory=list)
+    help_resources: list = field(default_factory=list)  # [{"title": ..., "url": ...}]
+
+    @property
+    def track(self):
+        return SimpleNamespace(name=self.language)
+
+
+@dataclass
 class HelpRequest:
     topic: object
     question: str
@@ -131,10 +157,14 @@ class HelpReply:
 
 
 def topic_tips(topic):
+    if isinstance(topic, StudyTopic):
+        return list(topic.help_tips)
     return [tip.text for tip in topic.tips.all()]
 
 
 def topic_resources(topic):
+    if isinstance(topic, StudyTopic):
+        return list(topic.help_resources)
     return [{"title": r.title, "url": r.url} for r in topic.resources.filter(is_active=True)]
 
 
@@ -144,10 +174,13 @@ def build_messages(request):
     tips = "\n".join(f"- {t}" for t in topic_tips(topic)) or "- (none)"
     resources = "\n".join(f"- {r['title']}" for r in topic_resources(topic)) or "- (none)"
     style = f"- {HINT_STYLES[request.hint_style]} Still follow the hint level.\n" if request.hint_style in HINT_STYLES else ""
+    # An AI-written lesson brings its own key terms and explanation, so hints match what it taught.
+    notes = f"Lesson notes:\n{topic.notes}\n" if getattr(topic, "notes", "") else ""
     system = (
         "You are a patient tutor helping a beginner programmer.\n"
         f"Topic: {topic.title} ({topic.track.name}).\n"
         f"Topic summary: {topic.summary or '(none)'}\n"
+        f"{notes}"
         f"Tips from our team:\n{tips}\n"
         f"Resources the learner has:\n{resources}\n\n"
         "Rules:\n"
@@ -157,13 +190,13 @@ def build_messages(request):
         f"{style}"
         "- Keep the reply under 120 words.\n"
         "- If the question is not about programming, gently steer back to the topic.\n"
-        f"{LANGUAGE_RULES}"
+        f"{HELP_LANGUAGE_RULES}"
     )
     user = f"My question: {request.question}{language_note(request.question)}"
     if request.screen == "quiz" and request.quiz_item is not None:
         # The prompt only. accepted_answers never leave the server.
         user = (
-            f"I'm on this quiz blank: {request.quiz_item.prompt}\n"
+            f"I'm on this quiz question: {request.quiz_item.prompt}\n"
             f"My answer so far: {request.learner_answer or '(blank)'}\n{user}"
         )
     return [{"role": "system", "content": system}, {"role": "user", "content": user}]
@@ -408,7 +441,7 @@ def build_practice_messages(task, answer, hint_style=""):
         "- If it already meets every check, say so and suggest one small way to stretch it.\n"
         f"{style}"
         "- Keep it under 120 words.\n"
-        f"{LANGUAGE_RULES}"
+        f"{ENGLISH_RULES}"
     )
     user = f"My answer:\n{answer}"
     return [{"role": "system", "content": system}, {"role": "user", "content": user}]

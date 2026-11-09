@@ -60,10 +60,13 @@ class Path(models.Model):
         tracks = self.ordered_tracks()
         return tracks[0] if tracks else None
 
-    def is_available(self):
-        """Learners can start it. With AI plans the AI writes the lessons, so curated topics aren't needed."""
+    def is_available(self, ai_plans=None):
+        """Learners can start it. With AI plans the AI writes the lessons, so curated topics aren't needed.
+
+        `ai_plans` says whether this learner gets AI plans; by default, whether everyone does (AI_PLANS).
+        """
         track = self.first_track()
-        if settings.AI_PLANS:
+        if settings.AI_PLANS if ai_plans is None else ai_plans:
             return bool(self.is_active and track and track.is_active)
         return bool(self.is_active and track and track.is_active and len(track.topics.all()))
 

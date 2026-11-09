@@ -5,9 +5,17 @@ Checks are graded with the same rules as curated quizzes (learning/grading.py): 
 answer matching, the same 70% pass mark compared as exact fractions, and the same bands.
 """
 
+import math
+from types import SimpleNamespace
+
 from django.db import transaction
+from django.db.models import Max
+from django.urls import reverse
 from django.utils import timezone
 
+from assistant.service import StudyTopic
+
+from .journey import NextAction
 from .grading import ALMOST_PERCENT, PASS_PERCENT, normalize
 from .lessons import current_lesson
 from .outline import SETUP_KEY, all_lessons, learner_setup, setup_lesson
@@ -153,3 +161,79 @@ def answer_text(question):
     if question["type"] == "blank":
         return question["accepted_answers"][0]
     return question.get("sample_answer", "")
+
+
+LANGUAGE_NAMES = {"html": "HTML", "css": "CSS", "javascript": "JavaScript", "python": "Python", "java": "Java",
+                  "sql": "SQL"}
+HELP_NOTES = 700  # Characters of the explanation sent with each hint: enough to stay on topic, few tokens.
+
+
+def help_topic(outline, key):
+    """What Agapay knows about one of the learner's AI lessons, or None if it isn't written yet."""
+    written = current_lesson(outline, key)
+    item = next((x for x in lessons_in_order(outline) if x["key"] == key), None)
+    if written is None or item is None:
+        return None
+    data = written.data
+    terms = [f"{t['term']}: {t['definition']}" for t in data.get("key_terms", [])]
+    notes = "\n".join([*terms, " ".join(data.get("explanation", "").split())[:HELP_NOTES]])
+    return StudyTopic(
+        title=item["title"], language=LANGUAGE_NAMES.get(data.get("lang", ""), "programming"),
+        summary=item.get("can", ""), notes=notes.strip(),
+        help_tips=terms[:2] or [item.get("can", "")],
+        help_resources=[{"title": r["name"], "url": r["url"]} for r in data.get("resources", []) if r.get("url")],
+    )
+
+
+def help_question(outline, key, index):
+    """One check question for "Why is this wrong?": its wording and choices, never its answer."""
+    written = current_lesson(outline, key)
+    check = written.data.get("check", []) if written else []
+    if not 0 <= index < len(check):
+        return None
+    question = check[index]
+    choices = f" (choices: {'; '.join(question['choices'])})" if question.get("choices") else ""
+    return SimpleNamespace(prompt=question["prompt"] + choices, hint="")
+
+
+def next_action(outline):
+    """The learner's next step on an AI plan, shaped like the curated plan's (journey.NextAction)."""
+    upcoming = next_lesson(outline)
+    if upcoming is None:
+        return None
+    if upcoming["kind"] == "setup":
+        return NextAction("start", "Choose your setup", "Pick how you'll write code, so your lessons can start.",
+                          reverse("ai_lesson", args=[upcoming["key"]]), "Choose your setup")
+    progress = LessonProgress.objects.filter(outline=outline, key=upcoming["key"]).first()
+    started = progress is not None and progress.status == LessonProgress.Status.IN_PROGRESS
+    return NextAction("continue" if started else "start", upcoming["title"], upcoming.get("can", ""),
+                      reverse("ai_lesson", args=[upcoming["key"]]), "Keep going" if started else "Open lesson")
+
+
+def plan_finished(outline):
+    """Every lesson is done or skipped, and at least one was really done (like journey.is_finished)."""
+    progress = progress_by_key(outline)
+    lessons = [x for x in lessons_in_order(outline) if x["kind"] != "setup"]
+    statuses = [progress[x["key"]].status if x["key"] in progress else LessonProgress.Status.TODO for x in lessons]
+    return LessonProgress.Status.DONE in statuses and all(is_finished(s) for s in statuses)
+
+
+def last_activity(outline):
+    """The latest lesson progress (opening, checking, rating), or None."""
+    return outline.progress.aggregate(last=Max("updated_at"))["last"]
+
+
+def finish_summary(outline):
+    """What the AI plan's finish page shows."""
+    progress = progress_by_key(outline)
+    lessons = [x for x in lessons_in_order(outline) if x["kind"] != "setup"]
+
+    def having(status, shaky=False):
+        return [x for x in lessons if x["key"] in progress and progress[x["key"]].status == status
+                and progress[x["key"]].shaky == shaky]
+    return {
+        "done": having(LessonProgress.Status.DONE),
+        "moved_on": having(LessonProgress.Status.SKIPPED, shaky=True),
+        "skipped": having(LessonProgress.Status.SKIPPED),
+        "weeks": max(math.ceil((timezone.now() - outline.created_at).days / 7), 1),
+    }

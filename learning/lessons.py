@@ -25,7 +25,7 @@ from django.conf import settings
 from django.db import transaction
 from django.db.models import Max
 
-from assistant.service import ask_model_json, language_note
+from assistant.service import ask_model_json
 
 from .models import GeneratedLesson
 from .outline import (
@@ -93,7 +93,6 @@ class LessonSpec:
     needs: list = field(default_factory=list)
     project: str = ""
     learns_from: str = ""
-    taglish: bool = False
     struggled: list = field(default_factory=list)
     setup: str = ""  # Setup lesson: its tools and folder. Others: how the learner writes code.
     computer: str = ""  # What the learner uses, e.g. "A Mac", for shortcuts and app names.
@@ -115,7 +114,6 @@ def spec_from_outline(outline, key, struggled=()):
         needs=[by_key[k]["title"] for k in lesson.get("needs", []) if k in by_key],
         project=(outline.data.get("project") or {}).get("title", ""),
         learns_from=learner.get_hint_style_display().lower() if learner.hint_style else "",
-        taglish=bool(language_note(f"{learner.goal_text} {outline.data.get('goal', '')}")),
         struggled=[_text(s, 200) for s in struggled if _text(s, 200)][:5],
         setup=_setup_line(outline, lesson),
         computer=learner.get_device_display() if learner.device else "",
@@ -153,7 +151,6 @@ def build_messages(spec):
         f"Builds on: {', '.join(spec.needs)}" if spec.needs else "",
         f"Project: {spec.project}" if spec.project else "",
         f"Learns best from: {spec.learns_from}" if spec.learns_from else "",
-        "Language: Taglish" if spec.taglish else "",
         f"Computer: {spec.computer}" if spec.computer else "",
         (spec.setup if spec.kind == "setup" else f"Learner's setup: {spec.setup}") if spec.setup else "",
         f"Struggled with: {'; '.join(spec.struggled)}. Teach it a different way." if spec.struggled else "",

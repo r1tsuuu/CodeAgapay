@@ -198,7 +198,7 @@ Open http://localhost:8000 for the app and http://localhost:8000/admin for curat
 | `GROQ_PLAN_MODEL`, `AI_INTAKE_DAILY_LIMIT` | Model for tailored plans, and AI-tailored plans per learner per day (default 2). Past the cap, the plan is built without AI |
 | `AI_OUTLINES` | `True` saves an AI-written outline with each AI-tailored plan, for review in admin. Default `False` |
 | `AI_PLAN_CALL_TIMEOUT`, `AI_REQUEST_BUDGET` | Seconds one plan or lesson AI call may take (default 30), and all of a page's AI calls together (default 50, under the server's 60 in `gunicorn.conf.py`) |
-| `AI_PLANS`, `AI_LESSON_DAILY_LIMIT` | `True` gives learners AI-written plans and lessons instead of the curated plan (default `False`), and how many lessons the AI may write or rewrite per learner per day (default 12) |
+| `AI_PLANS`, `AI_LESSON_DAILY_LIMIT` | `True` gives every learner AI-written plans and lessons instead of the curated plan (default `False`; to start with a few, tick **Gets AI plans early** on their profile in admin), and how many lessons the AI may write or rewrite per learner per day (default 12) |
 | `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `DEFAULT_FROM_EMAIL` | Reminder emails, on the machine that runs `send_reminders`. SMTP with TLS |
 | `SITE_URL` | Links in emails. Defaults to the live site; set it only to test emails locally |
 
@@ -391,7 +391,7 @@ The credentials live in settings only. Don't add a Google "Social application" i
 | AI helper | ✅ Help panel on lesson, practice and quiz pages |
 | Practice tasks | ✅ Done, with AI feedback. No code editor |
 | AI drafting commands | ✅ `draft_topic`, `draft_intro` and `draft_practice` |
-| AI-written plans and lessons | 🟡 Plan page, lesson pages, checks, rewrites and review are done behind `AI_PLANS`. To do: test with learners, then turn it on. The Agapay help panel will come to AI lessons |
+| AI-written plans and lessons | 🟡 Plans, lessons, checks, rewrites, setup, the help panel, reminders and the finish screen are done behind `AI_PLANS`, or per learner with **Gets AI plans early** in admin. To do: test with learners, then turn it on for everyone |
 | HTML and CSS tracks | 🟡 Drafted in `content/drafts/`. To do: review, load and activate. No practice tasks yet |
 | JavaScript, SQL and Java tracks | ⬜ Not started |
 | Finish screen and Settings | ✅ Done, at `/plan/finished/` and `/settings/` |

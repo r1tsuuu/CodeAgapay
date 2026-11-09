@@ -41,7 +41,7 @@ Return only a JSON object:
 Rules: 3-5 milestones that grow the project week by week, in the same order as the topics:
 each milestone uses only topics that come at or before it in your topic list, starting
 with a small working version and adding harder parts (like files) last. No links. No code solutions. Plain English
-(or Taglish if the learner used Taglish)."""
+even if the learner wrote in Taglish or Tagalog."""
 
 IDEAS_PROMPT = """
 Project ideas from our curators. Base the project on the one that best fits the learner's

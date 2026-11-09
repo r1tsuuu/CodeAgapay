@@ -26,8 +26,8 @@
 <section class="next-action" aria-labelledby="next-action-title">
   <p class="next-action-label">Plan finished</p>
   <h2 id="next-action-title">You finished every lesson!</h2>
-  <p>Finish your project, then see what to learn next below.</p>
-  <a class="button button-primary" href="#project">See your project</a>
+  <p>See what you did, and where you can go from here.</p>
+  <a class="button button-primary" href="{% url 'plan_finish' %}">See what you finished</a>
 </section>
 {% endif %}
 
@@ -64,7 +64,12 @@
       <p class="plan-item-summary">{{ setup_lesson.can|inline_code }}</p>
       <p class="plan-item-meta"><span class="status status-{% if setup_ready %}done{% else %}todo{% endif %}">{% if setup_ready %}Set up{% else %}Required first{% endif %}</span></p>
       <a class="button button-lagoon button-small plan-item-open" href="{% url 'ai_lesson' setup_lesson.key %}">{% if setup_ready %}Open guide{% else %}Choose your setup{% endif %}</a>
-      {% if setup_ready %}<a class="button button-small" href="{% url 'ai_lesson' setup_lesson.key %}#setup-choice">Change setup method</a>{% endif %}
+      {% if setup_ready %}
+      {# In the item's action area, styled like Mark done and Skip: plan items are dark, so outline buttons. #}
+      <div class="plan-item-actions">
+        <a class="button" href="{% url 'ai_lesson' setup_lesson.key %}#setup-choice">Change setup method</a>
+      </div>
+      {% endif %}
     </li>
   </ol>
 </details>

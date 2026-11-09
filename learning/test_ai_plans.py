@@ -683,3 +683,199 @@ class SetupCollapsedTests(AIPlanMixin, TestCase):
         self.assertNotIn('<details class="plan-week plan-week-setup" open>', page)
         self.assertIn("Nothing to install, so it works on a phone", page)
         self.assertIn("Tap an option to see its steps.", page)
+
+
+@override_settings(**AI_PLANS)
+class AILessonHelpTests(AIPlanMixin, TestCase):
+    """The Agapay help panel on AI lessons: hints grounded in the lesson, never its answers."""
+
+    def setUp(self):
+        self.make_plan()
+        self.write()  # L1: key terms tag and element; check: mc (answer h1), blank (answer p), self.
+
+    def ask(self, **data):
+        import json
+        body = {"lesson": "L1", "question": "I'm stuck", "hint_level": 1, **data}
+        with mock.patch("assistant.service.call_provider", return_value="Look at the closing tag.") as call:
+            response = self.client.post(reverse("help_ask"), json.dumps(body), content_type="application/json")
+        return response.json(), call
+
+    def test_the_lesson_page_has_the_panel(self):
+        page = self.client.get(self.lesson_url())
+        self.assertContains(page, 'data-lesson="L1"')
+        self.assertContains(page, "Helping with: Tags")
+
+    def test_hints_use_the_lessons_own_content(self):
+        reply, call = self.ask()
+        self.assertEqual((reply["mode"], reply["reply"]), ("ai", "Look at the closing tag."))
+        system = call.call_args.args[1][0]["content"]
+        self.assertIn("Topic: Tags (HTML)", system)
+        self.assertIn("tag: A label in angle brackets.", system)  # Key terms.
+        self.assertIn("HTML marks up text as headings and paragraphs.", system)  # The explanation.
+        self.assertIn("Never give the full solution", system)
+        self.assertEqual(reply["resources"][0]["url"], "https://developer.mozilla.org/en-US/docs/Web/HTML")
+
+    def test_why_is_this_wrong_never_sends_the_answer(self):
+        self.client.post(self.lesson_url(name="ai_lesson_check"), {"q0": "1", "q1": "x"})
+        page = self.client.get(self.lesson_url())
+        self.assertContains(page, 'data-quiz-item="0" data-answer="h6"')  # The chosen option's words.
+        reply, call = self.ask(screen="quiz", quiz_item_id="1", learner_answer="x")
+        user = call.call_args.args[1][1]["content"]
+        self.assertIn("I'm on this quiz question: Paragraph text goes inside <___> tags.", user)
+        self.assertIn("My answer so far: x", user)
+        sent = call.call_args.args[1][0]["content"] + user
+        self.assertNotIn("Paragraphs use p.", sent)  # The question's explanation stays on the server.
+
+    def test_another_learners_lesson_is_not_reachable(self):
+        self.client.force_login(get_user_model().objects.create_user("ben"))
+        reply, call = self.ask()
+        call.assert_not_called()
+        self.assertEqual(reply["reply"], "Open a topic first, then ask your question.")
+
+    def test_without_ai_the_lesson_terms_and_links_still_help(self):
+        AIUsage.objects.create(learner=self.profile, date=timezone.localdate(), messages_used=99)
+        reply, call = self.ask()
+        call.assert_not_called()
+        self.assertEqual(reply["mode"], "fallback")
+        self.assertEqual(reply["tips"][0], "tag: A label in angle brackets.")
+
+
+@override_settings(**AI_PLANS)
+class AIReminderTests(AIPlanMixin, TestCase):
+    def setUp(self):
+        self.make_plan()
+        self.profile.email_reminders = True
+        self.profile.save()
+        self.user.email = "ana@example.com"
+        self.user.save()
+        week_ago = timezone.now() - timezone.timedelta(days=8)
+        PlanOutline.objects.filter(pk=self.outline.pk).update(created_at=week_ago)
+        LessonProgress.objects.filter(outline=self.outline).update(updated_at=week_ago)
+        get_user_model().objects.filter(pk=self.user.pk).update(last_login=week_ago)
+
+    def reminder(self):
+        from .reminders import reminder_for
+        return reminder_for(get_profile(get_user_model().objects.get(pk=self.user.pk)))
+
+    def test_a_quiet_learner_is_reminded_of_their_next_ai_lesson(self):
+        reminder = self.reminder()
+        self.assertEqual((reminder.action.title, reminder.action.url), ("Tags", reverse("ai_lesson", args=["L1"])))
+
+    def test_lesson_progress_counts_as_activity(self):
+        LessonProgress.objects.create(outline=self.outline, key="L1", status="in_progress")
+        self.assertIsNone(self.reminder())
+
+    def test_without_a_setup_the_reminder_asks_to_choose_one(self):
+        PlanOutline.objects.filter(pk=self.outline.pk).update(setup_choice="")
+        LessonProgress.objects.filter(key="S1").delete()
+        self.assertEqual(self.reminder().action.title, "Choose your setup")
+
+    def test_a_finished_plan_gets_no_reminder(self):
+        for key in ["L1", "L2", "L3", "L4", "L5"]:
+            LessonProgress.objects.create(outline=self.outline, key=key, status="done")
+        LessonProgress.objects.update(updated_at=timezone.now() - timezone.timedelta(days=8))
+        self.assertIsNone(self.reminder())
+
+
+@override_settings(**AI_PLANS)
+class AIFinishTests(AIPlanMixin, TestCase):
+    def setUp(self):
+        self.make_plan()
+
+    def test_finish_page_waits_for_the_last_lesson(self):
+        self.assertRedirects(self.client.get(reverse("plan_finish")), reverse("plan"))
+
+    def test_finish_page_shows_what_was_done_and_what_comes_next(self):
+        self.write("L1")
+        for key, status, shaky in [("L1", "done", False), ("L2", "done", False), ("L3", "skipped", True),
+                                   ("L4", "skipped", False), ("L5", "done", False)]:
+            LessonProgress.objects.create(outline=self.outline, key=key, status=status, shaky=shaky)
+        plan = self.client.get(reverse("plan"))
+        self.assertContains(plan, "See what you finished")
+        page = self.client.get(reverse("plan_finish"))
+        self.assertTemplateUsed(page, "learning/ai_finish.html")
+        self.assertEqual([x["key"] for x in page.context["done"]], ["L1", "L2", "L5"])
+        self.assertEqual([x["key"] for x in page.context["moved_on"]], ["L3"])
+        self.assertEqual([x["key"] for x in page.context["skipped"]], ["L4"])
+        self.assertContains(page, "Forms")  # The AI's "after this plan" suggestions.
+        self.assertContains(page, "Your glossary: 2 terms")
+
+
+@override_settings(**{**AI_PLANS, "AI_PLANS": False})
+class EarlyAccessTests(AIPlanMixin, TestCase):
+    """With AI_PLANS off for everyone, learners given early access still get AI plans."""
+
+    def setUp(self):
+        self.make_learner()
+        Topic.objects.create(track=self.html, title="Page structure", slug="html-structure")
+        self.client.force_login(self.user)
+
+    def build(self):
+        with mock.patch("learning.outline.ask_model_json", return_value=outline_reply()), \
+                mock.patch("learning.tailoring.ask_model_json", return_value=None):
+            return _build_plan(self.profile, "an event page")
+
+    def test_without_early_access_its_the_curated_plan(self):
+        self.assertFalse(self.build())
+        self.assertFalse(PlanOutline.objects.exists())
+        self.assertTemplateUsed(self.client.get(reverse("plan")), "learning/plan.html")
+
+    def test_with_early_access_its_an_ai_plan(self):
+        self.profile.ai_plans_early = True
+        self.profile.save()
+        self.assertTrue(self.build())
+        self.assertTemplateUsed(self.client.get(reverse("plan")), "learning/ai_plan.html")
+
+    def test_paths_without_topics_are_offered_only_to_early_learners(self):
+        from diagnose import onboarding
+        Topic.objects.all().delete()
+        with onboarding.cached_paths(False):
+            self.assertEqual(onboarding.available_paths(), [])
+        with onboarding.cached_paths(True):
+            self.assertEqual(onboarding.available_paths(), [self.path])
+
+    def test_admin_actions_turn_it_on_and_off(self):
+        admin_user = get_user_model().objects.create_superuser("curator", "c@example.com", "pw")
+        self.client.force_login(admin_user)
+        url = reverse("admin:accounts_learnerprofile_changelist")
+        self.client.post(url, {"action": "give_ai_plans_early", "_selected_action": [self.profile.pk]})
+        self.profile.refresh_from_db()
+        self.assertTrue(self.profile.ai_plans_early)
+        self.client.post(url, {"action": "take_ai_plans_early", "_selected_action": [self.profile.pk]})
+        self.profile.refresh_from_db()
+        self.assertFalse(self.profile.ai_plans_early)
+
+
+@override_settings(**AI_PLANS)
+class EnglishLessonsTests(AIPlanMixin, TestCase):
+    """Lessons are always English; only the Need help panel answers in Taglish."""
+
+    def setUp(self):
+        self.make_plan()
+        self.profile.goal_text = "Make a website: gusto ko po gumawa ng page para sa org namin"
+        self.profile.save()
+
+    def test_a_taglish_goal_still_gets_an_english_lesson(self):
+        with mock.patch("learning.lessons.ask_model_json", return_value=lesson_reply()) as ask:
+            self.client.get(self.lesson_url("L1") + "?write=1")
+        system, user = (m["content"] for m in ask.call_args.args[0])
+        self.assertNotIn("Taglish", user)
+        self.assertIn("Write in plain English", system)
+
+    def test_need_help_still_answers_in_taglish(self):
+        import json
+        self.write()
+        body = {"lesson": "L1", "question": "bakit hindi gumagana yung tag ko?", "hint_level": 1}
+        with mock.patch("assistant.service.call_provider", return_value="Tingnan mo yung closing tag.") as call:
+            self.client.post(reverse("help_ask"), json.dumps(body), content_type="application/json")
+        system, user = (m["content"] for m in call.call_args.args[1])
+        self.assertIn("reply in Taglish", system)
+        self.assertIn("(I wrote in Taglish. Please reply in Taglish too.)", user)
+
+    def test_practice_feedback_is_in_english(self):
+        from types import SimpleNamespace
+        from assistant.service import build_practice_messages
+        task = SimpleNamespace(topic=SimpleNamespace(title="Tags", track=SimpleNamespace(name="HTML"), summary=""),
+                               prompt="Write a heading.", checklist=["Uses h1"], sample_answer="<h1>Hi</h1>")
+        system = build_practice_messages(task, "gusto ko po ng heading")[0]["content"]
+        self.assertIn("Reply in plain English, even if the learner wrote in Taglish", system)

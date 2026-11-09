@@ -60,9 +60,17 @@ class LearnerProfile(models.Model):
         "content.Track", blank=True, related_name="+", help_text="Tracks whose setup the learner finished."
     )
     onboarded = models.BooleanField(default=False)
+    ai_plans_early = models.BooleanField(
+        "gets AI plans early", default=False,
+        help_text="Gets AI-written plans and lessons while AI_PLANS is still off for everyone (gradual rollout).",
+    )
 
     def __str__(self):
         return f"Profile of {self.user}"
+
+    def gets_ai_plans(self):
+        """AI-written plans for this learner: everyone's on (AI_PLANS), or they're in the early group."""
+        return settings.AI_PLANS or self.ai_plans_early
 
 
 def get_profile(user):

@@ -1,6 +1,5 @@
 from itertools import groupby
 
-from django.conf import settings
 from django.contrib import messages
 from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404, redirect, render
@@ -34,13 +33,13 @@ def plan_build(request):
 
 def plan(request):
     profile = get_profile(request.user)
-    if settings.AI_PLANS:
+    if profile.gets_ai_plans():
         outline = active_outline(profile)
         if outline is not None:
             return ai_views.plan(request, profile, outline)
     current = active_plan(profile)
     if current is None:
-        if settings.AI_PLANS and profile.onboarded:
+        if profile.gets_ai_plans() and profile.onboarded:
             # Onboarding finished but the AI couldn't write the plan: offer to try again.
             return render(request, "learning/ai_plan_retry.html", {"profile": profile})
         return redirect("result")
@@ -105,6 +104,8 @@ def plan(request):
 def plan_finish(request):
     """The end of the plan: what the learner did, and where they can go from here."""
     profile = get_profile(request.user)
+    if profile.gets_ai_plans() and (outline := active_outline(profile)) is not None:
+        return ai_views.finish(request, profile, outline)
     current = active_plan(profile)
     if current is None:
         return redirect("result")

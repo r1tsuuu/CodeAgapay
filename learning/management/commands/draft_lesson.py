@@ -37,7 +37,6 @@ class Command(BaseCommand):
         parser.add_argument("--minutes", type=int, default=25)
         parser.add_argument("--earlier", default="", help='Earlier lesson titles, separated by "|"')
         parser.add_argument("--project", default="")
-        parser.add_argument("--taglish", action="store_true")
         parser.add_argument("--setup", choices=["main", "alternative", "curated"],
                             help="Pretend the learner chose this setup: main (VS Code), alternative (no install) "
                                  "or curated (the team's guide)")
@@ -103,7 +102,7 @@ class Command(BaseCommand):
             key="L1", title=opts["title"], can=opts["can"], minutes=opts["minutes"], kind=opts["kind"],
             level=opts["level"], path="Learn to code", tracks=opts["track"],
             earlier=[t.strip() for t in opts["earlier"].split("|") if t.strip()],
-            project=opts["project"], taglish=opts["taglish"], struggled=opts["struggled"],
+            project=opts["project"], struggled=opts["struggled"],
             setup=self._setup_line(opts), computer=dict(LearnerProfile.Device.choices).get(opts["device"], ""),
         )
 
