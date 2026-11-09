@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% load lesson_format %}
+
+{% block title %}{{ item.title }} · CodeAgapay{% endblock %}
+
+{% block head %}
+{% if not failed %}<meta http-equiv="refresh" content="0;url=?write=1">{% endif %}
+{% endblock %}
+
+{% block content %}
+<p class="breadcrumb"><a href="{% url 'plan' %}">Your plan</a> / <strong>{{ item.title }}</strong></p>
+<h1>{{ item.title|inline_code }}</h1>
+{% if failed == "limit" %}
+<p class="lead">You've opened a lot of new lessons today, so this one will be written tomorrow.</p>
+<p>Lessons you've already opened are still here. Review one of those, or work on your project.</p>
+<p><a class="button button-primary" href="{% url 'plan' %}">Back to my plan</a></p>
+{% elif failed %}
+<p class="lead">We couldn't write this lesson just now.</p>
+<p>That's on our side, not yours. Please try again in a few minutes.</p>
+{% if setup_info.curated %}
+<p>Or set up now with the guide the CodeAgapay team checked:</p>
+<p><a class="button" href="{% url 'setup_guide' setup_info.track_slug %}" target="_blank" rel="noopener">Open the CodeAgapay setup guide</a></p>
+<form method="post" action="{% url 'ai_setup_done' item.key %}">
+  {% csrf_token %}
+  <button type="submit" name="way" value="curated" class="button button-primary no-arrow">I set up with the CodeAgapay guide</button>
+</form>
+{% endif %}
+<p><a class="button button-primary no-arrow" href="?write=1">Try again</a> <a class="text-link" href="{% url 'plan' %}">Back to my plan</a></p>
+{% else %}
+{% if updating %}
+<p class="lead" role="status">Updating this lesson for your new setup… This takes about 10 to 20 seconds.</p>
+{% else %}
+<p class="lead" role="status">Writing your lesson… This takes about 10 to 20 seconds, only the first time you open it.</p>
+{% endif %}
+{% if item.can %}<p><strong>You'll be able to:</strong> {{ item.can|inline_code }}</p>{% endif %}
+<noscript><p><a class="button" href="?write=1">Continue</a></p></noscript>
+{% endif %}
+{% endblock %}

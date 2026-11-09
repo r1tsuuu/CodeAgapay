@@ -99,7 +99,7 @@ class ServiceTests(AssistantTestMixin, TestCase):
         ask(self.learner, self.request())
         usage = AIUsage.objects.get(learner=self.learner)
         self.assertEqual(usage.messages_used, 1)
-        self.assertEqual({f.name for f in AIUsage._meta.fields}, {"id", "learner", "date", "messages_used", "intakes_used"})
+        self.assertEqual({f.name for f in AIUsage._meta.fields}, {"id", "learner", "date", "messages_used", "intakes_used", "lessons_used"})
 
 
 @override_settings(**AI_OFF)
@@ -205,3 +205,41 @@ class UsageTests(TestCase):
         with mock.patch("assistant.service.call_provider", side_effect=call):
             self.assertEqual(ask_model_json([], usage=usage), {"ok": True})
         self.assertEqual(usage["model"], "small")
+
+
+@override_settings(GROQ_API_KEY="test", GROQ_PLAN_MODEL="big", GROQ_MODEL="small", CF_ACCOUNT_ID="cf",
+                   CF_API_TOKEN="cf", AI_PLAN_CALL_TIMEOUT=30, AI_REQUEST_BUDGET=50)
+class TimeBudgetTests(TestCase):
+    """Plan and lesson AI calls stay inside the page's time limit (gunicorn.conf.py: 60 seconds)."""
+
+    def run_with_clock(self, seconds_per_call, results):
+        from .service import ask_model_json
+        now = [1000.0]
+        calls = []
+
+        def call(provider, messages, **kwargs):
+            calls.append((provider.model, kwargs["timeout"]))
+            now[0] += seconds_per_call
+            outcome = results.pop(0)
+            if isinstance(outcome, Exception):
+                raise outcome
+            return outcome
+        with mock.patch("assistant.service.time.monotonic", side_effect=lambda: now[0]), \
+                mock.patch("assistant.service.call_provider", side_effect=call):
+            return ask_model_json([]), calls
+
+    def test_each_call_waits_at_most_the_time_left(self):
+        reply, calls = self.run_with_clock(30, [RuntimeError("timed out"), '{"ok": true}'])
+        self.assertEqual(reply, {"ok": True})
+        self.assertEqual(calls, [("big", 30), ("small", 20)])  # 50s budget: 30, then the 20 left.
+
+    def test_no_call_starts_without_enough_time(self):
+        reply, calls = self.run_with_clock(45, [RuntimeError("timed out"), '{"ok": true}'])
+        self.assertIsNone(reply)
+        self.assertEqual(len(calls), 1)  # 5 seconds left: not enough to try the small model.
+
+    def test_the_server_limit_is_above_the_budget(self):
+        import runpy
+        from django.conf import settings
+        config = runpy.run_path(str(settings.BASE_DIR / "gunicorn.conf.py"))
+        self.assertGreater(config["timeout"], settings.AI_REQUEST_BUDGET)

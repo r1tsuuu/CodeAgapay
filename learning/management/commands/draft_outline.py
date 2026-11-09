@@ -10,6 +10,7 @@ unless --save is given with --learner; saved outlines appear in admin for review
 """
 
 import json
+import sys
 
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
@@ -35,8 +36,14 @@ class Command(BaseCommand):
         parser.add_argument("--hint-style", choices=[c for c, _ in LearnerProfile.HintStyle.choices], default="")
         parser.add_argument("--save", action="store_true", help="Save it for review in admin (needs --learner)")
         parser.add_argument("--show-prompt", action="store_true", help="Print the messages sent, and stop")
+        parser.add_argument("--raw", action="store_true",
+                            help="Also print the model's reply before checks, with hidden characters as \\u codes")
 
     def handle(self, *args, **opts):
+        # Windows terminals often can't show characters like →; show "?" instead of crashing.
+        for stream in (sys.stdout, sys.stderr):
+            if hasattr(stream, "reconfigure"):
+                stream.reconfigure(errors="replace")
         if opts["save"] and not opts["learner"]:
             raise CommandError("--save needs --learner: made-up answers have no learner to save under.")
         profile, project = self._profile(opts)
@@ -54,6 +61,10 @@ class Command(BaseCommand):
         record = generate_outline(profile, project, save=opts["save"])
         if record is None:
             raise CommandError("The AI didn't return a usable outline. Try again, or check the provider keys.")
+        if opts["raw"]:
+            self.stdout.write(self.style.MIGRATE_HEADING("--- model reply, before checks"))
+            self.stdout.write(json.dumps(record.raw, indent=2, ensure_ascii=True))
+            self.stdout.write(self.style.MIGRATE_HEADING("--- after checks"))
         self.stdout.write(json.dumps(record.data, indent=2, ensure_ascii=False))
         for repair in record.repairs:
             self.stdout.write(self.style.WARNING(f"Repaired: {repair}"))

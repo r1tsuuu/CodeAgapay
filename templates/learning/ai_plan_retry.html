@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}Your learning plan · CodeAgapay{% endblock %}
+
+{% block content %}
+<h1>Your plan isn't ready yet</h1>
+<p class="lead">We couldn't write your plan just now. That's on our side, not yours, and your answers are saved.</p>
+<form method="post" action="{% url 'ai_plan_retry' %}">
+  {% csrf_token %}
+  <button type="submit" class="button button-primary no-arrow">Write my plan</button>
+</form>
+<p><a class="text-link" href="{% url 'intake' %}?edit=1">Change my answers</a></p>
+{% endblock %}

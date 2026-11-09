@@ -1,5 +1,6 @@
 """Learning content. Edited by the content team in Django admin only."""
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 
@@ -60,7 +61,10 @@ class Path(models.Model):
         return tracks[0] if tracks else None
 
     def is_available(self):
+        """Learners can start it. With AI plans the AI writes the lessons, so curated topics aren't needed."""
         track = self.first_track()
+        if settings.AI_PLANS:
+            return bool(self.is_active and track and track.is_active)
         return bool(self.is_active and track and track.is_active and len(track.topics.all()))
 
 

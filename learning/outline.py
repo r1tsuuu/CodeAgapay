@@ -12,17 +12,22 @@ usable lessons is asked for again, once.
 """
 
 import re
+import time
+import unicodedata
 from pathlib import Path
 from types import SimpleNamespace
 
+from django.conf import settings
+
 from assistant.service import ask_model_json, language_note
-from content.models import ProjectIdea
+from content.models import ProjectIdea, Track
 from diagnose.models import TopicMastery
 
+from . import setup_guides
 from .models import PlanOutline
 from .planner import assign_weeks, milestone_weeks
 
-PROMPT_PATH = Path(__file__).parent / "prompts" / "outline.md"
+PROMPTS = Path(__file__).parent / "prompts"
 
 LEVEL_MINUTES = {"beginner": (15, 30), "intermediate": (25, 45), "advanced": (30, 60)}
 KINDS = {"foundation", "recap", "core", "optional"}
@@ -42,9 +47,9 @@ STUCK_PATH = [
 ]
 
 
-def load_prompt():
-    """The system prompt and its version, from learning/prompts/outline.md."""
-    text = PROMPT_PATH.read_text(encoding="utf-8")
+def load_prompt(name="outline"):
+    """A system prompt and its version, from learning/prompts/<name>.md."""
+    text = (PROMPTS / f"{name}.md").read_text(encoding="utf-8")
     header, _, body = text.partition("\n\n")
     match = re.search(r"^version:\s*(\S+)", header, re.MULTILINE)
     return body.strip(), match.group(1) if match else "unknown"
@@ -63,6 +68,94 @@ def outline_tracks(profile):
     if profile.track and profile.track not in tracks:
         tracks.insert(0, profile.track)
     return tracks
+
+
+SETUP_KEY = "S1"
+
+
+def setup_lesson(outline):
+    """The setup step that opens every AI plan (framework section 5, Setup).
+
+    It offers options: the team's curated guide when the track has one (recommended), VS Code
+    step by step (written by the AI, with the project folder), and a no-install way where one
+    exists. The learner must choose one before any lesson opens; lessons then follow it.
+    Added here rather than asked of the outline, so it costs no outline tokens.
+    """
+    tracks = [t for t in outline_tracks(outline.learner) if t.is_active]
+    if not tracks:
+        return None
+    track = tracks[0]
+    tool, alternative = SETUP_TOOLS.get(track.slug, DEFAULT_TOOLS)
+    folder = project_folder(outline)
+    return {"key": SETUP_KEY, "title": f"Get ready to write {track.name}", "kind": "setup", "minutes": 25, "week": 1,
+            "can": f"Choose how you'll write {track.name}, set it up, and see your first file work", "needs": [],
+            "tool": tool, "alternative": alternative, "folder": folder,
+            "track_id": track.pk, "track_slug": track.slug, "curated": track.setup_steps.exists(),
+            "built_in": bool(setup_guides.guide(track.slug, "main", folder)),
+            "device": outline.learner.device}
+
+
+def setup_options(setup):
+    """The ways to set up, in order. The curated guide, checked by the team, is always recommended."""
+    # On a phone or Chromebook the no-install way fits best, unless the team's guide is there to recommend.
+    phone = setup_guides.needs_a_computer(setup.get("device", ""))
+    note = "Needs a Windows, Mac or Linux computer." if phone else ""
+    options = []
+    if setup["curated"]:
+        options.append({"way": "curated", "name": "The CodeAgapay setup guide", "recommended": True, "note": note,
+                        "summary": "The team's checked steps for installing what you need."})
+    no_install_first = phone and bool(setup["alternative"]) and not setup["curated"]
+    options.append({"way": "main", "name": f"{setup['tool']}, step by step", "note": note,
+                    "recommended": not setup["curated"] and not no_install_first,
+                    "summary": f"Install {setup['tool']} and keep every lesson in one project folder. "
+                               "Best on a Windows, Mac or Linux computer."})
+    if setup["alternative"]:
+        options.append({"way": "alternative", "name": f"No install: {setup['alternative']}", "note": "",
+                        "recommended": no_install_first,
+                        "summary": f"Use {setup['alternative']} in your browser. Nothing to install, so it works on a "
+                                   "phone or a shared computer."})
+    return options
+
+
+MAX_CURATED_SUMMARY = 450  # Characters of the curated guide sent with each lesson, so lessons can follow it.
+
+
+# The tools setup teaches, chosen in code so every plan for a track sets up the same, reliable way:
+# VS Code for everything, plus a no-install option where a good free one exists (phones, shared PCs).
+DEFAULT_TOOLS = ("VS Code", "")
+SETUP_TOOLS = {
+    "html": ("VS Code", "CodePen"), "css": ("VS Code", "CodePen"), "javascript": ("VS Code", "CodePen"),
+    "python": ("VS Code with the Python extension", "Google Colab"),
+    "java": ("VS Code with the Extension Pack for Java", ""),
+}
+
+
+def project_folder(outline):
+    """The folder every lesson saves into, named from the project, e.g. "codeagapay-event-page"."""
+    title = (outline.data.get("project") or {}).get("title", "") or "my-project"
+    slug = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")[:30].strip("-")
+    return f"codeagapay-{slug or 'my-project'}"
+
+
+def learner_setup(outline):
+    """How the learner writes code, from the setup option they chose, for every later lesson to follow."""
+    setup = setup_lesson(outline)
+    if setup is None or not outline.setup_choice:
+        return ""
+    if outline.setup_choice == "curated" and setup["curated"]:
+        track = Track.objects.get(pk=setup["track_id"])
+        steps = "; ".join(f"{step.title}: {step.body}" for step in track.setup_steps.all())
+        return f"the CodeAgapay setup guide ({' '.join(steps.split())})"[:MAX_CURATED_SUMMARY]
+    if outline.setup_choice == "alternative" and setup["alternative"]:
+        return f"{setup['alternative']} in the browser (no project folder)"
+    return f"{setup['tool']}, with every file in the project folder {setup['folder']}"
+
+
+def all_lessons(outline):
+    """Every lesson in order: the setup lesson (if any), then the outline's modules."""
+    setup = setup_lesson(outline)
+    lessons = [lesson for module in outline.data.get("modules", []) for lesson in module["lessons"]]
+    return [setup, *lessons] if setup else lessons
 
 
 def lesson_limit(profile, level):
@@ -128,12 +221,24 @@ def build_messages(profile, project_idea, ideas=()):
     return messages, version
 
 
-# Non-breaking and other Unicode hyphens look the same but break copying and search.
-HYPHENS = str.maketrans({"‐": "-", "‑": "-"})
+def clean_chars(text):
+    """Replace characters models emit that look right but break copying, search and grading.
+
+    Unicode hyphens become "-". Invisible format characters (zero-width spaces and the like,
+    Unicode category Cf) become spaces: models put them where a space belongs, so the words
+    otherwise show up glued together ("needfor").
+    """
+    return "".join(
+        "-" if ch in "\u2010\u2011" else " " if unicodedata.category(ch) == "Cf" else ch for ch in str(text)
+    )
 
 
 def _text(value, limit):
-    return " ".join(str(value or "").translate(HYPHENS).split())[:limit]
+    """Prose from the model on one line. Never used for code."""
+    text = " ".join(clean_chars(value or "").split())
+    # A full stop with no space before the next sentence ("activities.I-save"). Only lowercase
+    # then uppercase, so file names and versions ("page.html", "3.13") are left alone.
+    return re.sub(r"(?<=[a-z])\.(?=[A-Z])", ". ", text)[:limit]
 
 
 def _list(value):
@@ -323,9 +428,11 @@ def generate_outline(profile, project_idea="", plan=None, save=True):
     ideas = project_ideas(profile)
     messages, version = build_messages(profile, project_idea, ideas)
     repairs, usage = [], {}
+    earlier_problems = []
+    deadline = time.monotonic() + settings.AI_REQUEST_BUDGET  # Both attempts together (assistant.service).
     for attempt in range(2):
         attempt_usage = {}
-        data = ask_model_json(messages, max_tokens=MAX_TOKENS, usage=attempt_usage)
+        data = ask_model_json(messages, max_tokens=MAX_TOKENS, deadline=deadline, usage=attempt_usage)
         for field in ("prompt_tokens", "completion_tokens"):
             usage[field] = (usage.get(field) or 0) + (attempt_usage.get(field) or 0)
         usage["model"] = attempt_usage.get("model", usage.get("model", ""))
@@ -334,13 +441,16 @@ def generate_outline(profile, project_idea="", plan=None, save=True):
         outline, repairs = parse_outline(data, profile, ideas)
         if outline is not None:
             break
+        earlier_problems = ["Asked again: the first reply had no usable lessons"]
     else:
         return None
+    repairs = earlier_problems + repairs
     record = PlanOutline(
         learner=profile, plan=plan, data=outline, repairs=repairs,
         prompt_version=version, model=usage.get("model", ""),
         prompt_tokens=usage.get("prompt_tokens") or None, completion_tokens=usage.get("completion_tokens") or None,
     )
+    record.raw = data  # The model's reply before checks, for draft_outline --raw. Not saved.
     if save:
         record.save()
     return record

@@ -12,6 +12,9 @@ class AIUsage(models.Model):
     intakes_used = models.PositiveIntegerField(
         default=0, help_text="Plan conversations started (the AI intake on /start/)."
     )
+    lessons_used = models.PositiveIntegerField(
+        default=0, help_text="AI-written lessons, first versions and rewrites."
+    )
 
     class Meta:
         verbose_name_plural = "AI usage"

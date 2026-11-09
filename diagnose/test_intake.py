@@ -94,7 +94,7 @@ class OnboardingFlowTests(IntakeContentMixin, TestCase):
         return self.client.post(reverse("intake"), data)
 
     def answer_all(self, path="automation", project=None, experience="a_little", known=("python-variables",),
-                   check=None, hours="2", deadline="0", stuck="think"):
+                   check=None, hours="2", deadline="0", device="windows", stuck="think"):
         self.answer(choice=path)
         self.answer(**(project or {"choice": "suggest"}))
         self.answer(choice=experience)
@@ -107,6 +107,7 @@ class OnboardingFlowTests(IntakeContentMixin, TestCase):
                 self.assertRedirects(self.client.post(reverse("intake_check"), check or default), reverse("intake"))
         self.answer(choice=hours)
         self.answer(choice=deadline)
+        self.answer(choice=device)
         self.answer(choice=stuck)
 
     def step(self):
@@ -136,6 +137,8 @@ class OnboardingFlowTests(IntakeContentMixin, TestCase):
         self.client.post(reverse("intake_check"), {f"question_{self.q_vars.pk}": "0"})
         self.answer(choice="2")
         self.answer(choice="0")
+        self.assertEqual(self.step().title, "What will you use to learn?")
+        self.answer(choice="mac")
         self.answer(choice="think")
 
         review = self.client.get(reverse("intake"))
@@ -151,6 +154,7 @@ class OnboardingFlowTests(IntakeContentMixin, TestCase):
         self.profile.refresh_from_db()
         self.assertEqual((self.profile.path.slug, self.profile.track, self.profile.hours_per_week), ("automation", self.track, 2))
         self.assertEqual((self.profile.experience, self.profile.hint_style, self.profile.target_weeks), ("a_little", "think", None))
+        self.assertEqual(self.profile.device, "mac")
         self.assertTrue(self.profile.onboarded)
         plan = LearningPlan.objects.get(learner=self.profile, is_active=True)
         # Lists was picked; Loops is added as its prerequisite; Variables was shown.
@@ -249,7 +253,7 @@ class OnboardingFlowTests(IntakeContentMixin, TestCase):
         self.answer(choice="none")
         page = self.client.get(reverse("intake"))
         self.assertEqual(page.context["question"].step, "hours")
-        self.assertEqual((page.context["done_count"], page.context["step_count"]), (3, 6))
+        self.assertEqual((page.context["done_count"], page.context["step_count"]), (3, 7))
         self.assertRedirects(self.client.get(reverse("intake_check")), reverse("intake"))
 
     def test_ticking_nothing_skips_the_check(self):

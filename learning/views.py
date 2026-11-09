@@ -1,5 +1,6 @@
 from itertools import groupby
 
+from django.conf import settings
 from django.contrib import messages
 from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404, redirect, render
@@ -10,7 +11,8 @@ from accounts.models import get_profile
 from assistant.service import daily_limit, practice_feedback, remaining_today
 from content.models import Resource, Topic, Track
 
-from . import journey
+from . import ai_views, journey
+from .ai_plan import active_outline
 from .forms import QuizForm
 from .grading import PASS_PERCENT, latest_result, submit_quiz
 from .models import PlanFeedback, PlanItem, PracticeSubmission, QuizAttempt
@@ -32,8 +34,15 @@ def plan_build(request):
 
 def plan(request):
     profile = get_profile(request.user)
+    if settings.AI_PLANS:
+        outline = active_outline(profile)
+        if outline is not None:
+            return ai_views.plan(request, profile, outline)
     current = active_plan(profile)
     if current is None:
+        if settings.AI_PLANS and profile.onboarded:
+            # Onboarding finished but the AI couldn't write the plan: offer to try again.
+            return render(request, "learning/ai_plan_retry.html", {"profile": profile})
         return redirect("result")
     items = list(
         current.items.select_related("topic__track")

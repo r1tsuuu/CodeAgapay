@@ -220,7 +220,7 @@ class GenerateOutlineTests(OutlineContentMixin, TestCase):
     def fake_ask(self, *replies):
         replies = list(replies)
 
-        def ask(messages, max_tokens, usage):
+        def ask(messages, max_tokens, usage, **kwargs):
             usage.update(model="openai/gpt-oss-120b", prompt_tokens=700, completion_tokens=900)
             return replies.pop(0)
         return mock.patch("learning.outline.ask_model_json", side_effect=ask)
@@ -239,6 +239,7 @@ class GenerateOutlineTests(OutlineContentMixin, TestCase):
             record = generate_outline(self.profile)
         self.assertEqual(ask.call_count, 2)
         self.assertEqual((record.prompt_tokens, record.completion_tokens), (1400, 1800))  # both calls counted
+        self.assertEqual(record.repairs[0], "Asked again: the first reply had no usable lessons")
 
     def test_gives_up_after_two_unusable_replies(self):
         with self.fake_ask({"modules": []}, {"modules": []}) as ask:

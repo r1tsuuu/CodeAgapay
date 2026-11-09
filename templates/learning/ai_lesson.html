@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+{% load static lesson_format %}
+
+{% block title %}{{ item.title }} · CodeAgapay{% endblock %}
+
+{% block content %}
+<div class="lesson-layout">
+<p class="breadcrumb"><a href="{% url 'plan' %}">{{ module.progress }}: {{ module.title }}</a> / <strong>{{ item.title }}</strong></p>
+
+{% if warm_up %}
+<details class="warm-up">
+  <summary>
+    <span class="warm-up-label">Warm-up from the last lesson · not graded</span>
+    {% for w in warm_up %}<span class="warm-up-prompt">{{ w.question.prompt|inline_code }}</span>{% endfor %}
+    <span class="warm-up-reveal">Think of your answer, then tap to check</span>
+  </summary>
+  {% for w in warm_up %}<p class="warm-up-answer">Answer: <code class="inline-code">{{ w.answer }}</code>{% if w.question.explanation %} · {{ w.question.explanation|inline_code }}{% endif %}</p>{% endfor %}
+</details>
+{% endif %}
+
+<h1>{{ item.title|inline_code }}</h1>
+{% if item.can %}<p class="lesson-summary"><strong>You'll be able to:</strong> {{ item.can|inline_code }}</p>{% endif %}
+<p class="lesson-meta">Lesson {{ lesson_number }} of {{ lesson_total }} · about {{ item.minutes }} minutes · <span class="status status-{{ progress.status }}">{{ progress.get_status_display }}</span></p>
+
+<section class="lesson-intro">
+  {% if lesson.why %}
+  <div class="lesson-why">
+    <h2>Why it matters</h2>
+    <p>{{ lesson.why|inline_code }}</p>
+  </div>
+  {% endif %}
+  {% if lesson.key_terms %}
+  <div class="lesson-terms">
+    <h2>Key terms</h2>
+    <dl>{% for t in lesson.key_terms %}<div><dt>{{ t.term }}</dt><dd>{{ t.definition|inline_code }}</dd></div>{% endfor %}</dl>
+  </div>
+  {% endif %}
+</section>
+
+<section class="nutshell" aria-labelledby="explain-title">
+  <h2 id="explain-title">How it works</h2>
+  {{ lesson.explanation|paragraphs }}
+  {% for example in lesson.examples %}
+  <p class="nutshell-label">Example {{ forloop.counter }}{% if example.note %}: {{ example.note|inline_code }}{% endif %}</p>
+  <pre class="code"><code>{{ example.code|highlight_code:example.lang }}</code></pre>
+  {% if example.output %}
+  <p class="nutshell-label">{% if example.lang == "html" or example.lang == "css" %}What you'll see{% else %}What it prints{% endif %}</p>
+  <pre class="nutshell-output"><code>{{ example.output }}</code></pre>
+  {% endif %}
+  {% endfor %}
+  {% if beginner and try_steps and lesson.examples %}<p class="field-help">Want to run an example yourself? Make a new file the same way as in <a href="#try">Try it yourself</a>, and type the example in.</p>{% endif %}
+</section>
+
+{% if setup_info %}
+<section class="setup-choose" aria-labelledby="setup-choose-title">
+  <h2 id="setup-choose-title">Choose how you want to set up</h2>
+  <p>Tap an option to see its steps. Your lessons will follow the way you choose, and you can change it later.</p>
+  {% include "learning/partials/setup_options.html" %}
+</section>
+{% endif %}
+
+<section class="lesson-build" id="try">
+  <h2>{% if setup_info %}Check it works{% else %}Try it yourself{% endif %}</h2>
+  {{ lesson.try_it.prompt|paragraphs }}
+  {% if try_steps %}
+  <details class="plan-item-details"{% if beginner %} open{% endif %}>
+    <summary>{% if beginner %}How to try it in your setup{% else %}Need a reminder of how to try it?{% endif %}</summary>
+    {% include "learning/partials/setup_steps.html" with steps=try_steps %}
+  </details>
+  {% endif %}
+  {% if lesson.try_it.starter_code %}
+  <p class="nutshell-label">Start from this</p>
+  <pre class="code"><code>{{ lesson.try_it.starter_code|highlight_code:lesson.lang }}</code></pre>
+  {% endif %}
+  {% if lesson.try_it.checklist %}
+  <p>A good answer:</p>
+  <ul class="lesson-list">{% for c in lesson.try_it.checklist %}<li>{{ c|inline_code }}</li>{% endfor %}</ul>
+  {% endif %}
+  {% if lesson.try_it.sample_answer %}
+  <details class="plan-item-details">
+    <summary>Tried it? See one way to do it</summary>
+    <pre class="code"><code>{{ lesson.try_it.sample_answer|highlight_code:lesson.lang }}</code></pre>
+  </details>
+  {% endif %}
+</section>
+
+{% if setup_info %}
+<section class="card quiz-card" id="setup-choice">
+  {% if outline.setup_choice %}
+  <p class="message message-success">You're set up with: {{ outline.get_setup_choice_display }}.</p>
+  {% if next_key %}<p><a class="button button-primary" href="{% url 'plan' %}">Back to my plan</a></p>{% endif %}
+
+  {% if setup_info.options|length > 1 %}
+  <h2>Change setup method</h2>
+  <p>Follow another option above until its last step works, then switch to it. New lessons will follow your new setup.</p>
+  <form method="post" action="{% url 'ai_setup_done' item.key %}">
+    {% csrf_token %}
+    <div class="actions">
+      {% for option in setup_info.options %}{% if option.way != outline.setup_choice %}
+      <button type="submit" name="way" value="{{ option.way }}" class="button">Switch to: {{ option.name }}</button>
+      {% endif %}{% endfor %}
+    </div>
+  </form>
+  {% endif %}
+
+  {% if outdated_count %}
+  <section class="quiz-next quiz-next-almost" id="update" aria-labelledby="update-title">
+    <h2 id="update-title">Update your lessons for the new setup?</h2>
+    {% if outline.update_for_setup %}
+    <p>Your {{ outdated_count }} lesson{{ outdated_count|pluralize }} written for your old setup will be rewritten, each the next time you open it.</p>
+    {% else %}
+    <p>{{ outdated_count }} lesson{{ outdated_count|pluralize }} you've already opened still follow{{ outdated_count|pluralize:"s," }} your old setup. Lessons you haven't opened yet will follow the new one by themselves.</p>
+    <p class="review-warning"><strong>This uses your daily lessons.</strong> Each lesson rewritten counts as one of your {{ lessons_left }} new lesson{{ lessons_left|pluralize }} left today. Lessons are rewritten one at a time, when you open them, and any you don't reach today are updated another day.</p>
+    <form method="post" action="{% url 'ai_update_lessons' item.key %}">
+      {% csrf_token %}
+      <button type="submit" class="button button-primary no-arrow">Update my lessons</button>
+      <a class="text-link" href="{% url 'plan' %}">Keep them as they are</a>
+    </form>
+    {% endif %}
+  </section>
+  {% endif %}
+
+  {% else %}
+  <p>Did the last step work? Tell us which way you set up, and your lessons will follow it.</p>
+  <form method="post" action="{% url 'ai_setup_done' item.key %}">
+    {% csrf_token %}
+    <div class="actions">
+      {% for option in setup_info.options %}
+      <button type="submit" name="way" value="{{ option.way }}" class="button{% if option.recommended %} button-primary no-arrow{% endif %}">I set up with: {{ option.name }}</button>
+      {% endfor %}
+    </div>
+  </form>
+  {% endif %}
+</section>
+{% endif %}
+
+<section class="lesson-resources">
+  <h2>Go deeper</h2>
+  <ul>
+    {% for r in lesson.resources %}
+    <li class="resource-card">
+      <div class="resource-card-top"><span class="resource-kind">{% if r.role == "primary" %}Start here{% else %}Also good{% endif %}</span></div>
+      {% if r.url %}
+      <a class="external" href="{{ r.url }}" target="_blank" rel="noopener">{{ r.name }}<span class="visually-hidden"> (opens in a new tab)</span></a>
+      {% else %}
+      <p>{{ r.name }}</p>
+      {% endif %}
+      {% if r.how %}<p class="field-help"><strong>How to read it:</strong> {{ r.how|inline_code }}</p>{% endif %}
+      {% if r.search %}<p class="field-help">Search for: “{{ r.search }}”</p>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+
+{% if not questions and not setup_info %}
+<section class="card quiz-card" id="lesson-done">
+  {% if progress.status == "done" %}
+  <p class="message message-success">Done.</p>
+  {% else %}
+  <form method="post" action="{% url 'ai_lesson_status' item.key %}">
+    {% csrf_token %}
+    <button type="submit" name="status" value="done" class="button button-primary no-arrow">Mark done</button>
+  </form>
+  {% endif %}
+</section>
+{% elif questions %}
+<section class="card quiz-card" id="check" aria-labelledby="check-title">
+  <h2 id="check-title">Check your understanding</h2>
+  {% if score %}
+  <p class="quiz-score">{% if score.passed %}You passed: {{ score.correct }} of {{ score.total }}.{% else %}{{ score.correct }} of {{ score.total }} right. You need 70% to pass.{% endif %}</p>
+  {% else %}
+  <p class="field-help">You need 70% to pass. Capitals and extra spaces don't matter.</p>
+  {% endif %}
+  <form method="post" action="{% url 'ai_lesson_check' item.key %}">
+    {% csrf_token %}
+    <ol class="skill-questions">
+      {% for x in questions %}
+      <li class="skill-question{% if x.result and x.result.correct is False %} quiz-wrong{% elif x.result and x.result.correct %} quiz-correct{% endif %}">
+        <fieldset>
+          <legend><span class="skill-question-number">{{ forloop.counter }}.</span> {{ x.q.prompt|inline_code }}{% if x.q.type == "self" %} <span class="field-help">(not graded)</span>{% endif %}</legend>
+          {% if x.q.type == "mc" %}
+          {% for choice in x.q.choices %}
+          <label class="choice"><input type="radio" name="q{{ x.n }}" value="{{ forloop.counter0 }}"{% if x.result and x.result.answer == forloop.counter0|stringformat:"s" %} checked{% endif %}> {{ choice|inline_code }}</label>
+          {% endfor %}
+          {% elif x.q.type == "blank" %}
+          <label class="visually-hidden" for="q{{ x.n }}">Your answer</label>
+          <input id="q{{ x.n }}" type="text" name="q{{ x.n }}" autocomplete="off" spellcheck="false" maxlength="200" value="{{ x.result.answer|default:'' }}">
+          {% else %}
+          <label class="visually-hidden" for="q{{ x.n }}">Your answer</label>
+          <textarea id="q{{ x.n }}" name="q{{ x.n }}" rows="2" maxlength="200">{{ x.result.answer|default:'' }}</textarea>
+          {% endif %}
+        </fieldset>
+        {% if x.result %}
+        {% if x.result.correct is None or x.result.correct or progress.status == "done" or progress.status == "skipped" %}
+        <p class="quiz-hint">{% if x.result.correct is False %}Answer: <code class="inline-code">{{ x.answer }}</code>. {% elif x.result.correct is None %}One good answer: {{ x.answer|inline_code }} {% endif %}{{ x.q.explanation|inline_code }}</p>
+        {% else %}
+        <p class="quiz-hint">Not quite. Try again, or ask for it explained another way below.</p>
+        {% endif %}
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ol>
+    <div class="actions">
+      <a class="text-link" href="{% url 'plan' %}">Back to plan</a>
+      <button type="submit" class="button button-primary no-arrow">{% if score %}Check again{% else %}Check answers{% endif %}</button>
+    </div>
+  </form>
+
+  {% if score and not score.passed %}
+  <section class="quiz-next quiz-next-{{ score.band }}">
+    <h3>{% if score.band == "almost" %}You're close{% else %}Let's try a different way in{% endif %}</h3>
+    <p>Look at the resources above, or get this lesson rewritten with a new explanation, new examples and new questions.</p>
+    <form method="post" action="{% url 'ai_lesson_rewrite' item.key %}">
+      {% csrf_token %}
+      <button type="submit" class="button">Explain it another way</button>
+    </form>
+    {% if can_move_on %}
+    <form class="quiz-move-on" method="post" action="{% url 'ai_lesson_move_on' item.key %}">
+      {% csrf_token %}
+      <p>Still stuck after two tries? You don't have to keep looping. Move on for now, and this lesson is marked to review later.</p>
+      <button type="submit" class="button">Move on for now</button>
+    </form>
+    {% endif %}
+  </section>
+  {% elif score.passed and next_key %}
+  <p><a class="button button-primary" href="{% url 'ai_lesson' next_key %}">Next lesson</a></p>
+  {% elif score.passed %}
+  <p><a class="button button-primary" href="{% url 'plan' %}#project">That was the last lesson. See your project</a></p>
+  {% endif %}
+</section>
+{% endif %}
+
+<section class="plan-report" id="feedback">
+  {% if progress.rating %}
+  <p class="field-help">Thanks for rating this lesson.</p>
+  {% else %}
+  <form method="post" action="{% url 'ai_lesson_rate' item.key %}">
+    {% csrf_token %}
+    <p><strong>Was this lesson helpful?</strong> <span class="ai-note">It was written by AI, and it can be wrong.</span></p>
+    <label for="rate-note">What was wrong or confusing? (optional)</label>
+    <textarea id="rate-note" name="note" rows="2" maxlength="300" placeholder="e.g. It used a word it never explained."></textarea>
+    <div class="actions">
+      <button type="submit" name="helpful" value="yes" class="button">Yes</button>
+      <button type="submit" name="helpful" value="no" class="button">No</button>
+    </div>
+  </form>
+  {% endif %}
+</section>
+</div>
+{% endblock %}

@@ -141,11 +141,10 @@ class PlanFeedback(models.Model):
         return self.text[:60]
 
 
-class PlanOutline(models.Model):
-    """An AI-written plan outline (docs/plan-framework.md, section 5), kept for review in admin.
+class AIRecord(models.Model):
+    """What every AI-written plan part keeps: the checked reply, what produced it, and its review.
 
-    Learners don't see outlines yet: they arrive with lesson generation. Until then the
-    team reviews them here to tune the prompt (framework section 11).
+    Reviewed afterwards in admin, not approved first (docs/plan-framework.md, section 11).
     """
 
     class Review(models.TextChoices):
@@ -153,14 +152,7 @@ class PlanOutline(models.Model):
         OK = "ok", "OK"
         PROBLEM = "problem", "Problem"
 
-    learner = models.ForeignKey(
-        "accounts.LearnerProfile", on_delete=models.CASCADE, related_name="plan_outlines"
-    )
-    plan = models.ForeignKey(
-        LearningPlan, on_delete=models.SET_NULL, null=True, blank=True, related_name="outlines",
-        help_text="The plan the learner got at the same time, if any.",
-    )
-    data = models.JSONField(help_text="The checked outline: modules, lessons, weeks, project.")
+    data = models.JSONField(help_text="The checked reply, as the app uses it.")
     repairs = models.JSONField(default=list, blank=True, help_text="What the code fixed in the AI's reply.")
     prompt_version = models.CharField(max_length=40)
     model = models.CharField(max_length=100, blank=True)
@@ -175,7 +167,100 @@ class PlanOutline(models.Model):
     reviewed_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
+        abstract = True
         ordering = ["-created_at"]
+
+
+class PlanOutline(AIRecord):
+    """An AI-written plan outline (docs/plan-framework.md, section 5), kept for review in admin.
+
+    Learners don't see outlines yet: they arrive with lesson generation. Until then the
+    team reviews them here to tune the prompt (framework section 11).
+    """
+
+    learner = models.ForeignKey(
+        "accounts.LearnerProfile", on_delete=models.CASCADE, related_name="plan_outlines"
+    )
+    plan = models.ForeignKey(
+        LearningPlan, on_delete=models.SET_NULL, null=True, blank=True, related_name="outlines",
+        help_text="The plan the learner got at the same time, if any.",
+    )
+    is_active = models.BooleanField(
+        default=False, help_text="The learner's plan (AI plans on). Shadow-mode outlines stay inactive."
+    )
+    setup_choice = models.CharField(
+        max_length=20, blank=True,
+        choices=[("curated", "CodeAgapay setup guide"), ("main", "VS Code, step by step"), ("alternative", "No-install way")],
+        help_text="The setup option the learner chose. Required before any lesson opens; later lessons follow it.",
+    )
+    update_for_setup = models.BooleanField(
+        default=False,
+        help_text="After a setup change, the learner asked to rewrite lessons for it: each is rewritten when next opened.",
+    )
+
+    class Meta(AIRecord.Meta):
+        constraints = [
+            models.UniqueConstraint(fields=["learner"], condition=Q(is_active=True), name="one_active_outline")
+        ]
 
     def __str__(self):
         return f"Outline for {self.learner.user} ({self.created_at:%Y-%m-%d})"
+
+
+class GeneratedLesson(AIRecord):
+    """One AI-written lesson of an outline (framework section 6), written when first opened.
+
+    Regenerating (after a low score, or from admin) adds a new version and keeps the old
+    ones for review; only the current version is shown.
+    """
+
+    outline = models.ForeignKey(PlanOutline, on_delete=models.CASCADE, related_name="lessons")
+    key = models.CharField(max_length=10, help_text='The outline lesson it writes, e.g. "L3".')
+    title = models.CharField(max_length=150)
+    version = models.PositiveIntegerField(default=1)
+    is_current = models.BooleanField(default=True)
+    flags = models.JSONField(
+        default=list, blank=True, help_text="Problems found automatically, for a person to check."
+    )
+    flagged = models.BooleanField(default=False, help_text="Has flags. Kept as a field so admin can filter on it.")
+
+    class Meta(AIRecord.Meta):
+        constraints = [
+            models.UniqueConstraint(
+                fields=["outline", "key"], condition=Q(is_current=True), name="one_current_lesson_per_key",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.key} {self.title} (v{self.version})"
+
+    def save(self, *args, **kwargs):
+        self.flagged = bool(self.flags)
+        super().save(*args, **kwargs)
+
+
+class LessonProgress(models.Model):
+    """A learner's progress on one lesson of their AI plan (framework sections 7 and 8)."""
+
+    class Status(models.TextChoices):
+        TODO = "todo", "To do"
+        IN_PROGRESS = "in_progress", "In progress"
+        DONE = "done", "Done"
+        SKIPPED = "skipped", "Skipped"
+
+    outline = models.ForeignKey(PlanOutline, on_delete=models.CASCADE, related_name="progress")
+    key = models.CharField(max_length=10)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.TODO)
+    shaky = models.BooleanField(default=False, help_text="Moved on after missing the check twice.")
+    tries = models.PositiveIntegerField(default=0, help_text="Check attempts on the current version.")
+    last_answers = models.JSONField(default=list, blank=True, help_text="The latest check answers, in order.")
+    last_correct = models.JSONField(default=list, blank=True, help_text="Which of those were right.")
+    rating = models.SmallIntegerField(default=0, help_text="1 helpful, -1 not helpful, 0 not rated.")
+    completed_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["outline", "key"], name="one_progress_per_lesson")]
+
+    def __str__(self):
+        return f"{self.outline.learner.user} · {self.key} · {self.get_status_display()}"

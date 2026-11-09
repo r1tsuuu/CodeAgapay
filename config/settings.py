@@ -165,6 +165,16 @@ AI_INTAKE_DAILY_LIMIT = env.int("AI_INTAKE_DAILY_LIMIT", default=2)
 # plan also saves an outline for review in admin. Learners don't see it. Costs one more AI call
 # (about 1-3k tokens) per new plan, and adds that call's wait to the confirm step.
 AI_OUTLINES = env.bool("AI_OUTLINES", default=False)
+# AI-written plans for learners (docs/plan-framework.md): the AI outline becomes the learner's plan
+# and lessons are written when first opened. Off means every learner gets the curated plan.
+AI_PLANS = env.bool("AI_PLANS", default=False)
+# Lessons the AI may write (or rewrite) per learner per day. Each one is about 2,000 tokens.
+AI_LESSON_DAILY_LIMIT = env.int("AI_LESSON_DAILY_LIMIT", default=12)
+# Seconds. A plan or lesson is written inside a page request, which gunicorn.conf.py ends after 60:
+# one AI call may take up to AI_PLAN_CALL_TIMEOUT, and all of a request's calls together stay
+# within AI_REQUEST_BUDGET, leaving time to save and show the page.
+AI_PLAN_CALL_TIMEOUT = env.int("AI_PLAN_CALL_TIMEOUT", default=30)
+AI_REQUEST_BUDGET = env.int("AI_REQUEST_BUDGET", default=50)
 
 
 # Reminder emails. The send_reminders command refuses to run until EMAIL_HOST is set.
