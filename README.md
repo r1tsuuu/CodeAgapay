@@ -197,6 +197,7 @@ Open http://localhost:8000 for the app and http://localhost:8000/admin for curat
 | `AI_DAILY_LIMIT` | AI hint messages per learner per day (default 20) |
 | `GROQ_PLAN_MODEL`, `AI_INTAKE_DAILY_LIMIT` | Model for tailored plans, and AI-tailored plans per learner per day (default 2). Past the cap, the plan is built without AI |
 | `AI_OUTLINES` | `True` saves an AI-written outline with each AI-tailored plan, for review in admin. Default `False` |
+| `AI_PLAN_CALL_TIMEOUT`, `AI_REQUEST_BUDGET` | Seconds one plan or lesson AI call may take (default 30), and all of a page's AI calls together (default 50, under the server's 60 in `gunicorn.conf.py`) |
 | `AI_PLANS`, `AI_LESSON_DAILY_LIMIT` | `True` gives learners AI-written plans and lessons instead of the curated plan (default `False`), and how many lessons the AI may write or rewrite per learner per day (default 12) |
 | `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `DEFAULT_FROM_EMAIL` | Reminder emails, on the machine that runs `send_reminders`. SMTP with TLS |
 | `SITE_URL` | Links in emails. Defaults to the live site; set it only to test emails locally |
@@ -349,7 +350,7 @@ DATABASE_URL="<neon url>" python manage.py send_reminders
 
 <br>
 
-- **Render web service** (free, Singapore): build command `./build.sh`, start command `gunicorn config.wsgi:application`. Python comes from `.python-version`.
+- **Render web service** (free, Singapore): build command `./build.sh`, start command `gunicorn config.wsgi:application`. Python comes from `.python-version`. Gunicorn reads `gunicorn.conf.py`, which allows 60 seconds per request, room for an AI-written lesson (its AI calls stay within 50 seconds).
 - **Neon Postgres** (free, Singapore): put its connection string in Render as `DATABASE_URL`.
 - Set `SECRET_KEY`, `DEBUG=False`, `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in Render. The Render hostname is added to `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS` automatically; add custom domains yourself.
 - Render free has no shell. Run admin commands from your laptop against Neon:

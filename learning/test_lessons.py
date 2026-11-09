@@ -288,7 +288,7 @@ class GenerateLessonTests(OutlineContentMixin, TestCase):
     def fake_ask(self, *replies):
         replies = list(replies)
 
-        def ask(messages, max_tokens, usage):
+        def ask(messages, max_tokens, usage, **kwargs):
             usage.update(model="openai/gpt-oss-120b", prompt_tokens=500, completion_tokens=1200)
             return replies.pop(0)
         return mock.patch("learning.lessons.ask_model_json", side_effect=ask)
@@ -448,12 +448,36 @@ class OfficialDocsTests(TestCase):
 
     def test_official_docs_carry_a_reading_tip_or_get_flagged(self):
         resources = [
-            {"name": "Python docs: functions", "role": "primary",
-             "url": "https://docs.python.org/3/library/functions.html", "search": "print",
-             "how": "Find print() in the list; read its first line and example, skip the parameter details."},
-            {"name": "Java String API", "url": "https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/String.html"},
+            {"name": "MDN: the h1 element", "role": "primary",
+             "url": "https://developer.mozilla.org/en-US/docs/Web/HTML/Element/Heading_Elements", "search": "h1",
+             "how": "Find print()-style examples at the bottom; skip the Specifications table."},
+            {"name": "MDN: the p element", "url": "https://developer.mozilla.org/en-US/docs/Web/HTML/Element/p"},
             {"name": "MDN Web Docs", "url": "", "search": "html tags"},  # A search link we build: no tip needed.
         ]
         lesson, _, flags = parse_lesson(lesson_reply(resources=resources), SPEC)
         self.assertTrue(lesson["resources"][0]["how"].startswith("Find print()"))
-        self.assertEqual(flags, ["Official docs without a how-to-read tip: Java String API"])
+        self.assertEqual(flags, ["Official docs without a how-to-read tip: MDN: the p element"])
+
+
+class PromptSplitAndLanguageTests(TestCase):
+    def test_setup_rules_travel_only_with_setup_lessons(self):
+        normal, version = build_messages(SPEC)
+        setup, setup_version = build_messages(LessonSpec(key="S1", title="Get ready", kind="setup"))
+        self.assertNotIn("Setup rules:", normal[0]["content"])
+        self.assertIn("Setup rules:", setup[0]["content"])
+        self.assertTrue(setup_version.startswith(version + "+lesson-setup-"))
+
+    def test_links_to_another_languages_docs_are_dropped(self):
+        # Seen live: a Python lesson linked "MDN Python Lists" to MDN's JavaScript Array page.
+        examples = [{"lang": "python", "code": "fruits = ['apple']\nprint(fruits[0])", "output": "apple"}]
+        resources = [{"name": "MDN Python Lists", "role": "primary",
+                      "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array"}]
+        task = {"prompt": "Make a list.", "answer": "x = [1]"}
+        lesson, repairs, _ = parse_lesson(lesson_reply(examples=examples, resources=resources, **{"try": task}), SPEC)
+        self.assertIn("Dropped a resource for another language: MDN Python Lists", repairs)
+        self.assertEqual(lesson["resources"][0]["name"], "Python docs")  # The lesson language's own docs instead.
+        self.assertTrue(lesson["resources"][0]["url"].startswith("https://docs.python.org/3/search.html"))
+
+    def test_matching_language_links_are_kept(self):
+        lesson, repairs, _ = parse_lesson(lesson_reply(), SPEC)  # An HTML lesson with an MDN link.
+        self.assertEqual(lesson["resources"][0]["url"], "https://developer.mozilla.org/en-US/docs/Web/HTML")

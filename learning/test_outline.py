@@ -220,7 +220,7 @@ class GenerateOutlineTests(OutlineContentMixin, TestCase):
     def fake_ask(self, *replies):
         replies = list(replies)
 
-        def ask(messages, max_tokens, usage):
+        def ask(messages, max_tokens, usage, **kwargs):
             usage.update(model="openai/gpt-oss-120b", prompt_tokens=700, completion_tokens=900)
             return replies.pop(0)
         return mock.patch("learning.outline.ask_model_json", side_effect=ask)

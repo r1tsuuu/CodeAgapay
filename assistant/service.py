@@ -25,7 +25,11 @@ from .models import AIUsage
 logger = logging.getLogger(__name__)
 
 MAX_TOKENS = 300
-TIMEOUT_SECONDS = 20
+TIMEOUT_SECONDS = 20  # One hint call.
+# Plans and lessons run inside a page request, which the server ends after 60 seconds
+# (gunicorn.conf.py). All their AI calls together get a budget below that: each call waits at
+# most the time left, and no new call starts without enough time to finish.
+MIN_CALL_SECONDS = 8
 # A rate-limited request is retried once if the provider asks us to wait this long or less.
 # Longer waits would hold the page too long, so the next model is tried instead.
 MAX_RETRY_WAIT_SECONDS = 3
@@ -165,10 +169,11 @@ def build_messages(request):
     return [{"role": "system", "content": system}, {"role": "user", "content": user}]
 
 
-def call_provider(provider, messages, max_tokens=MAX_TOKENS, json_mode=False, reasoning="low", usage=None):
+def call_provider(provider, messages, max_tokens=MAX_TOKENS, json_mode=False, reasoning="low", usage=None,
+                  timeout=TIMEOUT_SECONDS):
     """One chat call. With `usage` (a dict), records the model and token counts there."""
     client = OpenAI(api_key=provider.api_key, base_url=provider.base_url,
-                    timeout=TIMEOUT_SECONDS, max_retries=0)
+                    timeout=timeout, max_retries=0)
     extra = {}
     # gpt-oss models think before answering; keep that short so it fits in max_tokens.
     if provider.model.startswith("openai/gpt-oss"):
@@ -200,15 +205,19 @@ def _retry_after(error):
         return None
 
 
-def call_with_retry(provider, messages, **kwargs):
-    """call_provider, retried once after a short rate-limit wait."""
+def call_with_retry(provider, messages, deadline=None, **kwargs):
+    """call_provider, retried once after a short rate-limit wait (only if the deadline allows it)."""
     try:
         return call_provider(provider, messages, **kwargs)
     except RateLimitError as error:
         wait = _retry_after(error)
         if wait is None or wait > MAX_RETRY_WAIT_SECONDS:
             raise
+        if deadline is not None and deadline - time.monotonic() - wait < MIN_CALL_SECONDS:
+            raise
         time.sleep(wait)
+        if deadline is not None:
+            kwargs["timeout"] = min(kwargs.get("timeout", TIMEOUT_SECONDS), deadline - time.monotonic())
         return call_provider(provider, messages, **kwargs)
 
 
@@ -250,18 +259,27 @@ def _failed_generation(error):
     return ""
 
 
-def ask_model_json(messages, max_tokens=1500, text_ok=False, usage=None):
+def ask_model_json(messages, max_tokens=1500, text_ok=False, usage=None, deadline=None):
     """Like ask_model, but with the planning model and a parsed JSON object back.
 
     A provider that replies with broken JSON counts as failed, so the next one is tried.
     With `text_ok`, a plain-text reply is returned as {"reply": text} instead (used by
     the intake chat, where a plain follow-up question is still useful).
     With `usage` (a dict), records the model and token counts of the call that answered.
+    `deadline` (a time.monotonic() value) bounds all the calls; without one, they get
+    AI_REQUEST_BUDGET seconds from now. A provider is skipped once too little time is left.
     Returns None if all fail.
     """
+    if deadline is None:
+        deadline = time.monotonic() + settings.AI_REQUEST_BUDGET
     for provider in providers(purpose="plan"):
+        left = deadline - time.monotonic()
+        if left < MIN_CALL_SECONDS:
+            logger.warning("AI time budget used up before trying %s (%s)", provider.name, provider.model)
+            break
         try:
-            text = call_with_retry(provider, messages, max_tokens=max_tokens, json_mode=True, usage=usage)
+            text = call_with_retry(provider, messages, max_tokens=max_tokens, json_mode=True, usage=usage,
+                                   timeout=min(settings.AI_PLAN_CALL_TIMEOUT, left), deadline=deadline)
         except Exception as error:
             text = _failed_generation(error)
             if not text:

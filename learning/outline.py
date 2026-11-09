@@ -12,9 +12,12 @@ usable lessons is asked for again, once.
 """
 
 import re
+import time
 import unicodedata
 from pathlib import Path
 from types import SimpleNamespace
+
+from django.conf import settings
 
 from assistant.service import ask_model_json, language_note
 from content.models import ProjectIdea, Track
@@ -426,9 +429,10 @@ def generate_outline(profile, project_idea="", plan=None, save=True):
     messages, version = build_messages(profile, project_idea, ideas)
     repairs, usage = [], {}
     earlier_problems = []
+    deadline = time.monotonic() + settings.AI_REQUEST_BUDGET  # Both attempts together (assistant.service).
     for attempt in range(2):
         attempt_usage = {}
-        data = ask_model_json(messages, max_tokens=MAX_TOKENS, usage=attempt_usage)
+        data = ask_model_json(messages, max_tokens=MAX_TOKENS, deadline=deadline, usage=attempt_usage)
         for field in ("prompt_tokens", "completion_tokens"):
             usage[field] = (usage.get(field) or 0) + (attempt_usage.get(field) or 0)
         usage["model"] = attempt_usage.get("model", usage.get("model", ""))

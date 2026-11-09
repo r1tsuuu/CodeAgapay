@@ -17,9 +17,11 @@ A lesson without an example, a task or two gradable questions is asked for again
 
 import ast
 import re
+import time
 from dataclasses import dataclass, field
 from urllib.parse import quote_plus, urlparse
 
+from django.conf import settings
 from django.db import transaction
 from django.db.models import Max
 
@@ -56,6 +58,12 @@ ALLOWED_LINKS = [
     # Official language and tool documentation, for what learning sites don't cover.
     ("dev.java", ""), ("docs.oracle.com", "/en/java/"), ("sqlite.org", ""), ("postgresql.org", "/docs/"),
 ]
+# Sites about one family of languages. A lesson in another language never links to them.
+LANGUAGE_SITES = {
+    "developer.mozilla.org": {"html", "css", "javascript"}, "nodejs.org": {"javascript"},
+    "docs.python.org": {"python"}, "realpython.com": {"python"}, "dev.java": {"java"},
+    "docs.oracle.com": {"java"}, "sqlite.org": {"sql"}, "postgresql.org": {"sql"},
+}
 # Official documentation: a link to one of these gets a "how to read it" tip, because beginners
 # find raw reference pages hard to use.
 OFFICIAL_DOCS = ("developer.mozilla.org", "docs.python.org", "code.visualstudio.com", "dev.java",
@@ -125,6 +133,9 @@ def _setup_line(outline, lesson):
 def build_messages(spec):
     """The fixed system prompt and a short description of this lesson."""
     system, version = load_prompt("lesson")
+    if spec.kind == "setup":  # The setup rules travel only with setup lessons, to keep other requests small.
+        setup_rules, setup_version = load_prompt("lesson_setup")
+        system, version = f"{system}\n\n{setup_rules}", f"{version}+{setup_version}"
     limits = LIMITS.get(spec.level, LIMITS["beginner"])
     if spec.kind == "setup":
         shape = f"This is the setup lesson (see the setup rule). About {spec.minutes} minutes."
@@ -234,6 +245,13 @@ def allowed_link(url):
     )
 
 
+def _other_language(url, lang):
+    """The link is to docs for a different language than the lesson's (e.g. MDN in a Python lesson)."""
+    host = (urlparse(url).hostname or "").removeprefix("www.")
+    languages = next((langs for site, langs in LANGUAGE_SITES.items() if host == site or host.endswith("." + site)), None)
+    return bool(lang and languages and lang not in languages)
+
+
 def _official_page(url):
     """A page of official documentation (not a search page we built), which beginners need help reading."""
     parts = urlparse(url)
@@ -259,6 +277,9 @@ def _resources(items, spec, lang, repairs):
         if url and not allowed_link(url):
             repairs.append(f"Dropped a link not on the allowed list: {urlparse(url).hostname or url[:40]}")
             url = ""
+        if url and _other_language(url, lang):
+            repairs.append(f"Dropped a resource for another language: {name}")
+            continue
         wanted = "primary" if _text(item.get("role"), 10).lower() == "primary" else "optional"
         resources.append({"name": name, "role": wanted, "url": url or search_link(name, search), "search": search,
                           "how": _text(item.get("how"), 250)})
@@ -480,9 +501,10 @@ def generate_lesson(spec, outline=None, save=True):
     messages, version = build_messages(spec)
     usage = {}
     earlier_problems = []
+    deadline = time.monotonic() + settings.AI_REQUEST_BUDGET  # Both attempts together (assistant.service).
     for _ in range(2):
         attempt = {}
-        data = ask_model_json(messages, max_tokens=MAX_TOKENS, usage=attempt)
+        data = ask_model_json(messages, max_tokens=MAX_TOKENS, deadline=deadline, usage=attempt)
         for name in ("prompt_tokens", "completion_tokens"):
             usage[name] = (usage.get(name) or 0) + (attempt.get(name) or 0)
         usage["model"] = attempt.get("model", usage.get("model", ""))

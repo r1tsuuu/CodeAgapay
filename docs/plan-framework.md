@@ -1,6 +1,6 @@
 # CodeAgapay AI Learning Plan Framework
 
-Version 2.1, accepted by the team on 9 November 2026. Steps 2 to 5 are built behind `AI_PLANS` (prompts `outline-2` and `lesson-15`); with it off, learners get the curated plan.
+Version 2.1, accepted by the team on 9 November 2026. Steps 2 to 5 are built behind `AI_PLANS` (prompts `outline-2` and `lesson-16`); with it off, learners get the curated plan.
 
 This is the source of truth for how CodeAgapay's AI builds learning plans and lessons. The AI prompts and the code follow it. When a rule changes here, change the prompt or code that carries it out (see **Where** in each table) in the same pull request.
 
@@ -259,10 +259,11 @@ These run in code before anything is saved or shown. They are what make AI-writt
 | Lessons only need earlier lessons | Drop references to later or unknown lessons | Built (outline) |
 | Every question is gradable: a multiple choice with distinct choices and a valid answer, or a blank with ___ and accepted answers | Drop it; ask again if fewer than 2 remain | Built |
 | Every link is on the allowed list | Remove the URL, keep the name and search phrase | Built |
+| No link to another language's docs (MDN in a Python lesson, the Python docs in an HTML lesson) | Drop that resource; add the lesson language's own docs if none is left | Built (`lessons.LANGUAGE_SITES`) |
 | Text within length limits; no HTML or scripts | Trim or strip | Built for trimming |
 | Daily limits per learner | Plans: build without AI (`AI_INTAKE_DAILY_LIMIT`). Lessons: show a try-tomorrow message (`AI_LESSON_DAILY_LIMIT`, default 12) | Built |
 
-AI providers: Groq first (`GROQ_PLAN_MODEL`, then `GROQ_MODEL`), Cloudflare Workers AI as backup. *Code. Built.* Each saved outline records the model, prompt version and token counts (`PlanOutline`). *Code. Built.* Lessons will too. *v1.*
+AI providers: Groq first (`GROQ_PLAN_MODEL`, then `GROQ_MODEL`), Cloudflare Workers AI as backup. *Code. Built.* Plans and lessons are written inside a page request, which the server ends after 60 seconds (`gunicorn.conf.py`); each AI call may take up to 30 seconds (`AI_PLAN_CALL_TIMEOUT`) and all of a request's calls together stay within 50 (`AI_REQUEST_BUDGET`), so a slow model falls back in time instead of the page failing. *Code. Built.* Each saved outline records the model, prompt version and token counts (`PlanOutline`). *Code. Built.* Lessons will too. *v1.*
 
 ### Keeping calls small
 
@@ -328,7 +329,7 @@ Generated plans and lessons reach learners without approval. Review happens afte
 | Area | Change |
 | --- | --- |
 | `docs/plan-framework.md` | This file |
-| `learning/prompts/` | `outline.md` (built, `outline-2`) and `lesson.md` (built, `lesson-15`): the short prompts, each naming the sections it follows, with a version |
+| `learning/prompts/` | `outline.md` (built, `outline-2`) and `lesson.md` (built, `lesson-16`): the short prompts, each naming the sections it follows, with a version |
 | `learning/outline.py` | Built: builds the outline request, checks and repairs the reply, saves it. Shadow mode (`AI_OUTLINES`) saves one with each AI-tailored plan |
 | `learning/tailoring.py` | When lessons ship: the outline replaces topic selection; the curated plan stays as the fallback |
 | New models | Built: `PlanOutline` and `GeneratedLesson` (versions, current flag, flags), sharing `AIRecord` (JSON, repairs, model, prompt version, tokens, review fields). Modules stay inside the outline's JSON; a `PlanModule` table is only needed if the lesson page wants it |

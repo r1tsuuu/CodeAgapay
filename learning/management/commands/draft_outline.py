@@ -10,6 +10,7 @@ unless --save is given with --learner; saved outlines appear in admin for review
 """
 
 import json
+import sys
 
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
@@ -39,6 +40,10 @@ class Command(BaseCommand):
                             help="Also print the model's reply before checks, with hidden characters as \\u codes")
 
     def handle(self, *args, **opts):
+        # Windows terminals often can't show characters like →; show "?" instead of crashing.
+        for stream in (sys.stdout, sys.stderr):
+            if hasattr(stream, "reconfigure"):
+                stream.reconfigure(errors="replace")
         if opts["save"] and not opts["learner"]:
             raise CommandError("--save needs --learner: made-up answers have no learner to save under.")
         profile, project = self._profile(opts)
