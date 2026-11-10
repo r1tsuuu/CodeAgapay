@@ -1212,7 +1212,8 @@ input[type="radio"] {
 
 .result-lists {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  /* min(): on a small phone one column fills the box instead of forcing 16rem and spilling out. */
+  grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr));
   gap: 1.5rem 2rem;
   padding: 1.5rem;
   background: var(--white);
@@ -1238,17 +1239,24 @@ input[type="radio"] {
   margin-bottom: 0.9rem;
 }
 
+/* A tick for topics they know and a cross for ones to learn, as in the Figma Result frames. */
 .topic-result::before {
-  content: "";
+  content: "✓";
   grid-row: span 2;
+  display: grid;
+  place-items: center;
   width: 2rem;
   height: 2rem;
   border-radius: 50%;
   background: var(--success-soft);
+  color: var(--success);
+  font-weight: 800;
 }
 
 .result-to-learn .topic-result::before {
+  content: "✕";
   background: var(--error-soft);
+  color: var(--error);
 }
 
 .topic-result-title {
@@ -3975,5 +3983,142 @@ kbd {
 
   .icon-options {
     gap: 0.4rem;
+  }
+}
+
+/* ---------- Phone pass (Figma phone frames, 360–430px) ---------- */
+
+.bottom-nav {
+  display: none;
+}
+
+.lesson-meta {
+  flex-wrap: wrap;
+}
+
+@media (max-width: 48rem) {
+  /* My Plan and the track move from the top bar to a bar at the bottom, within thumb reach. */
+  .navbar-plan {
+    display: none;
+  }
+
+  .navbar-links {
+    margin-left: auto;
+  }
+
+  .bottom-nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 15;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.25rem;
+    padding: 0.55rem 1rem calc(0.55rem + env(safe-area-inset-bottom));
+    background: var(--paper);
+    border-top: 3px solid var(--line);
+  }
+
+  .bottom-nav .navbar-track {
+    display: inline-flex;
+    padding: 0.4rem 0.9rem;
+    font-size: 0.95rem;
+  }
+
+  .bottom-nav-plan {
+    padding: 0.3rem 0.2rem;
+    border-bottom: 3px solid transparent;
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.1rem;
+    text-decoration: none;
+  }
+
+  .bottom-nav-plan[aria-current="page"] {
+    border-bottom-color: var(--berry);
+  }
+
+  body:has(.bottom-nav) {
+    padding-bottom: 4.25rem;
+  }
+
+  body:has(.bottom-nav) .help-button {
+    bottom: calc(4.75rem + env(safe-area-inset-bottom));
+  }
+
+  /* About You: tracks and experience three to a row, as in the phone frame. */
+  .about-you-form .choice-options:has(.choice-track),
+  .about-you-form .choice-options:has(input[name="experience"]) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .about-you-form .choice-options:has(.choice-track) .choice,
+  .about-you-form .choice-options:has(input[name="experience"]) .choice {
+    min-height: 3.25rem;
+    padding: 0.5rem 0.3rem;
+    font-size: 0.95rem;
+    line-height: 1.2;
+  }
+
+  .about-you-form .choice-track {
+    font-size: 1rem;
+  }
+
+  .about-you-form .choice-track::after {
+    font-size: 0.68rem;
+  }
+
+  /* Plan cards stay short: the Open button sits on the right, Mark done and Skip below. */
+  .plan-item {
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 0.75rem;
+  }
+
+  .plan-item-open {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: start;
+    justify-self: end;
+    margin-top: 0;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.9rem;
+  }
+
+  .plan-item-actions {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 30rem) {
+  /* Thinner frames and less padding, so boxes inside boxes keep their width. */
+  .card {
+    border-width: 5px;
+    padding: 1.1rem 1rem;
+  }
+
+  .skill-question {
+    border-width: 4px;
+    padding: 0.9rem;
+  }
+
+  .result-lists {
+    padding: 1rem;
+  }
+
+  .result-plan {
+    padding: 1.1rem;
+  }
+
+  .about-you-form .choice-options:has(input[name="experience"]) .choice {
+    font-size: 0.85rem;
+    overflow-wrap: anywhere;
+  }
+
+  .plan-sheet {
+    padding-inline: 0.75rem;
   }
 }

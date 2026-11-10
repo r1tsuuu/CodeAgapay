@@ -25,3 +25,14 @@
   </nav>
   {% endif %}
 </header>
+{% if user.is_authenticated %}
+{# Phones: My Plan and the track move to a bar at the bottom of the screen (Figma phone frames). #}
+<nav class="bottom-nav" aria-label="Main">
+  <a class="bottom-nav-plan" href="{% url 'home' %}"{% if request.resolver_match.url_name == "plan" %} aria-current="page"{% endif %}>My Plan</a>
+  {% with profile=user.learner_profile %}
+  {% if profile.path or profile.track %}
+  <a class="navbar-track" href="{% url 'home' %}"><span class="navbar-track-icon" aria-hidden="true">&lt;&gt;</span> {% if profile.path %}{{ profile.path.title }}{% else %}{{ profile.track.name }} Track{% endif %}</a>
+  {% endif %}
+  {% endwith %}
+</nav>
+{% endif %}
