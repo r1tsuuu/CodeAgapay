@@ -24,6 +24,17 @@ class LearnerProfile(models.Model):
         EXPLAIN = "explain", "A clear explanation"
         EXAMPLE = "example", "An example I can learn from"
 
+    class Avatar(models.TextChoices):
+        """Profile icons: the CodeAgapay mascots in static/img/mascots/. Blank shows the first letter."""
+
+        FLOWER_YELLOW = "flower-yellow", "Yellow flower"
+        FLOWER_TEAL = "flower-teal", "Teal flower"
+        FLOWER_PINK = "flower-pink", "Pink flower"
+        FLOWER_ORANGE = "flower-orange", "Orange flower"
+        STAR_YELLOW = "star-yellow", "Yellow star"
+        STAR_PINK = "star-pink", "Pink star"
+        OVAL_TEAL = "oval-teal", "Teal blob"
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="learner_profile"
     )
@@ -60,6 +71,9 @@ class LearnerProfile(models.Model):
         "content.Track", blank=True, related_name="+", help_text="Tracks whose setup the learner finished."
     )
     onboarded = models.BooleanField(default=False)
+    avatar = models.CharField(max_length=20, choices=Avatar.choices, blank=True, help_text="Blank: the first letter of their name.")
+    school = models.CharField("school or organisation", max_length=120, blank=True)
+    role = models.CharField(max_length=60, blank=True, help_text='What they do, e.g. "student". Optional.')
     ai_plans_early = models.BooleanField(
         "gets AI plans early", default=False,
         help_text="Gets AI-written plans and lessons while AI_PLANS is still off for everyone (gradual rollout).",

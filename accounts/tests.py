@@ -42,23 +42,26 @@ class HomeTests(TestCase):
         self.assertContains(response, "navbar")
 
 
-class SettingsTests(TestCase):
+class ProfileTests(TestCase):
     def setUp(self):
         self.track = Track.objects.create(name="Python", slug="python")
         for i in (1, 2, 3):
             Topic.objects.create(track=self.track, title=f"T{i}", slug=f"t{i}", order=i, estimated_minutes=60)
-        self.user = get_user_model().objects.create_user("ana", "ana@example.com")
+        self.user = get_user_model().objects.create_user("ana", "ana@example.com", first_name="Ana", last_name="Cruz")
         self.profile = get_profile(self.user)
         self.profile.track = self.track
         self.profile.onboarded = True
         self.profile.hours_per_week = 1
+        self.profile.goal_text = "Automate my org's attendance"
         self.profile.save()
         self.client.force_login(self.user)
-        self.url = reverse("account_settings")
+        self.url = reverse("profile")
+        self.setup_url = reverse("profile_setup")
 
     def save(self, **changes):
-        data = {"hours_per_week": 1, "hint_style": "think", "email_reminders": "on", **changes}
-        return self.client.post(self.url, {k: v for k, v in data.items() if v is not None})
+        data = {"goal_text": self.profile.goal_text, "hours_per_week": 1, "experience": "none", "device": "windows",
+                "hint_style": "think", "email_reminders": "on", **changes}
+        return self.client.post(self.setup_url, {k: v for k, v in data.items() if v is not None})
 
     def test_needs_a_login(self):
         self.client.logout()
@@ -69,15 +72,25 @@ class SettingsTests(TestCase):
         self.profile.save()
         self.assertRedirects(self.client.get(self.url), reverse("welcome"))
 
-    def test_shows_current_values(self):
-        response = self.client.get(self.url)
-        self.assertContains(response, 'value="1"')
-        self.assertContains(response, "ana@example.com")
+    def test_shows_who_they_are_and_their_setup(self):
+        page = self.client.get(self.url)
+        self.assertContains(page, "<h1>Ana Cruz</h1>", html=True)
+        self.assertContains(page, "ana@example.com")
+        self.assertContains(page, "Automate my org&#x27;s attendance")
+        self.assertContains(page, 'value="1"')
+        self.assertContains(page, "You don't have a plan yet.")
 
-    def test_saves_hint_style_and_reminders(self):
-        self.assertRedirects(self.save(hint_style="example"), self.url)
+    def test_account_menu_links_here(self):
+        self.assertContains(self.client.get(reverse("welcome")), f'href="{self.url}">My profile')
+
+    def test_saves_learning_setup(self):
+        response = self.save(hint_style="example", device="mac", experience="a_little", goal_text="Make a game")
+        self.assertRedirects(response, self.url + "#learning-setup", fetch_redirect_response=False)
         self.profile.refresh_from_db()
-        self.assertEqual(self.profile.hint_style, "example")
+        self.assertEqual(
+            (self.profile.hint_style, self.profile.device, self.profile.experience, self.profile.goal_text),
+            ("example", "mac", "a_little", "Make a game"),
+        )
         self.assertTrue(self.profile.email_reminders)
         self.save(email_reminders=None)
         self.profile.refresh_from_db()
@@ -98,16 +111,84 @@ class SettingsTests(TestCase):
         self.assertEqual(first.status, PlanItem.Status.DONE)
 
     def test_works_without_a_plan(self):
-        self.assertRedirects(self.save(hours_per_week=5), self.url)
+        self.assertRedirects(self.save(hours_per_week=5), self.url + "#learning-setup", fetch_redirect_response=False)
 
-    def test_rejects_impossible_hours(self):
+    def test_rejects_impossible_hours_and_opens_the_form(self):
         response = self.save(hours_per_week=0)
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 400)
+        self.assertContains(response, '<details class="profile-edit" open>', status_code=400)
         self.profile.refresh_from_db()
         self.assertEqual(self.profile.hours_per_week, 1)
 
-    def test_account_menu_links_here(self):
-        self.assertContains(self.client.get(self.url), f'href="{self.url}"')
+    def test_shows_progress_and_the_next_topic(self):
+        plan = build_plan(self.profile)
+        set_item_status(plan.items.order_by("order").first(), PlanItem.Status.DONE)
+        page = self.client.get(self.url)
+        self.assertContains(page, "1 topic done out of 3")
+        self.assertContains(page, "33%")
+        self.assertContains(page, "Continue “T2”")
+        self.assertContains(page, '<span class="status status-done">completed</span>', html=True)
+        self.assertContains(page, '<span class="status status-todo">not started</span>', html=True)
+
+    def test_saves_details(self):
+        self.client.post(reverse("profile_details"), {"first_name": "Maria", "last_name": "Santos",
+                                                      "school": "Ateneo", "role": "student"})
+        self.user.refresh_from_db()
+        self.profile.refresh_from_db()
+        self.assertEqual((self.user.get_full_name(), self.profile.school, self.profile.role),
+                         ("Maria Santos", "Ateneo", "student"))
+        self.assertContains(self.client.get(self.url), "<dd>Ateneo</dd>", html=True)
+
+    def test_details_need_a_first_name(self):
+        response = self.client.post(reverse("profile_details"), {"first_name": " ", "last_name": "", "school": "", "role": ""})
+        self.assertEqual(response.status_code, 400)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.first_name, "Ana")
+
+    def test_icon_shows_in_the_menu(self):
+        self.client.post(reverse("profile_icon"), {"avatar": "star-pink"})
+        self.profile.refresh_from_db()
+        self.assertEqual(self.profile.avatar, "star-pink")
+        self.assertContains(self.client.get(reverse("welcome")), "img/mascots/star-pink.svg")
+        self.client.post(reverse("profile_icon"), {"avatar": ""})  # back to the first letter
+        self.profile.refresh_from_db()
+        self.assertEqual(self.profile.avatar, "")
+
+    def test_unknown_icon_is_rejected(self):
+        response = self.client.post(reverse("profile_icon"), {"avatar": "../../secret"})
+        self.assertEqual(response.status_code, 400)
+        self.profile.refresh_from_db()
+        self.assertEqual(self.profile.avatar, "")
+
+    def test_old_settings_link_goes_to_the_profile(self):
+        old = reverse("account_settings")
+        self.assertRedirects(self.client.get(old), self.url + "#learning-setup", fetch_redirect_response=False)
+        self.client.post(old, {"hours_per_week": 4, "hint_style": "example"})
+        self.profile.refresh_from_db()
+        self.assertEqual((self.profile.hours_per_week, self.profile.hint_style), (4, "example"))
+
+
+class DeleteAccountTests(TestCase):
+    def setUp(self):
+        self.user = get_user_model().objects.create_user("ana", "ana@example.com")
+        self.profile = get_profile(self.user)
+        self.client.force_login(self.user)
+        self.url = reverse("delete_account")
+
+    def test_asks_first(self):
+        self.assertContains(self.client.get(self.url), "This can't be undone.")
+        self.assertTrue(get_user_model().objects.filter(pk=self.user.pk).exists())
+
+    def test_needs_the_word_delete(self):
+        self.client.post(self.url, {"confirm": "yes"})
+        self.assertTrue(get_user_model().objects.filter(pk=self.user.pk).exists())
+
+    def test_deletes_the_login_and_everything_linked(self):
+        response = self.client.post(self.url, {"confirm": "delete"})
+        self.assertRedirects(response, reverse("account_login"), fetch_redirect_response=False)
+        self.assertFalse(get_user_model().objects.filter(pk=self.user.pk).exists())
+        self.assertFalse(LearnerProfile.objects.filter(pk=self.profile.pk).exists())
+        self.assertEqual(self.client.get(reverse("home")).status_code, 302)  # logged out
 
 
 class ReminderChoiceTests(TestCase):

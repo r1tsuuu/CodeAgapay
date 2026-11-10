@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}My profile · CodeAgapay{% endblock %}
+{% block page_class %}page-wide{% endblock %}
+
+{% block content %}
+<div class="profile">
+  <div class="profile-main">
+    <header class="profile-head">
+      <div class="profile-avatar-wrap">
+        {% include "partials/avatar.html" with size="big" %}
+        <details class="icon-picker"{% if open == "icon_form" %} open{% endif %}>
+          <summary class="profile-pencil" aria-label="Change your icon">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4Z M13.5 6.5l4 4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg>
+          </summary>
+          <form class="icon-picker-card" method="post" action="{% url 'profile_icon' %}">
+            {% csrf_token %}
+            <h2>Change icon</h2>
+            <fieldset>
+              <legend class="visually-hidden">Choose your icon</legend>
+              <div class="icon-options">
+                {% for choice in icon_form.avatar %}
+                <label class="icon-option" title="{{ choice.choice_label }}">
+                  {{ choice.tag }}
+                  {% if choice.data.value %}
+                  <img src="{% static 'img/mascots/' %}{{ choice.data.value }}.svg" alt="">
+                  {% else %}
+                  <span class="avatar-letter" aria-hidden="true">{{ user.first_name|default:user.username|first|upper }}</span>
+                  {% endif %}
+                  <span class="visually-hidden">{{ choice.choice_label }}</span>
+                </label>
+                {% endfor %}
+              </div>
+            </fieldset>
+            <button type="submit" class="button button-primary no-arrow button-small">Use this icon</button>
+          </form>
+        </details>
+      </div>
+      <h1>{{ user.get_full_name|default:user.first_name|default:"Your profile" }}</h1>
+    </header>
+
+    <section class="profile-card profile-details" aria-labelledby="details-title">
+      <h2 id="details-title" class="visually-hidden">Your details</h2>
+      <dl>
+        <div><dt>Name:</dt><dd>{{ user.get_full_name|default:"Not set" }}</dd></div>
+        <div><dt>Email address:</dt><dd>{{ user.email|default:"Not set" }}</dd></div>
+        {% if profile.school %}<div><dt>School or organisation:</dt><dd>{{ profile.school }}</dd></div>{% endif %}
+        {% if profile.role %}<div><dt>What you do:</dt><dd>{{ profile.role }}</dd></div>{% endif %}
+        <div class="profile-since"><dt>Learning since</dt><dd>{{ user.date_joined|date:"M Y" }}</dd></div>
+      </dl>
+      <details class="profile-edit"{% if open == "details_form" %} open{% endif %}>
+        <summary>Edit details</summary>
+        <form method="post" action="{% url 'profile_details' %}">
+          {% csrf_token %}
+          {% for field in details_form %}{% include "partials/form_field.html" %}{% endfor %}
+          <p class="field-help">Your email comes from your Google account, so it can't be changed here.</p>
+          <button type="submit" class="button button-primary no-arrow button-small">Save details</button>
+        </form>
+      </details>
+    </section>
+
+    <section class="profile-panel" aria-labelledby="progress-title">
+      <div class="profile-panel-head">
+        <h2 id="progress-title">Progress</h2>
+        {% if progress %}
+        <div class="profile-bar" role="img" aria-label="{{ progress.percent }}% of your plan done">
+          <span class="profile-bar-fill" style="width: {{ progress.percent }}%"></span>
+          <span class="profile-bar-text">{{ progress.percent }}%</span>
+        </div>
+        {% endif %}
+      </div>
+      <div class="profile-panel-body">
+        {% if progress %}
+        <ul class="profile-stats">
+          <li>{{ progress.done }} topic{{ progress.done|pluralize }} done out of {{ progress.total }}</li>
+          <li>{{ progress.checks_passed }} quiz{{ progress.checks_passed|pluralize:"zes" }} passed</li>
+          <li>{{ progress.weeks }} week{{ progress.weeks|pluralize }} active</li>
+        </ul>
+        {% if progress.next %}
+        <a class="profile-continue" href="{{ progress.next.url }}">{% if progress.next.kind == "review" %}{{ progress.next.title }}{% else %}Continue “{{ progress.next.title }}”{% endif %}</a>
+        {% else %}
+        <a class="profile-continue" href="{% url 'plan_finish' %}">See what you finished</a>
+        {% endif %}
+        {% else %}
+        <p>You don't have a plan yet.</p>
+        <a class="profile-continue" href="{% url 'home' %}">Make my plan</a>
+        {% endif %}
+      </div>
+
+      {% if progress.items %}
+      <div class="profile-panel-head profile-panel-head-flat">
+        <h2>Topics</h2>
+      </div>
+      <div class="profile-panel-body">
+        <ul class="profile-topics">
+          {% for item in progress.items %}
+          <li>
+            {% if item.shaky %}<span class="status status-shaky">review later</span>
+            {% elif item.status == "done" %}<span class="status status-done">completed</span>
+            {% elif item.status == "in_progress" %}<span class="status status-in_progress">ongoing</span>
+            {% elif item.status == "skipped" %}<span class="status status-skipped">skipped</span>
+            {% else %}<span class="status status-todo">not started</span>{% endif %}
+            <a href="{{ item.url }}">{{ item.title }}</a>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+    </section>
+
+    <section class="profile-panel profile-setup" id="learning-setup" aria-labelledby="setup-title">
+      <div class="profile-panel-head">
+        <h2 id="setup-title">Learning setup</h2>
+      </div>
+      <div class="profile-panel-body profile-setup-body">
+        <dl class="profile-setup-list">
+          <div><dt>Goal:</dt><dd>{{ profile.goal_text|default:"Not set" }}</dd></div>
+          <div><dt>Hours per week:</dt><dd>{{ profile.hours_per_week|default:"Not set" }}</dd></div>
+          <div><dt>Coding experience:</dt><dd>{{ profile.get_experience_display|default:"Not set" }}</dd></div>
+          <div><dt>What you learn on:</dt><dd>{{ profile.get_device_display|default:"Not sure" }}</dd></div>
+          <div><dt>What helps when stuck:</dt><dd>{{ profile.get_hint_style_display|default:"Not set" }}</dd></div>
+          {% if setup_method %}<div><dt>How you write code:</dt><dd>{{ setup_method }} · <a href="{% url 'plan' %}">change on your plan</a></dd></div>{% endif %}
+          <div><dt>Email reminders:</dt><dd>{% if profile.email_reminders %}On{% else %}Off{% endif %}</dd></div>
+        </dl>
+        <details class="profile-edit"{% if open == "setup_form" %} open{% endif %}>
+          <summary>Change my learning setup</summary>
+          <form class="about-you-form" method="post" action="{% url 'profile_setup' %}">
+            {% csrf_token %}
+            {% for error in setup_form.non_field_errors %}<p class="field-error">{{ error }}</p>{% endfor %}
+            {% for field in setup_form %}{% include "partials/form_field.html" %}{% endfor %}
+            <button type="submit" class="button button-primary no-arrow">Save my setup</button>
+          </form>
+        </details>
+      </div>
+      <p class="profile-setup-links">
+        <a href="{% url 'skill_check' %}">Retake skill check</a>
+        <a href="{% url 'intake' %}?edit=1">Change my answers (new plan)</a>
+      </p>
+    </section>
+  </div>
+
+  <aside class="profile-side" aria-label="Account">
+    <img class="mascot" src="{% static 'img/mascots/flower-yellow.svg' %}" alt="">
+    <form method="post" action="{% url 'account_logout' %}">
+      {% csrf_token %}
+      <button type="submit" class="profile-logout">Log out</button>
+    </form>
+    <a class="profile-delete" href="{% url 'delete_account' %}">Delete my account and data</a>
+  </aside>
+</div>
+{% endblock %}

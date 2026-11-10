@@ -93,7 +93,7 @@ def build_email(reminder):
         "name": profile.user.first_name or "there",
         "action": reminder.action,
         "plan_url": settings.SITE_URL + reverse("plan"),
-        "settings_url": settings.SITE_URL + reverse("account_settings"),
+        "settings_url": settings.SITE_URL + reverse("profile") + "#learning-setup",
         "unsubscribe_url": unsubscribe_url,
     })
     return EmailMessage(

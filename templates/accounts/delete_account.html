@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Delete my account · CodeAgapay{% endblock %}
+
+{% block content %}
+<section class="card delete-account">
+  <img class="mascot" src="{% static 'img/mascots/oval-berry.svg' %}" alt="">
+  <h1>Delete your account and data?</h1>
+  <p class="lead">This can't be undone. We'll delete:</p>
+  <ul>
+    <li>Your profile, goal and learning setup</li>
+    <li>Your plans, lessons, progress and quiz answers</li>
+    <li>Your practice answers and AI help history counts</li>
+  </ul>
+  <p>Your Google account isn't touched. You can sign up again later and start fresh.</p>
+  <form method="post">
+    {% csrf_token %}
+    <label for="confirm-delete" class="practice-label">Type <strong>delete</strong> to confirm</label>
+    <input id="confirm-delete" type="text" name="confirm" autocomplete="off" required>
+    <div class="actions">
+      <a class="text-link" href="{% url 'profile' %}">Keep my account</a>
+      <button type="submit" class="button button-danger">Delete everything</button>
+    </div>
+  </form>
+</section>
+{% endblock %}
