@@ -13,7 +13,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='learnerprofile',
             name='avatar',
-            field=models.CharField(blank=True, choices=[('flower-yellow', 'Yellow flower'), ('flower-teal', 'Teal flower'), ('flower-pink', 'Pink flower'), ('flower-orange', 'Orange flower'), ('star-yellow', 'Yellow star'), ('star-pink', 'Pink star'), ('oval-teal', 'Teal blob')], help_text='Blank: the first letter of their name.', max_length=20),
+            field=models.CharField(blank=True, choices=[('avatar-1', 'Glasses and a moustache'), ('avatar-2', 'Long yellow hair'), ('avatar-3', 'Short black hair'), ('avatar-4', 'Long brown hair'), ('avatar-5', 'Hair in a bun'), ('avatar-6', 'Curly brown hair'), ('avatar-7', 'Spiky black hair')], help_text='Blank: the first letter of their name.', max_length=20),
         ),
         migrations.AddField(
             model_name='learnerprofile',

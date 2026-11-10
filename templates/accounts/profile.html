@@ -24,7 +24,7 @@
                 <label class="icon-option" title="{{ choice.choice_label }}">
                   {{ choice.tag }}
                   {% if choice.data.value %}
-                  <img src="{% static 'img/mascots/' %}{{ choice.data.value }}.svg" alt="">
+                  <img src="{% static 'img/avatars/' %}{{ choice.data.value }}.svg" alt="">
                   {% else %}
                   <span class="avatar-letter" aria-hidden="true">{{ user.first_name|default:user.username|first|upper }}</span>
                   {% endif %}

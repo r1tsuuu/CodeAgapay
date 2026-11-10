@@ -25,15 +25,15 @@ class LearnerProfile(models.Model):
         EXAMPLE = "example", "An example I can learn from"
 
     class Avatar(models.TextChoices):
-        """Profile icons: the CodeAgapay mascots in static/img/mascots/. Blank shows the first letter."""
+        """Profile icons from the Figma "Custom Profile Page", in static/img/avatars/. Blank shows the first letter."""
 
-        FLOWER_YELLOW = "flower-yellow", "Yellow flower"
-        FLOWER_TEAL = "flower-teal", "Teal flower"
-        FLOWER_PINK = "flower-pink", "Pink flower"
-        FLOWER_ORANGE = "flower-orange", "Orange flower"
-        STAR_YELLOW = "star-yellow", "Yellow star"
-        STAR_PINK = "star-pink", "Pink star"
-        OVAL_TEAL = "oval-teal", "Teal blob"
+        AVATAR_1 = "avatar-1", "Glasses and a moustache"
+        AVATAR_2 = "avatar-2", "Long yellow hair"
+        AVATAR_3 = "avatar-3", "Short black hair"
+        AVATAR_4 = "avatar-4", "Long brown hair"
+        AVATAR_5 = "avatar-5", "Hair in a bun"
+        AVATAR_6 = "avatar-6", "Curly brown hair"
+        AVATAR_7 = "avatar-7", "Spiky black hair"
 
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="learner_profile"
@@ -81,6 +81,11 @@ class LearnerProfile(models.Model):
 
     def __str__(self):
         return f"Profile of {self.user}"
+
+    @property
+    def avatar_file(self):
+        """The chosen icon's file name, or "" when none is chosen or it's no longer offered."""
+        return self.avatar if self.avatar in self.Avatar.values else ""
 
     def gets_ai_plans(self):
         """AI-written plans for this learner: everyone's on (AI_PLANS), or they're in the early group."""

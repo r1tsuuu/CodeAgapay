@@ -146,19 +146,31 @@ class ProfileTests(TestCase):
         self.assertEqual(self.user.first_name, "Ana")
 
     def test_icon_shows_in_the_menu(self):
-        self.client.post(reverse("profile_icon"), {"avatar": "star-pink"})
+        self.client.post(reverse("profile_icon"), {"avatar": "avatar-3"})
         self.profile.refresh_from_db()
-        self.assertEqual(self.profile.avatar, "star-pink")
-        self.assertContains(self.client.get(reverse("welcome")), "img/mascots/star-pink.svg")
+        self.assertEqual(self.profile.avatar, "avatar-3")
+        self.assertContains(self.client.get(reverse("welcome")), "img/avatars/avatar-3.svg")
         self.client.post(reverse("profile_icon"), {"avatar": ""})  # back to the first letter
         self.profile.refresh_from_db()
         self.assertEqual(self.profile.avatar, "")
+
+    def test_picker_offers_the_letter_and_seven_avatars(self):
+        page = self.client.get(self.url)
+        for i in range(1, 8):
+            self.assertContains(page, f"img/avatars/avatar-{i}.svg")
+        self.assertContains(page, "Glasses and a moustache")
 
     def test_unknown_icon_is_rejected(self):
         response = self.client.post(reverse("profile_icon"), {"avatar": "../../secret"})
         self.assertEqual(response.status_code, 400)
         self.profile.refresh_from_db()
         self.assertEqual(self.profile.avatar, "")
+
+    def test_a_retired_icon_falls_back_to_the_letter(self):
+        LearnerProfile.objects.filter(pk=self.profile.pk).update(avatar="star-pink")
+        page = self.client.get(reverse("welcome"))
+        self.assertNotContains(page, "img/avatars/star-pink")
+        self.assertContains(page, '<span class="avatar avatar-small" aria-hidden="true">A</span>', html=True)
 
     def test_old_settings_link_goes_to_the_profile(self):
         old = reverse("account_settings")
