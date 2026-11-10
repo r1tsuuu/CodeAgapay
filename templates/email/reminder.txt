@@ -11,6 +11,6 @@ Even 15 minutes counts.
 CodeAgapay
 
 --
-You get this because reminders are on in your settings: {{ settings_url }}
+You get this because reminders are on in your profile: {{ settings_url }}
 Stop these emails: {{ unsubscribe_url }}
 {% endautoescape %}

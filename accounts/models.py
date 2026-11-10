@@ -24,6 +24,17 @@ class LearnerProfile(models.Model):
         EXPLAIN = "explain", "A clear explanation"
         EXAMPLE = "example", "An example I can learn from"
 
+    class Avatar(models.TextChoices):
+        """Profile icons from the Figma "Custom Profile Page", in static/img/avatars/. Blank shows the first letter."""
+
+        AVATAR_1 = "avatar-1", "Glasses and a moustache"
+        AVATAR_2 = "avatar-2", "Long yellow hair"
+        AVATAR_3 = "avatar-3", "Short black hair"
+        AVATAR_4 = "avatar-4", "Long brown hair"
+        AVATAR_5 = "avatar-5", "Hair in a bun"
+        AVATAR_6 = "avatar-6", "Curly brown hair"
+        AVATAR_7 = "avatar-7", "Spiky black hair"
+
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="learner_profile"
     )
@@ -60,6 +71,9 @@ class LearnerProfile(models.Model):
         "content.Track", blank=True, related_name="+", help_text="Tracks whose setup the learner finished."
     )
     onboarded = models.BooleanField(default=False)
+    avatar = models.CharField(max_length=20, choices=Avatar.choices, blank=True, help_text="Blank: the first letter of their name.")
+    school = models.CharField("school or organisation", max_length=120, blank=True)
+    role = models.CharField(max_length=60, blank=True, help_text='What they do, e.g. "student". Optional.')
     ai_plans_early = models.BooleanField(
         "gets AI plans early", default=False,
         help_text="Gets AI-written plans and lessons while AI_PLANS is still off for everyone (gradual rollout).",
@@ -67,6 +81,11 @@ class LearnerProfile(models.Model):
 
     def __str__(self):
         return f"Profile of {self.user}"
+
+    @property
+    def avatar_file(self):
+        """The chosen icon's file name, or "" when none is chosen or it's no longer offered."""
+        return self.avatar if self.avatar in self.Avatar.values else ""
 
     def gets_ai_plans(self):
         """AI-written plans for this learner: everyone's on (AI_PLANS), or they're in the early group."""

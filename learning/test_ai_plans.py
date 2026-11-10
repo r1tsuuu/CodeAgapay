@@ -801,6 +801,24 @@ class AIFinishTests(AIPlanMixin, TestCase):
         self.assertContains(page, "Your glossary: 2 terms")
 
 
+@override_settings(**AI_PLANS)
+class AIProfileTests(AIPlanMixin, TestCase):
+    def setUp(self):
+        self.make_plan()
+
+    def test_profile_shows_ai_plan_progress_and_setup_method(self):
+        LessonProgress.objects.create(outline=self.outline, key="L1", status="done", tries=1)
+        LessonProgress.objects.create(outline=self.outline, key="L2", status="in_progress")
+        page = self.client.get(reverse("profile"))
+        lessons = [x for x in ai_plan.lessons_in_order(self.outline) if x["kind"] != "setup"]
+        self.assertEqual(page.context["progress"]["total"], len(lessons))
+        self.assertContains(page, f"1 topic done out of {len(lessons)}")
+        self.assertContains(page, "1 quiz passed")
+        self.assertContains(page, f"Continue “{lessons[1]['title']}”")
+        self.assertContains(page, reverse("ai_lesson", args=[lessons[0]["key"]]))
+        self.assertContains(page, "VS Code, step by step")
+
+
 @override_settings(**{**AI_PLANS, "AI_PLANS": False})
 class EarlyAccessTests(AIPlanMixin, TestCase):
     """With AI_PLANS off for everyone, learners given early access still get AI plans."""

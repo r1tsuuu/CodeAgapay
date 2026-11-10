@@ -222,12 +222,37 @@ img {
 .avatar {
   display: grid;
   place-items: center;
+  flex: none;
   width: 2rem;
   height: 2rem;
   border-radius: 50%;
   background: var(--marigold);
   font-weight: 800;
   font-size: 0.95rem;
+  overflow: hidden;
+}
+
+.avatar-picture {
+  background: var(--paper);
+}
+
+.avatar-picture img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-big {
+  width: clamp(7rem, 16vw, 10rem);
+  height: clamp(7rem, 16vw, 10rem);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(4rem, 9vw, 6rem);
+  color: var(--ink);
+}
+
+.avatar-big.avatar-picture {
+  box-shadow: 0 0 0 5px var(--paper);
 }
 
 .account-menu-panel {
@@ -3428,4 +3453,527 @@ kbd {
   font-family: var(--font-code);
   font-size: 0.85em;
   line-height: 1.5;
+}
+
+/* ---------- Profile ---------- */
+
+/* Figma "Custom Profile Page": a soft pink panel for the learner, a berry column for the account. */
+.profile {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 17rem;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.profile-main {
+  padding: clamp(1rem, 3vw, 2.25rem);
+  border-radius: var(--radius-lg);
+  background: var(--berry-soft);
+}
+
+.profile-head {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.profile-head h1 {
+  margin: 0.75rem 0 0;
+}
+
+.profile-avatar-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.profile-pencil {
+  position: absolute;
+  right: -0.25rem;
+  top: calc(clamp(7rem, 16vw, 10rem) - 2.75rem);
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 3px solid var(--berry-soft);
+  border-radius: 50%;
+  background: var(--berry);
+  color: var(--white);
+  cursor: pointer;
+  list-style: none;
+}
+
+.profile-pencil::-webkit-details-marker {
+  display: none;
+}
+
+.profile-pencil svg {
+  width: 1.3rem;
+  height: 1.3rem;
+}
+
+.profile-pencil:hover,
+.icon-picker[open] > .profile-pencil {
+  background: var(--berry-deep);
+}
+
+/* The open picker floats under the avatar like a speech bubble; nothing behind it moves. */
+.icon-picker-card {
+  position: absolute;
+  top: calc(100% + 1.1rem);
+  left: 50%;
+  z-index: 5;
+  width: min(24rem, 86vw);
+  transform: translateX(-50%);
+  box-shadow: 0 16px 40px rgba(42, 26, 32, 0.18);
+  padding: 1.25rem 1.5rem;
+  border: 6px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--paper);
+  text-align: left;
+}
+
+.icon-picker-card::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -1.1rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 6px solid var(--line);
+  border-right-color: transparent;
+  border-bottom-color: transparent;
+  background: var(--paper);
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.icon-picker-card h2 {
+  margin: 0 0 0.75rem;
+  color: var(--berry);
+  text-decoration: underline;
+  text-decoration-thickness: 4px;
+  text-underline-offset: 0.2em;
+}
+
+.icon-options {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.icon-option {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border: 3px solid var(--line);
+  border-radius: 50%;
+  background: var(--white);
+  cursor: pointer;
+}
+
+.icon-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.icon-option {
+  overflow: hidden;
+}
+
+.icon-option img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.icon-option .avatar-letter {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: var(--marigold);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.6rem;
+}
+
+.icon-option:hover {
+  border-color: #d9c4ae;
+}
+
+.icon-option:has(input:checked) {
+  border-color: var(--berry);
+  box-shadow: 0 0 0 3px var(--berry-soft), 0 0 0 5px var(--berry);
+}
+
+.icon-option:has(input:focus-visible) {
+  outline: 3px solid var(--teal);
+  outline-offset: 3px;
+}
+
+/* Details: white text on berry, as in Figma. */
+.profile-card {
+  margin-bottom: 1.5rem;
+  padding: 1.25rem 1.75rem;
+  border-radius: var(--radius-lg);
+  background: var(--berry);
+  color: var(--white);
+}
+
+.profile-details dl {
+  margin: 0;
+}
+
+.profile-details dl > div {
+  margin-bottom: 0.2rem;
+}
+
+.profile-details dt {
+  display: inline;
+  font-weight: 800;
+}
+
+.profile-details dd {
+  display: inline;
+  margin: 0 0 0 0.3em;
+  overflow-wrap: anywhere;
+}
+
+.profile-since {
+  margin-top: 0.5rem;
+  font-weight: 800;
+}
+
+.profile-edit {
+  margin-top: 0.9rem;
+}
+
+.profile-edit > summary {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+  list-style: none;
+}
+
+.profile-edit > summary::-webkit-details-marker {
+  display: none;
+}
+
+.profile-edit form {
+  margin-top: 1rem;
+  padding: 1.25rem;
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.profile-edit .form-field {
+  margin-bottom: 1.1rem;
+}
+
+.profile-edit .form-field > label,
+.profile-edit .form-field legend {
+  font-size: 1.05rem;
+  margin-bottom: 0.4rem;
+}
+
+/* Progress, topics and learning setup: berry headers over paper bodies. */
+.profile-panel {
+  margin-bottom: 1.5rem;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--paper);
+}
+
+.profile-panel-head {
+  padding: 1.1rem 1.75rem 1.25rem;
+  background: var(--berry);
+  color: var(--white);
+}
+
+.profile-panel-head h2 {
+  display: inline-block;
+  margin: 0;
+  color: var(--white);
+  border-bottom: 4px solid var(--white);
+}
+
+.profile-panel-head-flat {
+  padding-block: 0.75rem;
+}
+
+.profile-panel-head-flat h2 {
+  border-bottom: 0;
+}
+
+.profile-bar {
+  position: relative;
+  height: 2.1rem;
+  margin-top: 0.9rem;
+  border: 4px solid var(--white);
+  border-radius: 999px;
+  background: var(--white);
+  overflow: hidden;
+}
+
+.profile-bar-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 999px;
+  background: var(--lagoon);
+}
+
+.profile-bar-text {
+  position: relative;
+  display: block;
+  text-align: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1.6rem;
+  color: var(--teal-deep);
+}
+
+.profile-panel-body {
+  padding: 1.25rem 1.75rem 1.5rem;
+}
+
+.profile-stats {
+  margin: 0 0 1.1rem;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.25rem;
+  color: var(--berry);
+}
+
+.profile-continue {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0.55rem 1.75rem;
+  border-radius: 999px;
+  background: var(--berry);
+  box-shadow: inset 0 0 0 3px var(--berry), inset 0 0 0 6px var(--white);
+  color: var(--white);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.15rem;
+  text-align: center;
+  text-decoration: none;
+}
+
+.profile-continue:hover {
+  color: var(--white);
+  background: var(--berry-deep);
+  box-shadow: inset 0 0 0 3px var(--berry-deep), inset 0 0 0 6px var(--white);
+}
+
+.profile-topics {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.profile-topics li {
+  display: grid;
+  grid-template-columns: 7.5rem 1fr;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.profile-topics .status {
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.profile-topics a {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--berry);
+  text-decoration: none;
+}
+
+.profile-topics a:hover {
+  text-decoration: underline;
+}
+
+.profile-setup {
+  background: var(--berry);
+}
+
+.profile-setup-body {
+  margin: 0 1.25rem;
+  border-radius: var(--radius);
+  background: var(--paper);
+}
+
+.profile-setup-list {
+  margin: 0;
+}
+
+.profile-setup-list > div {
+  margin-bottom: 0.35rem;
+}
+
+.profile-setup-list dt {
+  display: inline;
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--berry);
+}
+
+.profile-setup-list dd {
+  display: inline;
+  margin: 0 0 0 0.3em;
+}
+
+.profile-setup .profile-edit > summary {
+  color: var(--teal-deep);
+}
+
+.profile-setup-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem 2rem;
+  margin: 0;
+  padding: 1rem 1.25rem 1.25rem;
+}
+
+.profile-setup-links a {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--white);
+}
+
+.profile-setup-links a:hover {
+  color: var(--marigold-light);
+}
+
+/* The berry account column. */
+.profile-side {
+  position: sticky;
+  top: 6rem;
+  display: grid;
+  gap: 1rem;
+  padding: 1.5rem 1.25rem;
+  border-radius: var(--radius-lg);
+  background: var(--berry);
+}
+
+.profile-side .mascot {
+  width: 5rem;
+  margin: 0 auto 0.5rem;
+}
+
+.profile-logout {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--lagoon);
+  color: var(--white);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.35rem;
+  cursor: pointer;
+}
+
+.profile-logout:hover {
+  background: #2fb3a4;
+}
+
+.profile-delete {
+  display: block;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  background: var(--white);
+  color: var(--berry);
+  font-family: var(--font-display);
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+}
+
+.profile-delete:hover {
+  color: var(--berry-deep);
+  background: var(--berry-soft);
+}
+
+/* Delete account confirmation. */
+.delete-account {
+  max-width: 40rem;
+  margin: 0 auto;
+}
+
+.delete-account .mascot {
+  width: 5rem;
+  margin-bottom: 1rem;
+}
+
+.delete-account input[type="text"] {
+  max-width: 16rem;
+}
+
+.button-danger {
+  border-color: var(--error);
+  background: var(--error);
+  color: var(--white);
+  box-shadow: 0 4px 0 #b52a2a;
+}
+
+.button-danger:hover {
+  border-color: #b52a2a;
+  background: #b52a2a;
+  color: var(--white);
+}
+
+@media (max-width: 56rem) {
+  .profile {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-side {
+    position: static;
+  }
+
+  .profile-side .mascot {
+    display: none;
+  }
+}
+
+@media (max-width: 30rem) {
+  .profile-main {
+    padding: 1rem 0.75rem;
+  }
+
+  .profile-card,
+  .profile-panel-head,
+  .profile-panel-body {
+    padding-inline: 1.1rem;
+  }
+
+  .profile-setup-body {
+    margin: 0 0.6rem;
+  }
+
+  .profile-topics li {
+    grid-template-columns: 6.25rem 1fr;
+    gap: 0.6rem;
+  }
+
+  .icon-options {
+    gap: 0.4rem;
+  }
 }
