@@ -1,10 +1,10 @@
 <div align="center">
 
-<a href="https://learnpath-l14m.onrender.com"><img src=".github/assets/banner.svg" width="100%" alt="CodeAgapay: support for beginner programmers, even when no tutor is around"></a>
+<a href="https://codeagapay.onrender.com"><img src=".github/assets/banner.svg" width="100%" alt="CodeAgapay: support for beginner programmers, even when no tutor is around"></a>
 
 <br>
 
-[![Live site](https://img.shields.io/badge/live_site-open_app-C7366F?style=flat-square)](https://learnpath-l14m.onrender.com)
+[![Live site](https://img.shields.io/badge/live_site-open_app-C7366F?style=flat-square)](https://codeagapay.onrender.com)
 [![Python 3.13](https://img.shields.io/badge/python-3.13-0E7C7E?style=flat-square&logo=python&logoColor=white)](.python-version)
 [![Django 5.2](https://img.shields.io/badge/django-5.2-0E7C7E?style=flat-square&logo=django&logoColor=white)](requirements.txt)
 [![Hosting cost](https://img.shields.io/badge/hosting_cost-%E2%82%B10-FFB627?style=flat-square)](#tech-stack)
@@ -327,6 +327,18 @@ DATABASE_URL="<neon url>" python manage.py check_links
 
 <br>
 
+Reminders go out through Gmail SMTP from codeagapay.reminders@gmail.com, using a Google app password (16 letters, made at myaccount.google.com/apppasswords after turning on 2-Step Verification). Render's free tier blocks SMTP, so these settings belong in the `.env` of the machine that runs the command, not in Render:
+
+```bash
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_HOST_USER=codeagapay.reminders@gmail.com
+EMAIL_HOST_PASSWORD=<app password>
+DEFAULT_FROM_EMAIL=CodeAgapay <codeagapay.reminders@gmail.com>
+```
+
+TLS is always on. Links in the emails point to `SITE_URL` (default https://codeagapay.onrender.com).
+
 ```bash
 DATABASE_URL="<neon url>" python manage.py send_reminders --dry-run   # who is due, nothing sent
 DATABASE_URL="<neon url>" python manage.py send_reminders
@@ -350,15 +362,31 @@ DATABASE_URL="<neon url>" python manage.py send_reminders
 
 <br>
 
-- **Render web service** (free, Singapore): build command `./build.sh`, start command `gunicorn config.wsgi:application`. Python comes from `.python-version`. Gunicorn reads `gunicorn.conf.py`, which allows 60 seconds per request, room for an AI-written lesson (its AI calls stay within 50 seconds).
+- **Render web service** `codeagapay` (free, Singapore), live at https://codeagapay.onrender.com. Build command `./build.sh`, start command `gunicorn config.wsgi:application`. Python comes from `.python-version`. Gunicorn reads `gunicorn.conf.py`, which allows 60 seconds per request, room for an AI-written lesson (its AI calls stay within 50 seconds).
 - **Neon Postgres** (free, Singapore): put its connection string in Render as `DATABASE_URL`.
-- Set `SECRET_KEY`, `DEBUG=False`, `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in Render. The Render hostname is added to `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS` automatically; add custom domains yourself.
-- Render free has no shell. Run admin commands from your laptop against Neon:
+- The Render hostname is added to `ALLOWED_HOSTS` and `CSRF_TRUSTED_ORIGINS` automatically; add custom domains yourself.
+
+Environment variables to set in Render (names only; never commit the values):
+
+| Variable | Notes |
+| --- | --- |
+| `SECRET_KEY` | A long random string |
+| `DEBUG` | `False` |
+| `DATABASE_URL` | The Neon connection string |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | From the Google OAuth client below |
+| `GROQ_API_KEY` | AI helper and AI plans. Optional: without it the app falls back to curated plans, tips and links |
+| `AI_PLANS` | `True` gives every learner AI-written plans and lessons |
+
+Optional: `CF_ACCOUNT_ID`, `CF_API_TOKEN` (backup AI), and the model and limit settings listed under [Environment variables](#environment-variables).
+
+Render free has no shell. Run admin commands from your laptop against Neon:
 
 ```bash
 DATABASE_URL="<neon url>" python manage.py createsuperuser
-DATABASE_URL="<neon url>" python manage.py loaddata fixtures/content.json
 ```
+
+> [!CAUTION]
+> Only run `loaddata fixtures/content.json` on an empty database. It writes by ID, so on production it can replace curated topics and quiz items that share an ID.
 
 </details>
 
@@ -368,9 +396,9 @@ DATABASE_URL="<neon url>" python manage.py loaddata fixtures/content.json
 <br>
 
 1. In Google Cloud console, create an OAuth client (type: Web application).
-2. Add these authorized redirect URIs:
+2. Add the site as an authorized JavaScript origin (`https://codeagapay.onrender.com`), and add these authorized redirect URIs. The pattern is always `https://<host>/accounts/google/login/callback/`, so add a new one whenever the site's address changes:
    - `http://localhost:8000/accounts/google/login/callback/`
-   - `https://learnpath-l14m.onrender.com/accounts/google/login/callback/`
+   - `https://codeagapay.onrender.com/accounts/google/login/callback/`
 3. Put the client ID and secret in `.env` locally and in Render's environment.
 4. Publish the OAuth consent screen to production, or only listed test users can log in.
 

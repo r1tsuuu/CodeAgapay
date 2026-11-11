@@ -179,7 +179,7 @@ AI_REQUEST_BUDGET = env.int("AI_REQUEST_BUDGET", default=50)
 
 # Reminder emails. The send_reminders command refuses to run until EMAIL_HOST is set.
 # Commands have no request to read the domain from, so links in emails use SITE_URL.
-SITE_URL = env("SITE_URL", default="https://learnpath-l14m.onrender.com").rstrip("/")
+SITE_URL = env("SITE_URL", default="https://codeagapay.onrender.com").rstrip("/")
 EMAIL_HOST = env("EMAIL_HOST", default="")
 EMAIL_PORT = env.int("EMAIL_PORT", default=587)
 EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="")
