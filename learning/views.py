@@ -122,9 +122,7 @@ def plan_finish(request):
             "reviews": journey.due_reviews(profile, current),
             **journey.finish_summary(profile, current, items),
             "plan_title": profile.path.title if profile.path_id else f"{current.track.name} basics",
-            "finished_on": rewards.finished_on(profile),
-            "badges": rewards.badges(profile),
-        },
+            "finished_on": rewards.finished_on(profile),        },
     )
 
 

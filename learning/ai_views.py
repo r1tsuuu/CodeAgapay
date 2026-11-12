@@ -137,9 +137,7 @@ def finish(request, profile, outline):
         "glossary": glossary(outline),
         **ai_plan.finish_summary(outline),
         "plan_title": profile.path.title if profile.path_id else "Learn to code",
-        "finished_on": rewards.finished_on(profile),
-        "badges": rewards.badges(profile),
-    })
+        "finished_on": rewards.finished_on(profile),    })
 
 
 @require_POST

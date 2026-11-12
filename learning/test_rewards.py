@@ -117,7 +117,7 @@ class CertificateTests(PlanTestMixin, TestCase):
         self.assertContains(page, "Certificate of completion")
         self.assertContains(page, "Ana Reyes")
         self.assertContains(page, "Python basics")
-        self.assertContains(page, "3 November 2026")
+        self.assertContains(page, "November 3, 2026")
         self.assertContains(page, "data-print")
 
 
