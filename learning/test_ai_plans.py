@@ -799,6 +799,18 @@ class AIFinishTests(AIPlanMixin, TestCase):
         self.assertEqual([x["key"] for x in page.context["skipped"]], ["L4"])
         self.assertContains(page, "Forms")  # The AI's "after this plan" suggestions.
         self.assertContains(page, "Your glossary: 2 terms")
+        self.assertContains(page, "Congratulations, ")
+        self.assertContains(page, "Certificate of completion")
+
+    def test_skipping_every_lesson_still_opens_the_finish_page(self):
+        # The plan page says "Plan finished" once nothing is left, so its button must lead somewhere.
+        for key in ["L1", "L2", "L3", "L4", "L5"]:
+            LessonProgress.objects.create(outline=self.outline, key=key, status="skipped")
+        self.assertContains(self.client.get(reverse("plan")), reverse("plan_finish"))
+        page = self.client.get(reverse("plan_finish"))
+        self.assertEqual(page.status_code, 200)
+        self.assertContains(page, "no certificate yet")
+        self.assertNotContains(page, "Certificate of completion")
 
 
 @override_settings(**AI_PLANS)

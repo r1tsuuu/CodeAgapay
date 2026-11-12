@@ -3,15 +3,10 @@
 
 {% block title %}You finished your plan · CodeAgapay{% endblock %}
 {% block content %}
-<section class="plan-hero">
-  <img class="mascot plan-mascot-1" src="{% static 'img/mascots/star-pink.svg' %}" alt="">
-  <img class="mascot plan-mascot-4" src="{% static 'img/mascots/flower-yellow.svg' %}" alt="">
-  <h1>You finished your plan!</h1>
-  <p class="plan-progress-note">{{ done|length }} lesson{{ done|length|pluralize }} done in about {{ weeks }} week{{ weeks|pluralize }}.</p>
-</section>
+{% include "learning/partials/finish_hero.html" with unit="lesson" %}
 
 <div class="plan-sheet">
-  {% include "learning/partials/certificate.html" with unit="lesson" %}
+  {% if done %}{% include "learning/partials/certificate.html" with unit="lesson" %}{% else %}<p class="finish-no-certificate">You skipped every lesson, so there's no certificate yet. Finish one and it shows up here.</p>{% endif %}
 
   <section class="plan-overview">
     <div class="plan-overview-part">
@@ -36,20 +31,14 @@
   </section>
   {% endif %}
 
+  {% if data.next_steps|length > 1 %}
   <section class="finish-next" aria-labelledby="finish-next-title">
-    <h2 id="finish-next-title">Where to go from here</h2>
-    {% if data.next_steps %}
+    <h2 id="finish-next-title">More to learn next</h2>
     <div class="tile finish-next-part">
-      <h3>Learn next</h3>
       <ul class="lesson-list">{% for step in data.next_steps %}<li>{{ step|inline_code }}</li>{% endfor %}</ul>
     </div>
-    {% endif %}
-    <div class="tile finish-next-part">
-      <h3>Pick a new goal</h3>
-      <p>Ready for something different? Tell us what you want to make next, and you'll get a new plan.</p>
-      <a class="button" href="{% url 'intake' %}?edit=1">Change my answers</a>
-    </div>
   </section>
+  {% endif %}
 
   {% if glossary %}
   <details class="plan-report">

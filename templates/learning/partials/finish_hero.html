@@ -1,0 +1,40 @@
+{% load static %}{% comment %}
+The top of the finish page, from the Figma frame "Finish": greeting, three numbers, and what's next.
+Needs kicker, plan_name, done, unit ("topic" or "lesson"), quiz_passed, weeks, and next_title,
+next_text, next_url, next_button (next_post: a POST form instead of a link).
+{% endcomment %}
+<section class="finish-hero" aria-labelledby="finish-title">
+  <div class="finish-mascots" aria-hidden="true">
+    <img class="fm fm-cloud" src="{% static 'img/mascots/cloud-pink.svg' %}" alt="">
+    <img class="fm fm-sun" src="{% static 'img/mascots/sun-yellow.svg' %}" alt="">
+    <img class="fm fm-lime" src="{% static 'img/mascots/star-lime.svg' %}" alt="">
+    <img class="fm fm-teal" src="{% static 'img/mascots/cloud-teal.svg' %}" alt="">
+    <img class="fm fm-hex" src="{% static 'img/mascots/hex-orange.svg' %}" alt="">
+    <img class="fm fm-star" src="{% static 'img/mascots/star-yellow.svg' %}" alt="">
+    <img class="fm fm-oval" src="{% static 'img/mascots/oval-pink.svg' %}" alt="">
+  </div>
+  <p class="finish-kicker">{{ kicker }}</p>
+  <h1 id="finish-title">Congratulations, {{ user.first_name|default:user.username }}!</h1>
+  <p class="finish-lead">You finished your {{ plan_name }} learning plan. You've built a foundation you can keep practicing and growing.</p>
+
+  <ul class="finish-stats">
+    <li><strong class="finish-stat-berry">{{ done|length }}</strong> {{ unit }}{{ done|length|pluralize }} finished</li>
+    <li><strong class="finish-stat-teal">{{ quiz_passed|default:0 }}</strong> quiz{{ quiz_passed|default:0|pluralize:"zes" }} passed</li>
+    <li><strong class="finish-stat-gold">{{ weeks }}</strong> week{{ weeks|pluralize }} taken</li>
+  </ul>
+
+  <div class="finish-next-card">
+    <div class="finish-next-text">
+      <p class="finish-next-kicker">What's next?</p>
+      <h2>{{ next_title }}</h2>
+      <p>{{ next_text }}</p>
+      {% if next_post %}
+      <form method="post" action="{{ next_url }}">{% csrf_token %}<button type="submit" class="finish-next-button">{{ next_button }}</button></form>
+      {% else %}
+      <a class="finish-next-button" href="{{ next_url }}">{{ next_button }}</a>
+      {% endif %}
+    </div>
+    <img class="finish-next-art finish-next-art-1" src="{% static 'img/mascots/hex-teal.svg' %}" alt="">
+    <img class="finish-next-art finish-next-art-2" src="{% static 'img/mascots/star-yellow-tilt.svg' %}" alt="">
+  </div>
+</section>

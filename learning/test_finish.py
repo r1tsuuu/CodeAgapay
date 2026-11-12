@@ -78,8 +78,8 @@ class FinishPageTests(FinishMixin, TestCase):
     def test_shows_what_was_done(self):
         self.finish_all()
         response = self.client.get(reverse("plan_finish"))
-        self.assertContains(response, "You finished your plan!")
-        self.assertContains(response, "2 topics done")
+        self.assertContains(response, "Congratulations, ")
+        self.assertContains(response, "<strong class=\"finish-stat-berry\">2</strong> topics finished", html=False)
         self.assertContains(response, "Topic 1")
 
     def test_counts_quiz_passes_apart_from_topics_marked_done(self):
@@ -87,11 +87,11 @@ class FinishPageTests(FinishMixin, TestCase):
             self.profile, self.topics[0], TopicMastery.Status.DEMONSTRATED, "Quiz", TopicMastery.Source.QUIZ, force=True
         )
         self.finish_all()
-        self.assertContains(self.client.get(reverse("plan_finish")), "1 of them with a passed quiz")
+        self.assertContains(self.client.get(reverse("plan_finish")), "<strong class=\"finish-stat-teal\">1</strong> quiz passed")
 
     def test_no_quiz_claim_when_every_topic_was_marked_by_hand(self):
         self.finish_all()
-        self.assertNotContains(self.client.get(reverse("plan_finish")), "passed quiz")
+        self.assertContains(self.client.get(reverse("plan_finish")), "<strong class=\"finish-stat-teal\">0</strong> quizzes passed")
 
     def test_lists_skipped_topics_but_not_shaky_ones(self):
         first, second = self.plan.items.all()
@@ -100,6 +100,13 @@ class FinishPageTests(FinishMixin, TestCase):
         self.assertContains(self.client.get(reverse("plan_finish")), "You skipped")
         move_on_shaky(second)
         self.assertNotContains(self.client.get(reverse("plan_finish")), "You skipped")
+
+    def test_skipping_everything_opens_the_page_without_a_certificate(self):
+        for item in self.plan.items.all():
+            set_item_status(item, Status.SKIPPED)
+        response = self.client.get(reverse("plan_finish"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "no certificate yet")
 
     def test_shows_the_project_checks(self):
         PlanProject.objects.create(plan=self.plan, title="Quiz game", description="d", done_when=["It runs."])
@@ -114,13 +121,13 @@ class FinishPageTests(FinishMixin, TestCase):
         self.finish_all()
         response = self.client.get(reverse("plan_finish"))
         self.assertContains(response, "Coming soon on your path")
-        self.assertNotContains(response, "Add it to my plan")
+        self.assertNotContains(response, "Start SQL")
 
         Topic.objects.create(track=soon, title="Select", slug="select", order=1)
         soon.is_active = True
         soon.save()
         response = self.client.get(reverse("plan_finish"))
-        self.assertContains(response, "Keep going with SQL")
+        self.assertContains(response, "Try SQL")
         self.assertNotContains(response, "Coming soon on your path")
 
     def test_adding_a_new_track_keeps_finished_topics_finished(self):

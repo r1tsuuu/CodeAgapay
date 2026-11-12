@@ -128,16 +128,40 @@ def plan(request, profile, outline):
 
 def finish(request, profile, outline):
     """The AI plan's finish page. Called by learning.views.plan_finish."""
-    if not ai_plan.plan_finished(outline):
+    # Open once no lesson is left, the same moment the plan page says the plan is finished,
+    # even if every lesson was skipped (the certificate only shows when something was done).
+    if ai_plan.next_lesson(outline) is not None:
         return redirect("plan")
+    summary = ai_plan.finish_summary(outline)
+    progress = ai_plan.progress_by_key(outline)
+    plan_name = profile.path.title if profile.path_id else "Learn to code"
+    next_steps = outline.data.get("next_steps") or []
+    if next_steps:
+        next_step = {
+            "next_title": f"Try {next_steps[0]}",
+            "next_text": "Build on what you've learned. Make it your next goal, and you'll get a new plan for it.",
+            "next_url": reverse("intake") + "?edit=1", "next_button": "Make my next plan",
+        }
+    else:
+        next_step = {
+            "next_title": "Pick a new goal",
+            "next_text": "Ready for something different? Tell us what you want to make next, and you'll get a new plan.",
+            "next_url": reverse("intake") + "?edit=1", "next_button": "Change my answers",
+        }
     return render(request, "learning/ai_finish.html", {
         "profile": profile,
         "data": outline.data,
         "project": outline.data.get("project") or {},
         "glossary": glossary(outline),
-        **ai_plan.finish_summary(outline),
-        "plan_title": profile.path.title if profile.path_id else "Learn to code",
-        "finished_on": rewards.finished_on(profile),    })
+        **summary,
+        # A done lesson with check tries is a passed check (see learning/profile.py).
+        "quiz_passed": sum(1 for x in summary["done"] if progress[x["key"]].tries),
+        "kicker": f"{plan_name} plan complete",
+        "plan_name": plan_name,
+        "plan_title": plan_name,
+        "finished_on": rewards.finished_on(profile),
+        **next_step,
+    })
 
 
 @require_POST
