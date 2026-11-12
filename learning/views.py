@@ -111,8 +111,22 @@ def plan_finish(request):
     if current is None:
         return redirect("result")
     items = list(current.items.select_related("topic__track").order_by("order"))
-    if not journey.is_finished(items):
+    # Open once nothing is left to do, the same moment the plan page says the plan is finished,
+    # even if everything was skipped (the certificate only shows when something was done).
+    if any(i.status in (PlanItem.Status.TODO, PlanItem.Status.IN_PROGRESS) for i in items) or not items:
         return redirect("plan")
+    summary = journey.finish_summary(profile, current, items)
+    plan_name = profile.path.title if profile.path_id else current.track.name
+    if summary["new_tracks"]:
+        track = summary["new_tracks"][0]
+        next_step = {
+            "next_title": f"Try {track.name}",
+            "next_text": f"Build on what you've learned with {track.name}. It's now open on your path, "
+                         "and the topics you've finished stay finished.",
+            "next_url": reverse("plan_build"), "next_button": f"Start {track.name}", "next_post": True,
+        }
+    else:
+        next_step = _new_goal_step()
     return render(
         request,
         "learning/finish.html",
@@ -120,10 +134,23 @@ def plan_finish(request):
             "profile": profile,
             "project": getattr(current, "project", None),
             "reviews": journey.due_reviews(profile, current),
-            **journey.finish_summary(profile, current, items),
+            **summary,
+            "kicker": f"{profile.path.title} complete" if profile.path_id else f"{current.track.name} track complete",
+            "plan_name": plan_name,
             "plan_title": profile.path.title if profile.path_id else f"{current.track.name} basics",
-            "finished_on": rewards.finished_on(profile),        },
+            "finished_on": rewards.finished_on(profile),
+            **next_step,
+        },
     )
+
+
+def _new_goal_step():
+    """The finish page's "What's next?" when there's no next track to offer: a new goal."""
+    return {
+        "next_title": "Pick a new goal",
+        "next_text": "Ready for something different? Tell us what you want to make next, and you'll get a new plan.",
+        "next_url": reverse("intake") + "?edit=1", "next_button": "Change my answers",
+    }
 
 
 @require_POST

@@ -3,15 +3,10 @@
 
 {% block title %}You finished your plan · CodeAgapay{% endblock %}
 {% block content %}
-<section class="plan-hero">
-  <img class="mascot plan-mascot-1" src="{% static 'img/mascots/star-pink.svg' %}" alt="">
-  <img class="mascot plan-mascot-4" src="{% static 'img/mascots/flower-yellow.svg' %}" alt="">
-  <h1>You finished your plan!</h1>
-  <p class="plan-progress-note">{{ done|length }} topic{{ done|length|pluralize }} done in about {{ weeks }} week{{ weeks|pluralize }}{% if quiz_passed %}, {{ quiz_passed }} of them with a passed quiz{% endif %}.</p>
-</section>
+{% include "learning/partials/finish_hero.html" with unit="topic" %}
 
 <div class="plan-sheet">
-  {% include "learning/partials/certificate.html" with unit="topic" %}
+  {% if done %}{% include "learning/partials/certificate.html" with unit="topic" %}{% else %}<p class="finish-no-certificate">You skipped every topic, so there's no certificate yet. Finish one and it shows up here.</p>{% endif %}
 
   <section class="plan-overview">
     <div class="plan-overview-part">
@@ -48,27 +43,19 @@
       <a class="button" href="{% url 'quiz' reviews.0.slug %}">Take the review quiz</a>
     </div>
     {% endif %}
-    {% if new_tracks %}
-    <div class="tile finish-next-part">
-      <h3>Keep going with {% for track in new_tracks %}{{ track.name }}{% if not forloop.last %} and {% endif %}{% endfor %}</h3>
-      <p>It's now open on your path. This builds a new plan, and topics you've finished stay finished.</p>
-      <form method="post" action="{% url 'plan_build' %}">
-        {% csrf_token %}
-        <button type="submit" class="button button-primary no-arrow">Add it to my plan</button>
-      </form>
-    </div>
-    {% endif %}
     {% if coming_soon %}
     <div class="tile finish-next-part">
       <h3>Coming soon on your path</h3>
       <p>{% for track in coming_soon %}{{ track.name }}{% if not forloop.last %}, {% endif %}{% endfor %} isn't ready yet. Come back to see it here.</p>
     </div>
     {% endif %}
+    {% if new_tracks %}
     <div class="tile finish-next-part">
       <h3>Pick a new goal</h3>
       <p>Ready for something different? Tell us what you want to make next.</p>
       <a class="button" href="{% url 'intake' %}?edit=1">Change my answers</a>
     </div>
+    {% endif %}
   </section>
 
   <p class="plan-controls"><a href="{% url 'plan' %}">Back to my plan</a></p>

@@ -850,8 +850,12 @@ input[type="radio"] {
   background: var(--berry-soft);
 }
 
-.login-art .mascot {
+.login-art img {
   position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .login-panel {
@@ -4441,4 +4445,180 @@ kbd {
 
 .quiz-why {
   color: var(--teal-deep);
+}
+
+/* Long plan titles ("Your Automate boring tasks learning plan") used to run over the
+   star mascot in the same colour. Keep the title clear of the mascots on each side. */
+.plan-hero h1 {
+  padding-inline: clamp(0rem, 10vw - 2rem, 7.5rem);
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Finish page (Figma frame "Finish") ---------- */
+
+.finish-hero {
+  position: relative;
+  isolation: isolate;
+  padding: 6.25rem 0 2.5rem;
+  text-align: center;
+}
+
+.finish-mascots .fm {
+  position: absolute;
+  z-index: -1;
+}
+
+.fm-cloud { width: 6.5rem; left: calc(50% - 3.25rem); top: 0; }
+.fm-sun   { width: 4.25rem; left: calc(50% - 29rem); top: 6.5rem; }
+.fm-lime  { width: 5.25rem; left: calc(50% - 25rem); top: 3.5rem; }
+.fm-teal  { width: 4.75rem; left: calc(50% - 26.5rem); top: 10rem; }
+.fm-hex   { width: 5rem;   left: calc(50% + 19.5rem); top: 3.75rem; }
+.fm-star  { width: 4.75rem; left: calc(50% + 24.5rem); top: 1.5rem; }
+.fm-oval  { width: 5rem;   left: calc(50% + 23rem); top: 9.5rem; }
+
+.finish-kicker {
+  margin: 0;
+  color: var(--berry);
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.finish-hero h1 {
+  margin: 0.25rem 0 0;
+  font-size: clamp(2.1rem, 1.6rem + 2.4vw, 3.25rem);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.finish-lead {
+  max-width: 36rem;
+  margin: 0.5rem auto 0;
+  color: var(--ink-soft);
+  font-size: 1.2rem;
+}
+
+.finish-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  max-width: 52rem;
+  margin: 2rem auto 0;
+  padding: 0;
+  list-style: none;
+}
+
+.finish-stats li {
+  padding: 1.25rem 0.75rem 1.4rem;
+  border: 4px solid var(--line);
+  border-radius: 1.5rem;
+  background: var(--paper);
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--ink);
+}
+
+.finish-stats strong {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 3.25rem;
+  line-height: 1.1;
+}
+
+.finish-stat-berry { color: var(--berry); }
+.finish-stat-teal { color: var(--teal-deep); }
+.finish-stat-gold { color: #815C14; }
+
+.finish-next-card {
+  position: relative;
+  max-width: 48rem;
+  margin: 2.5rem auto 0;
+  padding: 2rem 2.25rem 2.25rem;
+  border-radius: 2rem;
+  background: var(--berry);
+  color: var(--white);
+  text-align: left;
+}
+
+.finish-next-text {
+  max-width: 62%;
+}
+
+.finish-next-kicker {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.6rem;
+  line-height: 1.1;
+}
+
+.finish-next-card h2 {
+  margin: 0.1rem 0 0;
+  color: var(--white);
+  font-size: 2rem;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.finish-next-card p:not(.finish-next-kicker) {
+  margin: 0.6rem 0 1.25rem;
+  font-size: 1.1rem;
+}
+
+.finish-next-card form {
+  margin: 0;
+}
+
+.finish-next-button {
+  display: inline-block;
+  padding: 0.55rem 1.25rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: var(--lagoon);
+  box-shadow: 0 4px 0 var(--teal-deep);
+  color: var(--white);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.15rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.finish-next-button:hover {
+  color: var(--white);
+  background: var(--teal);
+}
+
+.finish-next-art {
+  position: absolute;
+}
+
+.finish-next-art-1 { width: 7.5rem; right: 9rem; top: 1.75rem; }
+.finish-next-art-2 { width: 9.5rem; right: 2.5rem; bottom: 0.5rem; }
+
+.finish-no-certificate {
+  margin: 0 0 2rem;
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius);
+  background: var(--marigold-soft);
+  text-align: center;
+  font-weight: 600;
+}
+
+/* Below this width the side mascots would reach the words, so only the top one stays. */
+@media (max-width: 66rem) {
+  .fm-sun, .fm-lime, .fm-teal, .fm-hex, .fm-star, .fm-oval { display: none; }
+}
+
+@media (max-width: 48rem) {
+  .finish-hero { padding-top: 5.5rem; }
+  .finish-stats { gap: 0.6rem; }
+  .finish-stats li { font-size: 0.9rem; padding: 0.9rem 0.4rem 1rem; border-radius: 1rem; }
+  .finish-stats strong { font-size: 2.4rem; }
+  .finish-next-card { padding: 1.5rem 1.4rem 1.75rem; }
+  .finish-next-text { max-width: none; }
+  .finish-next-art-1 { width: 4rem; right: 1rem; top: -1.5rem; }
+  .finish-next-art-2 { display: none; }
 }
