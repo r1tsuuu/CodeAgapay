@@ -10,7 +10,7 @@ from accounts.models import get_profile
 from assistant.service import daily_limit, practice_feedback, remaining_today
 from content.models import Resource, Topic, Track
 
-from . import ai_views, journey
+from . import ai_views, journey, rewards
 from .ai_plan import active_outline
 from .forms import QuizForm
 from .grading import PASS_PERCENT, latest_result, submit_quiz
@@ -97,6 +97,7 @@ def plan(request):
             "estimate": journey.estimate(profile, current, items),
             "finished": journey.is_finished(items),
             "hours_choices": [1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 20],
+            "streak": rewards.weekly_streak(profile),
         },
     )
 
@@ -120,7 +121,8 @@ def plan_finish(request):
             "project": getattr(current, "project", None),
             "reviews": journey.due_reviews(profile, current),
             **journey.finish_summary(profile, current, items),
-        },
+            "plan_title": profile.path.title if profile.path_id else f"{current.track.name} basics",
+            "finished_on": rewards.finished_on(profile),        },
     )
 
 
@@ -332,6 +334,9 @@ def quiz_result(request, topic):
             **_help(profile, topic, "quiz"),
             # After a couple of misses, point back to what this topic builds on.
             "struggling": struggling,
+            # Right answers show once they've passed or had two goes, so the first try is theirs to figure out.
+            "reveal": result.passed or tries >= 2,
+            "missed": result.total - result.correct,
             # Plan progress only means something if this topic was in the plan.
             "topic_in_plan": item is not None,
             **(_after_pass(profile) if result.passed else {}),

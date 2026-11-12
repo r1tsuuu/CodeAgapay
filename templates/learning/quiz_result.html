@@ -42,13 +42,26 @@
 
   <div class="quiz-details">
     <h2>How you did</h2>
+    <p class="quiz-tally">
+      <span class="quiz-tally-right">{{ result.correct }} right</span>
+      {% if missed %}<span class="quiz-tally-wrong">{{ missed }} to fix</span>{% endif %}
+    </p>
+    {% if missed and not reveal %}<p class="quiz-reveal-note">Use the hints and try again. If you miss it twice, the right answers show here so you're never stuck.</p>{% endif %}
     <ol class="quiz-feedback">
       {% for r in result.items %}
       <li class="quiz-feedback-item {% if r.correct %}quiz-correct{% else %}quiz-wrong{% endif %}">
         <code class="quiz-prompt">{{ r.item.prompt }}</code>
         <p>Your answer: <code>{{ r.answer|default:"(blank)" }}</code> · {% if r.correct %}Correct{% else %}Not quite{% endif %}</p>
-        {% if not r.correct and r.item.hint %}<p class="quiz-hint">Hint: {{ r.item.hint }}</p>{% endif %}
-        {% if not r.correct %}<button type="button" class="help-inline" data-help-ask="Why is my answer wrong?" data-quiz-item="{{ r.item.pk }}" data-answer="{{ r.answer }}">Why is this wrong?</button>{% endif %}
+        {% if not r.correct %}
+        {% if reveal %}
+        <div class="quiz-answer">
+          <p class="quiz-answer-label">The right answer</p>
+          <code class="quiz-answer-code">{{ r.item.filled }}</code>
+          {% if r.item.explanation %}<p><strong>Why:</strong> {{ r.item.explanation }}</p>{% elif r.item.hint %}<p><strong>Why:</strong> {{ r.item.hint }}</p>{% endif %}
+        </div>
+        {% elif r.item.hint %}<p class="quiz-hint">Hint: {{ r.item.hint }}</p>{% endif %}
+        <button type="button" class="help-inline" data-help-ask="Why is my answer wrong?" data-quiz-item="{{ r.item.pk }}" data-answer="{{ r.answer }}">Ask Agapay why</button>
+        {% elif reveal and r.item.explanation %}<p class="quiz-why">{{ r.item.explanation }}</p>{% endif %}
       </li>
       {% endfor %}
     </ol>

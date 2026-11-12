@@ -271,6 +271,11 @@ class QuizItem(models.Model):
     prompt = models.TextField(help_text="Write the blank as ___ (three underscores).")
     accepted_answers = models.JSONField(default=list, help_text="One accepted answer per line.")
     hint = models.TextField(blank=True)
+    explanation = models.TextField(
+        blank=True,
+        help_text="Why the answer is right, in a sentence or two. Shown on the result page with the answer, "
+        "once the learner has passed or tried twice.",
+    )
     case_sensitive = models.BooleanField(default=False)
 
     class Meta:
@@ -278,6 +283,11 @@ class QuizItem(models.Model):
 
     def __str__(self):
         return self.prompt[:60]
+
+    @property
+    def filled(self):
+        """The prompt with its blank filled in by the first accepted answer."""
+        return self.prompt.replace("___", self.accepted_answers[0] if self.accepted_answers else "___", 1)
 
     def clean(self):
         _validate_string_list(self.accepted_answers, "accepted_answers")

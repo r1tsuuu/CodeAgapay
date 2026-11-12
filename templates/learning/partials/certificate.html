@@ -1,0 +1,20 @@
+{% load static %}{# The finish page's certificate. Needs plan_title, finished_on, done, weeks and `unit` ("topic" or "lesson"). #}
+<section class="certificate-wrap" aria-labelledby="certificate-title">
+  <div class="certificate">
+    <img class="certificate-mascot certificate-mascot-1" src="{% static 'img/mascots/star-pink.svg' %}" alt="">
+    <img class="certificate-mascot certificate-mascot-2" src="{% static 'img/mascots/flower-teal.svg' %}" alt="">
+
+    <p class="certificate-kicker">Certificate of completion</p>
+    <p class="certificate-line">This is to certify that</p>
+    <h2 id="certificate-title" class="certificate-name">{{ user.get_full_name|default:user.first_name|default:user.username }}</h2>
+    <p class="certificate-line">has completed the learning plan</p>
+    <p class="certificate-plan">{{ plan_title }}</p>
+
+    <div class="certificate-foot">
+      <p class="certificate-detail"><span>{{ done|length }} {{ unit }}{{ done|length|pluralize }}</span>in about {{ weeks }} week{{ weeks|pluralize }}</p>
+      <p class="certificate-brand"><img src="{% static 'img/mascots/flower-pink.svg' %}" alt="" width="30" height="27"> <span>Code<span class="brand-accent">Agapay</span></span></p>
+      <p class="certificate-detail"><span>{{ finished_on|date:"F j, Y" }}</span>date completed</p>
+    </div>
+  </div>
+  <p class="certificate-actions"><button type="button" class="button button-primary no-arrow" data-print>Print or save as PDF</button></p>
+</section>

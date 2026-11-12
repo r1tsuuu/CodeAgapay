@@ -1,0 +1,12 @@
+{% extends "admin/index.html" %}
+
+{% block content %}
+<div class="module review-callout">
+  <h2>Review queue</h2>
+  <p style="padding: 8px 10px; margin: 0;">
+    {% if review_waiting %}<strong>{{ review_waiting }} AI draft{{ review_waiting|pluralize }}</strong> waiting for approval.{% else %}No AI drafts waiting.{% endif %}
+    <a href="{% url 'review_queue' %}">Open the review queue</a>
+  </p>
+</div>
+{{ block.super }}
+{% endblock %}

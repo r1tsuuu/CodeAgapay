@@ -20,6 +20,11 @@ document.addEventListener("submit", function (event) {
   }, 0);
 });
 
+// Buttons marked data-print open the browser's print dialog (the certificate: print or save as PDF).
+document.addEventListener("click", function (event) {
+  if (event.target.closest("[data-print]")) window.print();
+});
+
 // Coming back with the browser's Back button can restore a disabled form; reset it.
 window.addEventListener("pageshow", function () {
   document.querySelectorAll("form[data-submitting]").forEach(function (form) {

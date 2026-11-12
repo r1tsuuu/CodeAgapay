@@ -2,7 +2,6 @@
 {% load static lesson_format %}
 
 {% block title %}You finished your plan · CodeAgapay{% endblock %}
-
 {% block content %}
 <section class="plan-hero">
   <img class="mascot plan-mascot-1" src="{% static 'img/mascots/star-pink.svg' %}" alt="">
@@ -12,6 +11,8 @@
 </section>
 
 <div class="plan-sheet">
+  {% include "learning/partials/certificate.html" with unit="lesson" %}
+
   <section class="plan-overview">
     <div class="plan-overview-part">
       <h2>Your goal</h2>

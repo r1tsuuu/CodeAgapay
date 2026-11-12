@@ -4122,3 +4122,323 @@ kbd {
     padding-inline: 0.75rem;
   }
 }
+
+/* ---------- Reasons to come back: streak, badges, certificate ---------- */
+
+/* The weekly streak: a marigold pill under the plan's progress, and on the profile. */
+.streak {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: fit-content;
+  max-width: 100%;
+  margin: 1rem auto 0;
+  padding: 0.45rem 1.1rem 0.45rem 0.55rem;
+  border: 3px solid var(--marigold-light);
+  border-radius: 999px;
+  background: var(--marigold-soft);
+  color: var(--ink);
+  font-weight: 600;
+  text-align: left;
+  line-height: 1.35;
+}
+
+.streak strong {
+  font-family: var(--font-display);
+  color: #8A5A00;
+}
+
+.streak-icon {
+  flex: none;
+  width: 2.1rem;
+  height: 2.1rem;
+}
+
+.streak-at-risk {
+  border-color: var(--hibiscus);
+  background: var(--berry-soft);
+}
+
+.streak-at-risk strong {
+  color: var(--berry-deep);
+}
+
+.streak-none {
+  border-color: var(--line);
+  background: var(--paper);
+}
+
+.streak-none .streak-icon {
+  filter: grayscale(1);
+  opacity: 0.6;
+}
+
+.streak-none strong {
+  color: var(--teal-deep);
+}
+
+.profile-panel-body .streak {
+  margin: 0 auto 1.1rem;
+}
+
+/* Badges: mascot tiles. Locked ones are grey with a dashed edge. */
+.badges {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(8.5rem, 100%), 1fr));
+  gap: 0.85rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 1rem 0.6rem 0.9rem;
+  border: 3px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--white);
+  text-align: center;
+}
+
+.badge-art {
+  display: grid;
+  place-items: center;
+  width: 4rem;
+  height: 4rem;
+  margin-bottom: 0.35rem;
+  border-radius: 50%;
+  background: var(--berry-soft);
+}
+
+.badge:nth-child(even) .badge-art {
+  background: var(--teal-soft);
+}
+
+.badge-art img {
+  width: 2.9rem;
+  height: 2.9rem;
+}
+
+.badge-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.05rem;
+  line-height: 1.2;
+  color: var(--berry);
+}
+
+.badge-text {
+  font-size: 0.85rem;
+  line-height: 1.3;
+  color: var(--teal-deep);
+  font-weight: 700;
+}
+
+.badge-locked {
+  border-style: dashed;
+  background: transparent;
+}
+
+.badge-locked .badge-art {
+  background: var(--line);
+}
+
+.badge-locked .badge-art img {
+  filter: grayscale(1);
+  opacity: 0.45;
+}
+
+.badge-locked .badge-title {
+  color: var(--ink-soft);
+}
+
+.badge-locked .badge-text {
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
+/* The finish page's certificate: a clean white sheet with a thin berry frame, in the app's
+   own fonts and colours. Formal enough to keep, without pretending to be an official credential. */
+.certificate-wrap {
+  margin: 0 0 2.5rem;
+}
+
+.certificate {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: clamp(2.25rem, 1.75rem + 2.5vw, 3.5rem) clamp(1.25rem, 0.5rem + 4vw, 4rem) 2rem;
+  border-radius: var(--radius);
+  background: var(--white);
+  box-shadow: inset 0 0 0 2px var(--berry), inset 0 0 0 8px var(--white), inset 0 0 0 9px var(--berry-soft);
+  text-align: center;
+}
+
+.certificate-mascot {
+  position: absolute;
+  z-index: -1;
+  width: 4.5rem;
+  opacity: 0.9;
+}
+
+.certificate-mascot-1 { left: -1.1rem; top: -1.1rem; }
+.certificate-mascot-2 { right: -1rem; bottom: -1.1rem; }
+
+.certificate-kicker {
+  margin: 0;
+  color: var(--teal);
+  font-weight: 800;
+  font-size: 0.85rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.certificate-line {
+  margin: 1rem 0 0;
+  color: var(--ink-soft);
+}
+
+.certificate .certificate-name {
+  margin: 0.35rem 0 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--line);
+  display: inline-block;
+  min-width: min(26rem, 100%);
+  font-size: clamp(2rem, 1.5rem + 2.5vw, 3rem);
+  color: var(--berry);
+  overflow-wrap: anywhere;
+}
+
+.certificate-plan {
+  margin: 0.35rem 0 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.5rem;
+  color: var(--ink);
+}
+
+.certificate-foot {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 2.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--line);
+}
+
+.certificate-detail {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+}
+
+.certificate-detail span {
+  display: block;
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.certificate-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.25rem;
+}
+
+.certificate-actions {
+  margin: 1.5rem 0 0;
+  text-align: center;
+}
+
+@media (max-width: 40rem) {
+  .certificate-foot { grid-template-columns: 1fr 1fr; }
+  .certificate-brand { grid-column: 1 / -1; grid-row: 1; justify-self: center; }
+}
+
+/* Only the finish page prints this way: a landscape page with just the certificate. */
+@page certificate {
+  size: landscape;
+  margin: 12mm;
+}
+
+@media print {
+  body:has(.certificate) { page: certificate; }
+  body:has(.certificate) * { visibility: hidden; }
+  .certificate,
+  .certificate * { visibility: visible; }
+  .certificate {
+    position: absolute;
+    inset: 0 0 auto;
+    margin: 0;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  .certificate-actions { display: none; }
+}
+
+/* Quiz result: a tally, and the right answer with why once it's fair to show. */
+.quiz-tally {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 0.75rem;
+}
+
+.quiz-tally span {
+  padding: 0.2rem 0.85rem;
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+.quiz-tally-right { background: var(--success-soft); color: #1E7A48; }
+.quiz-tally-wrong { background: var(--error-soft); color: #A82626; }
+
+.quiz-reveal-note {
+  margin: 0 0 1rem;
+  color: var(--ink-soft);
+}
+
+.quiz-answer {
+  margin: 0.75rem 0 0.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  background: var(--teal-soft);
+}
+
+.quiz-feedback-item .quiz-answer p {
+  margin: 0.4rem 0 0;
+}
+
+.quiz-feedback-item .quiz-answer .quiz-answer-label {
+  margin: 0;
+  color: var(--teal-deep);
+  font-weight: 800;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.quiz-answer-code {
+  display: block;
+  margin-top: 0.3rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: var(--radius-sm);
+  background: var(--code-bg);
+  color: var(--white);
+  font-family: var(--font-code);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.quiz-why {
+  color: var(--teal-deep);
+}
