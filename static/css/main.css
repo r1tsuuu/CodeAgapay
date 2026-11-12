@@ -4122,3 +4122,306 @@ kbd {
     padding-inline: 0.75rem;
   }
 }
+
+/* ---------- Reasons to come back: streak, badges, certificate ---------- */
+
+/* The weekly streak: a marigold pill under the plan's progress, and on the profile. */
+.streak {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: fit-content;
+  max-width: 100%;
+  margin: 1rem auto 0;
+  padding: 0.45rem 1.1rem 0.45rem 0.55rem;
+  border: 3px solid var(--marigold-light);
+  border-radius: 999px;
+  background: var(--marigold-soft);
+  color: var(--ink);
+  font-weight: 600;
+  text-align: left;
+  line-height: 1.35;
+}
+
+.streak strong {
+  font-family: var(--font-display);
+  color: #8A5A00;
+}
+
+.streak-icon {
+  flex: none;
+  width: 2.1rem;
+  height: 2.1rem;
+}
+
+.streak-at-risk {
+  border-color: var(--hibiscus);
+  background: var(--berry-soft);
+}
+
+.streak-at-risk strong {
+  color: var(--berry-deep);
+}
+
+.streak-none {
+  border-color: var(--line);
+  background: var(--paper);
+}
+
+.streak-none .streak-icon {
+  filter: grayscale(1);
+  opacity: 0.6;
+}
+
+.streak-none strong {
+  color: var(--teal-deep);
+}
+
+.profile-panel-body .streak {
+  margin: 0 auto 1.1rem;
+}
+
+/* Badges: mascot tiles. Locked ones are grey with a dashed edge. */
+.badges {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(8.5rem, 100%), 1fr));
+  gap: 0.85rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 1rem 0.6rem 0.9rem;
+  border: 3px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--white);
+  text-align: center;
+}
+
+.badge-art {
+  display: grid;
+  place-items: center;
+  width: 4rem;
+  height: 4rem;
+  margin-bottom: 0.35rem;
+  border-radius: 50%;
+  background: var(--berry-soft);
+}
+
+.badge:nth-child(even) .badge-art {
+  background: var(--teal-soft);
+}
+
+.badge-art img {
+  width: 2.9rem;
+  height: 2.9rem;
+}
+
+.badge-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.05rem;
+  line-height: 1.2;
+  color: var(--berry);
+}
+
+.badge-text {
+  font-size: 0.85rem;
+  line-height: 1.3;
+  color: var(--teal-deep);
+  font-weight: 700;
+}
+
+.badge-locked {
+  border-style: dashed;
+  background: transparent;
+}
+
+.badge-locked .badge-art {
+  background: var(--line);
+}
+
+.badge-locked .badge-art img {
+  filter: grayscale(1);
+  opacity: 0.45;
+}
+
+.badge-locked .badge-title {
+  color: var(--ink-soft);
+}
+
+.badge-locked .badge-text {
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
+/* The finish page's certificate: a white card with a berry ring, like the profile buttons. */
+.certificate {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  margin: 0 0 2rem;
+  padding: 2.5rem 1.5rem 2rem;
+  border-radius: var(--radius-lg);
+  background: var(--white);
+  box-shadow: inset 0 0 0 5px var(--berry), inset 0 0 0 11px var(--white), inset 0 0 0 13px var(--berry-soft);
+  text-align: center;
+}
+
+.certificate-mascot {
+  position: absolute;
+  z-index: -1;
+  width: 6rem;
+}
+
+.certificate-mascot-1 { left: -1.25rem; top: -1.25rem; }
+.certificate-mascot-2 { right: -1rem; bottom: -1.25rem; }
+
+.certificate-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.35rem;
+}
+
+.certificate-kicker {
+  margin: 1rem 0 0;
+  color: var(--teal);
+  font-weight: 800;
+  font-size: 0.85rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.certificate .certificate-name {
+  margin: 0.4rem 0 0;
+  font-size: clamp(2rem, 1.5rem + 2.5vw, 3rem);
+  color: var(--berry);
+  overflow-wrap: anywhere;
+}
+
+.certificate-line {
+  margin: 0.35rem 0 0;
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
+.certificate-plan {
+  margin: 0.25rem 0 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.6rem;
+  color: var(--ink);
+}
+
+.certificate-badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 1.25rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.certificate-badges li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.75rem 0.25rem 0.3rem;
+  border-radius: 999px;
+  background: var(--teal-soft);
+  color: var(--teal-deep);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.certificate-badges img {
+  width: 1.6rem;
+  height: 1.6rem;
+}
+
+.certificate-actions {
+  margin: 1.5rem 0 0;
+}
+
+@media print {
+  body * { visibility: hidden; }
+  .certificate,
+  .certificate * { visibility: visible; }
+  .certificate {
+    position: absolute;
+    inset: 0 0 auto;
+    margin: 0;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  .certificate-actions { display: none; }
+}
+
+/* Quiz result: a tally, and the right answer with why once it's fair to show. */
+.quiz-tally {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 0.75rem;
+}
+
+.quiz-tally span {
+  padding: 0.2rem 0.85rem;
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+.quiz-tally-right { background: var(--success-soft); color: #1E7A48; }
+.quiz-tally-wrong { background: var(--error-soft); color: #A82626; }
+
+.quiz-reveal-note {
+  margin: 0 0 1rem;
+  color: var(--ink-soft);
+}
+
+.quiz-answer {
+  margin: 0.75rem 0 0.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  background: var(--teal-soft);
+}
+
+.quiz-feedback-item .quiz-answer p {
+  margin: 0.4rem 0 0;
+}
+
+.quiz-feedback-item .quiz-answer .quiz-answer-label {
+  margin: 0;
+  color: var(--teal-deep);
+  font-weight: 800;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.quiz-answer-code {
+  display: block;
+  margin-top: 0.3rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: var(--radius-sm);
+  background: var(--code-bg);
+  color: var(--white);
+  font-family: var(--font-code);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.quiz-why {
+  color: var(--teal-deep);
+}

@@ -1,5 +1,8 @@
+import math
+
 from django import forms
 from django.contrib.auth import get_user_model
+from django.utils import timezone
 
 from .models import LearnerProfile
 
@@ -39,8 +42,35 @@ class LearningSetupForm(SettingsForm):
         label="What you learn on", help_text="New lessons and setup steps use its shortcuts and app names.",
     )
 
+    target_date = forms.DateField(
+        required=False, label="Date you're aiming to finish by",
+        widget=forms.DateInput(attrs={"type": "date"}),
+        help_text="Leave it blank for no date. Your plan stays the same; it shows whether your pace fits the date.",
+    )
+
     class Meta(SettingsForm.Meta):
-        fields = ["goal_text", "hours_per_week", "experience", "device", "hint_style", "email_reminders"]
+        fields = ["goal_text", "hours_per_week", "target_date", "experience", "device", "hint_style",
+                  "email_reminders"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from learning.profile import plan_started, target_date
+
+        # Plans count their date as weeks from the day the plan started (target_weeks).
+        self.plan_start = plan_started(self.instance)
+        self.fields["target_date"].initial = target_date(self.instance)
+
+    def clean_target_date(self):
+        day = self.cleaned_data["target_date"]
+        if day is not None and day <= timezone.localdate():
+            raise forms.ValidationError("Pick a date after today.")
+        return day
+
+    def save(self, commit=True):
+        day = self.cleaned_data.get("target_date")
+        start = self.plan_start or timezone.localdate()
+        self.instance.target_weeks = max(math.ceil((day - start).days / 7), 1) if day else None
+        return super().save(commit=commit)
 
 
 class DetailsForm(forms.ModelForm):

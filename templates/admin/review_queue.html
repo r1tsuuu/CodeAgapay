@@ -1,0 +1,66 @@
+{% extends "admin/base_site.html" %}
+
+{% block extrastyle %}{{ block.super }}
+<style>
+  .review-intro { max-width: 60rem; }
+  .review-item { margin: 0 0 1.5rem; padding: 1rem 1.25rem; border: 1px solid var(--hairline-color); border-radius: 8px; }
+  .review-item h3 { margin: 0 0 .25rem; font-size: 1rem; }
+  .review-item .meta { margin: 0 0 .75rem; color: var(--body-quiet-color); }
+  .review-item pre { padding: .75rem; background: var(--darkened-bg); white-space: pre-wrap; }
+  .review-item dt { font-weight: 600; margin-top: .5rem; }
+  .review-actions { display: flex; gap: .75rem; align-items: center; margin-top: 1rem; }
+  .review-actions form { margin: 0; }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs"><a href="{% url 'admin:index' %}">Home</a> › Review queue</div>
+{% endblock %}
+
+{% block content %}
+<div class="review-intro">
+  <p>AI drafts stay hidden from learners until someone approves them. Read each one as a learner would, run any code, then approve it, or open it to fix it first.</p>
+  {% if lesson_count %}<p><strong>{{ lesson_count }} AI plan lesson{{ lesson_count|pluralize }}</strong> {{ lesson_count|pluralize:"was,were" }} flagged or rated unhelpful and {{ lesson_count|pluralize:"isn't,aren't" }} reviewed yet. <a href="{{ lessons_url }}">Review AI lessons</a> (mark them OK or Problem).</p>{% endif %}
+</div>
+
+<h2>Topic intros ({{ intros|length }})</h2>
+{% for topic in intros %}
+<section class="review-item">
+  <h3>{{ topic.title }}</h3>
+  <p class="meta">{{ topic.track.name }} · Why it matters, Key terms and In a nutshell</p>
+  <dl>
+    <dt>Why it matters</dt><dd>{{ topic.why_it_matters|default:"(blank)" }}</dd>
+    <dt>Key terms</dt><dd>{% for t in topic.key_terms %}<b>{{ t.term }}</b>: {{ t.definition }}<br>{% empty %}(none){% endfor %}</dd>
+    <dt>In a nutshell</dt><dd>{{ topic.explanation|linebreaks }}</dd>
+    {% if topic.example %}<dt>Example</dt><dd><pre>{{ topic.example }}</pre></dd>{% endif %}
+    {% if topic.example_output %}<dt>What it prints</dt><dd><pre>{{ topic.example_output }}</pre></dd>{% endif %}
+  </dl>
+  <div class="review-actions">
+    <form method="post" action="{% url 'review_approve' 'intro' topic.pk %}">{% csrf_token %}<input type="submit" class="default" value="Approve"></form>
+    <a href="{% url 'admin:content_topic_change' topic.pk %}">Edit first</a>
+  </div>
+</section>
+{% empty %}
+<p>No intros waiting.</p>
+{% endfor %}
+
+<h2>Practice tasks ({{ tasks|length }})</h2>
+{% for task in tasks %}
+<section class="review-item">
+  <h3>{{ task.topic.title }}</h3>
+  <p class="meta">{{ task.topic.track.name }} · practice task</p>
+  <dl>
+    <dt>Task</dt><dd>{{ task.prompt|linebreaks }}</dd>
+    {% if task.starter_code %}<dt>Starter code</dt><dd><pre>{{ task.starter_code }}</pre></dd>{% endif %}
+    <dt>Sample answer (run it!)</dt><dd><pre>{{ task.sample_answer }}</pre></dd>
+    <dt>A good answer</dt><dd>{% for check in task.checklist %}• {{ check }}<br>{% endfor %}</dd>
+  </dl>
+  <div class="review-actions">
+    <form method="post" action="{% url 'review_approve' 'task' task.pk %}">{% csrf_token %}<input type="submit" class="default" value="Approve"></form>
+    <a href="{% url 'admin:content_practicetask_change' task.pk %}">Edit first</a>
+  </div>
+</section>
+{% empty %}
+<p>No practice tasks waiting.</p>
+{% endfor %}
+{% endblock %}

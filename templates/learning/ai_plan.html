@@ -12,6 +12,7 @@
   <p class="plan-percent" aria-hidden="true">{{ progress }}%</p>
   {% include "partials/progress_bar.html" %}
   <p class="plan-progress-note">{{ done_count }} of {{ total }} lesson{{ total|pluralize }} done</p>
+  {% include "learning/partials/streak.html" %}
 </section>
 
 <div class="plan-sheet">

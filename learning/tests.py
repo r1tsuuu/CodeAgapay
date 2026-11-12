@@ -692,5 +692,5 @@ class HelpPanelTests(PlanTestMixin, TestCase):
         item = QuizItem.objects.create(topic=self.topics[0], prompt="x = ___", accepted_answers=["1"])
         self.client.post(reverse("quiz", args=["topic-1"]), {f"item_{item.pk}": "2"})
         page = self.client.get(reverse("quiz_result", args=["topic-1"]))
-        self.assertContains(page, "Why is this wrong?")
+        self.assertContains(page, "Ask Agapay why")
         self.assertContains(page, f'data-quiz-item="{item.pk}" data-answer="2"')

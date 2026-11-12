@@ -67,7 +67,18 @@ class PracticeTaskInline(admin.StackedInline):
 class TopicAdmin(admin.ModelAdmin):
     form = TopicForm
     list_display = ["title", "track", "order", "estimated_minutes", "intro_approved"]
-    list_editable = ["order", "estimated_minutes"]
+    list_editable = ["order", "estimated_minutes", "intro_approved"]
+    actions = ["approve_intros", "hide_intros"]
+
+    @admin.action(description="Approve intro (learners see it)")
+    def approve_intros(self, request, queryset):
+        count = queryset.update(intro_approved=True)
+        self.message_user(request, f"Approved {count} intro{'s' if count != 1 else ''}.")
+
+    @admin.action(description="Hide intro")
+    def hide_intros(self, request, queryset):
+        count = queryset.update(intro_approved=False)
+        self.message_user(request, f"Hid {count} intro{'s' if count != 1 else ''}.")
     list_filter = ["track", "intro_approved"]
     search_fields = ["title", "summary"]
     prepopulated_fields = {"slug": ["title"]}
@@ -101,7 +112,19 @@ class QuizItemAdmin(admin.ModelAdmin):
 class PracticeTaskAdmin(admin.ModelAdmin):
     form = PracticeTaskForm
     list_display = ["__str__", "topic", "approved"]
+    list_editable = ["approved"]
     list_filter = ["approved", "topic__track"]
+    actions = ["approve_tasks", "hide_tasks"]
+
+    @admin.action(description="Approve (learners see it)")
+    def approve_tasks(self, request, queryset):
+        count = queryset.update(approved=True)
+        self.message_user(request, f"Approved {count} task{'s' if count != 1 else ''}.")
+
+    @admin.action(description="Hide")
+    def hide_tasks(self, request, queryset):
+        count = queryset.update(approved=False)
+        self.message_user(request, f"Hid {count} task{'s' if count != 1 else ''}.")
 
 
 @admin.register(SetupStep)
@@ -133,3 +156,16 @@ class ProjectIdeaAdmin(admin.ModelAdmin):
 admin.site.register(Tip)
 admin.site.site_header = "CodeAgapay content admin"
 admin.site.site_title = "CodeAgapay admin"
+
+# The admin home page links to the review queue, with how many drafts wait there.
+admin.site.index_template = "admin/codeagapay_index.html"
+_default_index = admin.site.index
+
+
+def _index(request, extra_context=None):
+    from .review import waiting_count
+
+    return _default_index(request, {**(extra_context or {}), "review_waiting": waiting_count()})
+
+
+admin.site.index = _index

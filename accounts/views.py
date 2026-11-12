@@ -54,10 +54,16 @@ def account_settings(request):
 
 def _render_profile(request, profile, **forms):
     from learning import profile as learning_profile
+    from learning import rewards
 
+    progress = learning_profile.summary(profile)
+    streak = rewards.weekly_streak(profile)
     return render(request, "accounts/profile.html", {
         "profile": profile,
-        "progress": learning_profile.summary(profile),
+        "progress": progress,
+        "streak": streak,
+        "badges": rewards.badges(profile, progress, streak),
+        "target_date": learning_profile.target_date(profile),
         "setup_method": learning_profile.setup_method(profile),
         "icon_form": forms.get("icon_form") or AvatarForm(instance=profile),
         "details_form": forms.get("details_form") or DetailsForm(instance=profile),

@@ -36,7 +36,8 @@ Return only a JSON object with exactly these keys:
   ],
   "quiz_items": [
     {"prompt": "one line of code or a sentence with exactly one blank written as ___",
-     "accepted_answers": ["every reasonable correct answer"], "hint": "a nudge, never the answer"}
+     "accepted_answers": ["every reasonable correct answer"], "hint": "a nudge, never the answer",
+     "explanation": "one or two sentences on why the answer is right, shown after the learner tries"}
   ]
 }
 Rules: up to 3 key_terms, exactly 2 tips, 2 skill_questions, 4 quiz_items. Each blank's answer is one
@@ -189,7 +190,7 @@ def save_draft(track, title, data, prerequisite=None):
             objects.append(QuizItem(
                 topic=topic, prompt=str(q.get("prompt", "")),
                 accepted_answers=[str(a) for a in q.get("accepted_answers") or []],
-                hint=str(q.get("hint") or ""),
+                hint=str(q.get("hint") or ""), explanation=str(q.get("explanation") or ""),
             ))
         for obj in objects[1:]:
             obj.full_clean()

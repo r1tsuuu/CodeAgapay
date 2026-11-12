@@ -1,0 +1,11 @@
+{% load static %}{# The weekly streak. Needs `streak` (learning.rewards.Streak). #}
+<p class="streak{% if streak.at_risk %} streak-at-risk{% elif not streak.weeks %} streak-none{% endif %}">
+  <img class="streak-icon" src="{% static 'img/mascots/star-yellow.svg' %}" alt="" width="34" height="34">
+  {% if streak.weeks and streak.this_week %}
+  <span><strong>{{ streak.weeks }}-week streak!</strong> You've learned something {{ streak.weeks }} week{{ streak.weeks|pluralize }} in a row.</span>
+  {% elif streak.at_risk %}
+  <span><strong>{{ streak.weeks }}-week streak.</strong> Do one lesson before Sunday to keep it going.</span>
+  {% else %}
+  <span><strong>Start a streak:</strong> do one lesson this week, then keep it up week after week.</span>
+  {% endif %}
+</p>

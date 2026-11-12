@@ -4,6 +4,7 @@ Built from the same records as the plan and finish pages, so the numbers always 
 """
 
 import math
+from datetime import timedelta
 
 from django.urls import reverse
 from django.utils import timezone
@@ -71,6 +72,26 @@ def summary(profile):
         return _ai(outline)
     plan = active_plan(profile)
     return _curated(profile, plan) if plan is not None else None
+
+
+def plan_started(profile):
+    """The day the learner's current plan started, or None without a plan.
+
+    Their target date is kept as weeks from this day (target_weeks), as onboarding asks it.
+    """
+    if profile.pk is None:
+        return None
+    if profile.gets_ai_plans() and (outline := ai_plan.active_outline(profile)) is not None:
+        return timezone.localdate(outline.created_at)
+    plan = active_plan(profile)
+    return timezone.localdate(plan.created_at) if plan is not None else None
+
+
+def target_date(profile):
+    """The date the learner is aiming for, or None when they didn't give one."""
+    if not profile.target_weeks:
+        return None
+    return (plan_started(profile) or timezone.localdate()) + timedelta(weeks=profile.target_weeks)
 
 
 def setup_method(profile):

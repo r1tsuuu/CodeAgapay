@@ -20,7 +20,7 @@ from assistant.service import (
 
 from content.models import Track
 
-from . import ai_plan, setup_guides
+from . import ai_plan, rewards, setup_guides
 from .lessons import current_lesson, glossary, lesson_for, regenerate_lesson
 from .models import GeneratedLesson, LessonProgress
 from .outline import SETUP_KEY, generate_outline, setup_lesson, setup_options
@@ -122,6 +122,7 @@ def plan(request, profile, outline):
         "setup_lesson": setup,
         "setup_ready": bool(outline.setup_choice) or not setup,
         "glossary": glossary(outline),
+        "streak": rewards.weekly_streak(profile),
     })
 
 
@@ -135,6 +136,9 @@ def finish(request, profile, outline):
         "project": outline.data.get("project") or {},
         "glossary": glossary(outline),
         **ai_plan.finish_summary(outline),
+        "plan_title": profile.path.title if profile.path_id else "Learn to code",
+        "finished_on": rewards.finished_on(profile),
+        "badges": rewards.badges(profile),
     })
 
 

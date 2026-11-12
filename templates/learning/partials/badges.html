@@ -1,0 +1,11 @@
+{% load static %}{# Milestone badges. Needs `badges` (learning.rewards.badges). #}
+<ul class="badges" aria-labelledby="badges-title">
+  {% for badge in badges %}
+  <li class="badge{% if not badge.earned %} badge-locked{% endif %}">
+    <span class="badge-art" aria-hidden="true"><img src="{% static 'img/mascots/' %}{{ badge.mascot }}.svg" alt=""></span>
+    <span class="badge-title">{{ badge.title }}</span>
+    <span class="badge-text">{% if badge.earned %}Earned{% else %}{{ badge.text }}{% endif %}</span>
+    {% if not badge.earned %}<span class="visually-hidden">Not earned yet.</span>{% endif %}
+  </li>
+  {% endfor %}
+</ul>
