@@ -79,7 +79,7 @@ class FinishPageTests(FinishMixin, TestCase):
         self.finish_all()
         response = self.client.get(reverse("plan_finish"))
         self.assertContains(response, "Congratulations, ")
-        self.assertContains(response, "<strong class=\"finish-stat-berry\">2</strong> topics finished", html=False)
+        self.assertContains(response, "<strong class=\"finish-stat-berry\" data-count-up=\"2\">2</strong> topics finished", html=False)
         self.assertContains(response, "Topic 1")
 
     def test_counts_quiz_passes_apart_from_topics_marked_done(self):
@@ -87,11 +87,11 @@ class FinishPageTests(FinishMixin, TestCase):
             self.profile, self.topics[0], TopicMastery.Status.DEMONSTRATED, "Quiz", TopicMastery.Source.QUIZ, force=True
         )
         self.finish_all()
-        self.assertContains(self.client.get(reverse("plan_finish")), "<strong class=\"finish-stat-teal\">1</strong> quiz passed")
+        self.assertContains(self.client.get(reverse("plan_finish")), "<strong class=\"finish-stat-teal\" data-count-up=\"1\">1</strong> quiz passed")
 
     def test_no_quiz_claim_when_every_topic_was_marked_by_hand(self):
         self.finish_all()
-        self.assertContains(self.client.get(reverse("plan_finish")), "<strong class=\"finish-stat-teal\">0</strong> quizzes passed")
+        self.assertContains(self.client.get(reverse("plan_finish")), "<strong class=\"finish-stat-teal\" data-count-up=\"0\">0</strong> quizzes passed")
 
     def test_lists_skipped_topics_but_not_shaky_ones(self):
         first, second = self.plan.items.all()

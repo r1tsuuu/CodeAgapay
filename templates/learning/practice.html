@@ -1,7 +1,8 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static lesson_format %}
 
 {% block title %}Practice: {{ topic.title }} · CodeAgapay{% endblock %}
+{% block page_class %}page-wide{% endblock %}
 
 {% block content %}
 <div class="lesson-layout">
@@ -16,15 +17,13 @@
   {% if has_quiz %}<a class="button button-primary" href="{% url 'quiz' topic.slug %}">Take the quiz</a>{% endif %}
 </div>
 {% else %}
-<p class="lead">Try it in your own editor first, then paste what you wrote. It isn't graded: Agapay gives hints, never the answer.</p>
+{% with language=topic.track.slug|panel_language:task.starter_code %}
+<p class="lead">{% if language == "java" %}Write it in VS Code and run it there, then paste it below.{% else %}Write your code in the editor and press <strong>Run</strong> to try it.{% endif %} When you're happy, send it to Agapay for hints. It isn't graded.</p>
 
+<div class="practice-workspace">
 <section class="card practice-task">
   <h2>Your task</h2>
   <p class="practice-prompt">{{ task.prompt|linebreaksbr }}</p>
-  {% if task.starter_code %}
-  <p class="practice-label">Start from this code:</p>
-  <pre class="code"><code>{{ task.starter_code }}</code></pre>
-  {% endif %}
   {% if task.checklist %}
   <p class="practice-label">A good answer:</p>
   <ul class="practice-checklist">
@@ -38,7 +37,7 @@
   <h2 id="feedback-title" class="visually-hidden">Feedback on your answer</h2>
   <div class="practice-answer">
     <p class="practice-label">Your answer</p>
-    <pre class="code"><code>{{ latest.answer }}</code></pre>
+    {% include "learning/partials/code_panel.html" with code=latest.answer field_id="sent-answer" rows=8 %}
   </div>
 
   {% if latest.mode == "ai" %}
@@ -71,14 +70,17 @@
 {% else %}
 <form class="practice-form" method="post" id="answer" data-loading="Agapay is reading your answer… this takes a few seconds.">
   {% csrf_token %}
-  <label for="practice-answer" class="practice-label">Your answer</label>
-  <textarea id="practice-answer" name="answer" rows="10" maxlength="{{ max_answer }}" required spellcheck="false" placeholder="Paste or type your code here.">{% if revising and latest %}{{ latest.answer }}{% endif %}</textarea>
+  <p class="practice-label">Your code</p>
+  {% if revising and latest %}{% include "learning/partials/code_panel.html" with code=latest.answer name="answer" field_id="practice-answer" label="Your code" maxlength=max_answer required=True rows=12 %}
+  {% else %}{% include "learning/partials/code_panel.html" with code=task.starter_code name="answer" field_id="practice-answer" label="Your code" maxlength=max_answer required=True rows=12 %}{% endif %}
   <div class="actions">
     <a class="text-link" href="{% url 'lesson' topic.slug %}">Back to lesson</a>
-    <button type="submit" class="button button-primary no-arrow">Send</button>
+    <button type="submit" class="button button-primary no-arrow">Send to Agapay</button>
   </div>
 </form>
 {% endif %}
+</div>
+{% endwith %}
 {% endif %}
 </div>
 {% include "partials/help_panel.html" %}

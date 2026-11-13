@@ -1,0 +1,200 @@
+{
+  "python-variables-and-data-types": {
+    "prompt": "Make variables for a student: their name (text), age (a whole number), height in meters (a number with a decimal) and whether they're enrolled (True or False). Then print one sentence that uses all four.",
+    "starter_code": "# Make your four variables here\n\n\n# Print one sentence that uses all four\n",
+    "sample_answer": "name = \"Ana\"\nage = 19\nheight = 1.6\nenrolled = True\n\nprint(name, \"is\", age, \"years old,\", height, \"m tall. Enrolled:\", enrolled)",
+    "checklist": ["Has a str, an int, a float and a bool", "Each variable has a clear name", "Prints one sentence with all four values", "Runs without errors"]
+  },
+  "python-input-and-output": {
+    "prompt": "Ask for the user's name and the year they were born. Print a greeting with their name and how old they turn in 2026. Type your test answers in \"Input for your program\" before pressing Run.",
+    "starter_code": "name = input(\"What's your name? \")\n# Ask for the birth year, then turn it into a number\n\n# Print the greeting\n",
+    "sample_answer": "name = input(\"What's your name? \")\nborn = int(input(\"What year were you born? \"))\nage = 2026 - born\nprint(\"Hi \" + name + \"! You turn \" + str(age) + \" in 2026.\")",
+    "checklist": ["Uses input() twice", "Turns the year into a number with int()", "Works out the age with a calculation", "Prints a greeting with the name and age"]
+  },
+  "python-conditionals": {
+    "prompt": "Store a score from 0 to 100 in a variable. Print \"Excellent\" for 90 and up, \"Passed\" for 75 to 89, and \"Try again\" for anything lower. Change the score and run it a few times to check each branch.",
+    "starter_code": "score = 82\n\n# Print Excellent, Passed or Try again\n",
+    "sample_answer": "score = 82\n\nif score >= 90:\n    print(\"Excellent\")\nelif score >= 75:\n    print(\"Passed\")\nelse:\n    print(\"Try again\")",
+    "checklist": ["Uses if, elif and else", "The checks go from highest to lowest", "Each branch prints the right word", "Works for 95, 80 and 50"]
+  },
+  "python-loops": {
+    "prompt": "Print the multiplication table of 7, from 7 x 1 to 7 x 10, one line each, like \"7 x 3 = 21\".",
+    "starter_code": "number = 7\n\n# Use a loop to print 7 x 1 up to 7 x 10\n",
+    "sample_answer": "number = 7\n\nfor i in range(1, 11):\n    print(number, \"x\", i, \"=\", number * i)",
+    "checklist": ["Uses a for loop with range()", "Prints exactly 10 lines", "Starts at 1 and ends at 10", "Each line shows the right product"]
+  },
+  "python-lists": {
+    "prompt": "Make a list of five prices. Add one more with append(). Then print the cheapest price, the most expensive, and the total.",
+    "starter_code": "prices = [120, 45, 300, 80, 55]\n\n# Add one more price\n\n# Print the cheapest, the most expensive and the total\n",
+    "sample_answer": "prices = [120, 45, 300, 80, 55]\nprices.append(99)\n\nprint(\"Cheapest:\", min(prices))\nprint(\"Most expensive:\", max(prices))\nprint(\"Total:\", sum(prices))",
+    "checklist": ["Adds a price with append()", "Finds the cheapest and most expensive", "Prints the total", "Prints labels so the numbers make sense"]
+  },
+  "python-functions": {
+    "prompt": "Write a function average(numbers) that returns the average of a list of numbers. Call it on two different lists and print both results.",
+    "starter_code": "def average(numbers):\n    # Return the average\n    pass\n\n\nprint(average([80, 90, 70]))\n",
+    "sample_answer": "def average(numbers):\n    return sum(numbers) / len(numbers)\n\n\nprint(average([80, 90, 70]))\nprint(average([3, 4]))",
+    "checklist": ["Defines average with one parameter", "Uses return, not print, inside the function", "Is called on two different lists", "Prints 80.0 for [80, 90, 70]"]
+  },
+  "python-dictionaries": {
+    "prompt": "Make a dictionary of three friends and their favorite food. Add a fourth friend, then loop through the dictionary and print \"Name likes food\" for each one.",
+    "starter_code": "favorites = {\"Ana\": \"adobo\", \"Ben\": \"sinigang\", \"Carla\": \"halo-halo\"}\n\n# Add a fourth friend\n\n# Print each friend and their food\n",
+    "sample_answer": "favorites = {\"Ana\": \"adobo\", \"Ben\": \"sinigang\", \"Carla\": \"halo-halo\"}\nfavorites[\"Dan\"] = \"lumpia\"\n\nfor name, food in favorites.items():\n    print(name, \"likes\", food)",
+    "checklist": ["Adds a new key and value", "Loops with .items()", "Prints one line per friend", "Prints four lines"]
+  },
+  "python-files-and-exceptions": {
+    "prompt": "Ask for a number and print its double. If the user types something that isn't a number, print \"That's not a number\" instead of crashing. Test it with \"5\" and with \"hello\" in the input box.",
+    "starter_code": "text = input(\"Type a number: \")\n\n# Use try and except to handle text that isn't a number\n",
+    "sample_answer": "text = input(\"Type a number: \")\n\ntry:\n    number = float(text)\n    print(\"Double:\", number * 2)\nexcept ValueError:\n    print(\"That's not a number\")",
+    "checklist": ["Uses try and except", "Catches ValueError", "Prints the double for a number", "Prints a friendly message for text"]
+  },
+  "javascript-variables-and-values": {
+    "prompt": "Make variables for a product: its name, price and whether it's in stock. Use const for what never changes and let for the price, then give it a 10% discount. Print the name, the new price and the stock status.",
+    "starter_code": "// Make your variables here\n\n\n// Give the price a 10% discount\n\n// Print them with console.log\n",
+    "sample_answer": "const product = \"Notebook\";\nlet price = 50;\nconst inStock = true;\n\nprice = price * 0.9;\n\nconsole.log(product);\nconsole.log(price);\nconsole.log(inStock);",
+    "checklist": ["Uses const and let correctly", "Has a string, a number and a boolean", "Changes the price with a calculation", "Prints all three values"]
+  },
+  "javascript-making-decisions": {
+    "prompt": "Store a temperature in a variable. Print \"Hot\" above 32, \"Warm\" from 25 to 32, and \"Cool\" below 25. Try a few temperatures to check every branch.",
+    "starter_code": "const temp = 29;\n\n// Print Hot, Warm or Cool\n",
+    "sample_answer": "const temp = 29;\n\nif (temp > 32) {\n  console.log(\"Hot\");\n} else if (temp >= 25) {\n  console.log(\"Warm\");\n} else {\n  console.log(\"Cool\");\n}",
+    "checklist": ["Uses if, else if and else", "Compares with > and >=", "Prints one word for each temperature", "Works for 35, 29 and 20"]
+  },
+  "javascript-loops-and-arrays": {
+    "prompt": "You have an array of quiz scores. Use a loop to add them up, then print the total and the average.",
+    "starter_code": "const scores = [85, 92, 78, 90];\nlet total = 0;\n\n// Add every score to total with a loop\n\n// Print the total and the average\n",
+    "sample_answer": "const scores = [85, 92, 78, 90];\nlet total = 0;\n\nfor (const score of scores) {\n  total = total + score;\n}\n\nconsole.log(\"Total:\", total);\nconsole.log(\"Average:\", total / scores.length);",
+    "checklist": ["Uses a loop over the array", "Adds each score to total", "Divides by scores.length for the average", "Prints Total: 345 and Average: 86.25"]
+  },
+  "javascript-functions": {
+    "prompt": "Write a function isPassing(score) that returns true when the score is 75 or more, and false otherwise. Call it with three different scores and print the results.",
+    "starter_code": "function isPassing(score) {\n  // Return true or false\n}\n\nconsole.log(isPassing(80));\n",
+    "sample_answer": "function isPassing(score) {\n  return score >= 75;\n}\n\nconsole.log(isPassing(80));\nconsole.log(isPassing(75));\nconsole.log(isPassing(60));",
+    "checklist": ["Has one parameter, score", "Uses return", "Gives true for 75 and up", "Is called with three scores"]
+  },
+  "javascript-changing-the-page": {
+    "prompt": "Make a counter: a number on the page and a button. Each click adds 1 to the number on the page. Press Run, then click your button in the preview.",
+    "starter_code": "<p>Clicks: <span id=\"count\">0</span></p>\n<button id=\"add\">Add one</button>\n\n<script>\n  let count = 0;\n  // Find the span and the button\n\n  // When the button is clicked, add 1 and show it\n</script>",
+    "sample_answer": "<p>Clicks: <span id=\"count\">0</span></p>\n<button id=\"add\">Add one</button>\n\n<script>\n  let count = 0;\n  const countText = document.querySelector(\"#count\");\n  const button = document.querySelector(\"#add\");\n\n  button.addEventListener(\"click\", function () {\n    count = count + 1;\n    countText.textContent = count;\n  });\n</script>",
+    "checklist": ["Finds the elements with querySelector", "Adds a click listener to the button", "Increases the count by 1", "Shows the new number with textContent"]
+  },
+  "html-page-structure": {
+    "prompt": "Write a complete page about yourself: the doctype, html, head with a title, and a body with your name and one sentence about you. Press Run to see it.",
+    "starter_code": "<!DOCTYPE html>\n<html>\n  <!-- Add the head with a title -->\n\n  <!-- Add the body with your name and a sentence -->\n</html>",
+    "sample_answer": "<!DOCTYPE html>\n<html>\n  <head>\n    <title>About me</title>\n  </head>\n  <body>\n    <p>Maria Santos</p>\n    <p>I'm learning to code so I can build my org's website.</p>\n  </body>\n</html>",
+    "checklist": ["Starts with <!DOCTYPE html>", "Has a head with a title", "Has a body with visible text", "Every tag that opens also closes"]
+  },
+  "html-text-and-headings": {
+    "prompt": "Write a short article: a main heading, two smaller section headings, and a paragraph under each. Make one word bold and one word italic.",
+    "starter_code": "<h1><!-- Your title --></h1>\n\n<!-- Two sections, each with an h2 and a paragraph -->\n",
+    "sample_answer": "<h1>My Weekend</h1>\n\n<h2>Saturday</h2>\n<p>I went to the <strong>beach</strong> with my family.</p>\n\n<h2>Sunday</h2>\n<p>I stayed home and <em>finally</em> finished my project.</p>",
+    "checklist": ["Has one h1", "Has two h2 headings", "Has a paragraph under each heading", "Uses <strong> and <em>"]
+  },
+  "html-links-and-images": {
+    "prompt": "Add a heading, an image with alt text, and a link that opens a website. Use any image link, or the one in the starter code.",
+    "starter_code": "<h1>My favorite place</h1>\n\n<!-- Add an image with alt text: https://picsum.photos/320/200 -->\n\n<!-- Add a link to a website -->\n",
+    "sample_answer": "<h1>My favorite place</h1>\n\n<img src=\"https://picsum.photos/320/200\" alt=\"A photo of a quiet beach\">\n\n<p><a href=\"https://en.wikipedia.org/wiki/Palawan\">Read about Palawan</a></p>",
+    "checklist": ["Has an <img> with src and alt", "The alt text describes the picture", "Has an <a> with an href", "The link text says where it goes"]
+  },
+  "html-lists-and-tables": {
+    "prompt": "Make a numbered list of three steps to cook rice, and a table of your class schedule with columns for Day, Subject and Time.",
+    "starter_code": "<h2>Cooking rice</h2>\n<!-- A numbered list with three steps -->\n\n<h2>My schedule</h2>\n<!-- A table with Day, Subject and Time -->\n",
+    "sample_answer": "<h2>Cooking rice</h2>\n<ol>\n  <li>Wash the rice.</li>\n  <li>Add water.</li>\n  <li>Cook for 20 minutes.</li>\n</ol>\n\n<h2>My schedule</h2>\n<table>\n  <tr><th>Day</th><th>Subject</th><th>Time</th></tr>\n  <tr><td>Monday</td><td>Math</td><td>9:00</td></tr>\n  <tr><td>Tuesday</td><td>Science</td><td>10:30</td></tr>\n</table>",
+    "checklist": ["Uses <ol> with three <li> items", "Uses <table> with rows <tr>", "Has a header row with <th>", "Has at least two rows of data"]
+  },
+  "html-forms": {
+    "prompt": "Make a sign-up form for an org with a labeled name box, a labeled email box, a dropdown for year level, and a submit button.",
+    "starter_code": "<form>\n  <!-- Name, email, year level and a button -->\n\n</form>",
+    "sample_answer": "<form>\n  <label for=\"name\">Name</label>\n  <input id=\"name\" name=\"name\" type=\"text\">\n\n  <label for=\"email\">Email</label>\n  <input id=\"email\" name=\"email\" type=\"email\">\n\n  <label for=\"year\">Year level</label>\n  <select id=\"year\" name=\"year\">\n    <option>1st year</option>\n    <option>2nd year</option>\n  </select>\n\n  <button type=\"submit\">Sign up</button>\n</form>",
+    "checklist": ["Each input has a <label> with a matching for and id", "Uses type=\"email\" for the email", "Has a <select> with options", "Has a submit button"]
+  },
+  "css-selectors-and-rules": {
+    "prompt": "Style the page: make the heading berry colored (#C7366F), give every paragraph a bigger font size, and make the element with the class note have a yellow background.",
+    "starter_code": "<style>\n  /* Your rules here */\n\n</style>\n\n<h1>CodeAgapay</h1>\n<p>Learn to code one step at a time.</p>\n<p class=\"note\">This one is a note.</p>",
+    "sample_answer": "<style>\n  h1 {\n    color: #C7366F;\n  }\n  p {\n    font-size: 20px;\n  }\n  .note {\n    background: #FFEDC2;\n  }\n</style>\n\n<h1>CodeAgapay</h1>\n<p>Learn to code one step at a time.</p>\n<p class=\"note\">This one is a note.</p>",
+    "checklist": ["Uses a tag selector (h1, p)", "Uses a class selector with a dot (.note)", "Each rule has a property and a value", "Every declaration ends with a semicolon"]
+  },
+  "css-colors-and-text": {
+    "prompt": "Make the page easy to read: a soft background color, dark text, a different font, a centered heading, and more space between lines.",
+    "starter_code": "<style>\n  body {\n    /* background, color, font */\n  }\n  h1 {\n    /* center it */\n  }\n  p {\n    /* more space between lines */\n  }\n</style>\n\n<h1>Reading is better with good styles</h1>\n<p>Long text is easier to read when the lines have room to breathe and the colors aren't too harsh on the eyes.</p>",
+    "sample_answer": "<style>\n  body {\n    background: #FBEFE1;\n    color: #2A1A20;\n    font-family: Georgia, serif;\n  }\n  h1 {\n    text-align: center;\n  }\n  p {\n    line-height: 1.7;\n  }\n</style>\n\n<h1>Reading is better with good styles</h1>\n<p>Long text is easier to read when the lines have room to breathe and the colors aren't too harsh on the eyes.</p>",
+    "checklist": ["Sets background and color on body", "Changes the font-family", "Centers the heading with text-align", "Uses line-height on paragraphs"]
+  },
+  "css-the-box-model": {
+    "prompt": "Turn the div into a card: give it padding, a border, rounded corners, and space around it with margin. Keep its width at 250px.",
+    "starter_code": "<style>\n  .card {\n    width: 250px;\n    /* padding, border, border-radius, margin */\n  }\n</style>\n\n<div class=\"card\">\n  <h2>Ana</h2>\n  <p>BSCS, 2nd year</p>\n</div>",
+    "sample_answer": "<style>\n  .card {\n    width: 250px;\n    padding: 16px;\n    border: 3px solid #EADBCB;\n    border-radius: 16px;\n    margin: 24px;\n  }\n</style>\n\n<div class=\"card\">\n  <h2>Ana</h2>\n  <p>BSCS, 2nd year</p>\n</div>",
+    "checklist": ["Adds padding inside the card", "Adds a border", "Rounds the corners with border-radius", "Adds margin outside the card"]
+  },
+  "css-layout-with-flexbox": {
+    "prompt": "Put the three boxes side by side with Flexbox, with the same space between them, and center them vertically in the row.",
+    "starter_code": "<style>\n  .row {\n    /* Use flexbox here */\n    height: 160px;\n    background: #FBE0EA;\n  }\n  .box {\n    width: 80px;\n    height: 80px;\n    background: #3CC6B6;\n  }\n</style>\n\n<div class=\"row\">\n  <div class=\"box\"></div>\n  <div class=\"box\"></div>\n  <div class=\"box\"></div>\n</div>",
+    "sample_answer": "<style>\n  .row {\n    display: flex;\n    justify-content: space-between;\n    align-items: center;\n    height: 160px;\n    background: #FBE0EA;\n  }\n  .box {\n    width: 80px;\n    height: 80px;\n    background: #3CC6B6;\n  }\n</style>\n\n<div class=\"row\">\n  <div class=\"box\"></div>\n  <div class=\"box\"></div>\n  <div class=\"box\"></div>\n</div>",
+    "checklist": ["Sets display: flex on the row", "Uses justify-content to space the boxes", "Uses align-items to center them vertically", "The boxes sit side by side"]
+  },
+  "css-responsive-design": {
+    "prompt": "Make the two columns sit side by side on wide screens and stack on screens 500px wide or less, using a media query. To test it here, change 500px to 2000px for a moment: the columns should stack. Then change it back.",
+    "starter_code": "<style>\n  .columns {\n    display: flex;\n    gap: 16px;\n  }\n  .column {\n    flex: 1;\n    padding: 16px;\n    background: #D6F0EE;\n  }\n  /* Add a media query for screens 500px wide or less */\n\n</style>\n\n<div class=\"columns\">\n  <div class=\"column\">Left</div>\n  <div class=\"column\">Right</div>\n</div>",
+    "sample_answer": "<style>\n  .columns {\n    display: flex;\n    gap: 16px;\n  }\n  .column {\n    flex: 1;\n    padding: 16px;\n    background: #D6F0EE;\n  }\n  @media (max-width: 500px) {\n    .columns {\n      flex-direction: column;\n    }\n  }\n</style>\n\n<div class=\"columns\">\n  <div class=\"column\">Left</div>\n  <div class=\"column\">Right</div>\n</div>",
+    "checklist": ["Uses @media with max-width", "Changes the layout inside the media query", "Columns sit side by side on wide screens", "Columns stack on narrow screens"]
+  },
+  "java-variables-and-types": {
+    "prompt": "Write a program with variables for a product: its name (String), how many are in stock (int), its price (double) and whether it's on sale (boolean). Print each one with a label.",
+    "starter_code": "public class Main {\n    public static void main(String[] args) {\n        // Make your four variables\n\n        // Print each one with a label\n    }\n}",
+    "sample_answer": "public class Main {\n    public static void main(String[] args) {\n        String name = \"Notebook\";\n        int stock = 25;\n        double price = 49.50;\n        boolean onSale = false;\n\n        System.out.println(\"Product: \" + name);\n        System.out.println(\"Stock: \" + stock);\n        System.out.println(\"Price: \" + price);\n        System.out.println(\"On sale: \" + onSale);\n    }\n}",
+    "checklist": ["Uses String, int, double and boolean", "Every statement ends with a semicolon", "Prints each value with a label", "Compiles and runs without errors"]
+  },
+  "java-conditions": {
+    "prompt": "Store a password in a String. Print \"Too short\" if it has fewer than 8 characters, \"Welcome\" if it equals \"agapay2026\", and \"Wrong password\" otherwise.",
+    "starter_code": "public class Main {\n    public static void main(String[] args) {\n        String password = \"agapay2026\";\n\n        // Check the length first, then whether it matches\n    }\n}",
+    "sample_answer": "public class Main {\n    public static void main(String[] args) {\n        String password = \"agapay2026\";\n\n        if (password.length() < 8) {\n            System.out.println(\"Too short\");\n        } else if (password.equals(\"agapay2026\")) {\n            System.out.println(\"Welcome\");\n        } else {\n            System.out.println(\"Wrong password\");\n        }\n    }\n}",
+    "checklist": ["Uses length() to check the size", "Compares text with equals(), not ==", "Uses if, else if and else", "Prints one message for each case"]
+  },
+  "java-loops": {
+    "prompt": "Use a for loop to print the even numbers from 2 to 20, then use a while loop to count down from 5 to 1 and print \"Liftoff!\".",
+    "starter_code": "public class Main {\n    public static void main(String[] args) {\n        // Even numbers from 2 to 20\n\n        // Countdown from 5 to 1, then Liftoff!\n    }\n}",
+    "sample_answer": "public class Main {\n    public static void main(String[] args) {\n        for (int i = 2; i <= 20; i += 2) {\n            System.out.println(i);\n        }\n\n        int count = 5;\n        while (count > 0) {\n            System.out.println(count);\n            count--;\n        }\n        System.out.println(\"Liftoff!\");\n    }\n}",
+    "checklist": ["Uses a for loop for the even numbers", "Prints 2 up to 20", "Uses a while loop that ends", "Prints Liftoff! once, after the countdown"]
+  },
+  "java-arrays": {
+    "prompt": "Make an array of five temperatures. Use a loop to find the highest one and print it.",
+    "starter_code": "public class Main {\n    public static void main(String[] args) {\n        double[] temps = {31.5, 29.0, 33.2, 30.1, 28.7};\n        double highest = temps[0];\n\n        // Loop through temps and keep the highest\n\n        System.out.println(\"Highest: \" + highest);\n    }\n}",
+    "sample_answer": "public class Main {\n    public static void main(String[] args) {\n        double[] temps = {31.5, 29.0, 33.2, 30.1, 28.7};\n        double highest = temps[0];\n\n        for (double t : temps) {\n            if (t > highest) {\n                highest = t;\n            }\n        }\n\n        System.out.println(\"Highest: \" + highest);\n    }\n}",
+    "checklist": ["Loops through every item", "Compares each item with the highest so far", "Starts highest from the first item", "Prints Highest: 33.2"]
+  },
+  "java-methods": {
+    "prompt": "Write a method static String grade(int score) that returns \"A\" for 90 and up, \"B\" for 80 to 89, \"C\" for 75 to 79, and \"F\" below 75. Call it for three scores in main and print the results.",
+    "starter_code": "public class Main {\n    static String grade(int score) {\n        // Return a letter grade\n        return \"\";\n    }\n\n    public static void main(String[] args) {\n        System.out.println(grade(92));\n    }\n}",
+    "sample_answer": "public class Main {\n    static String grade(int score) {\n        if (score >= 90) {\n            return \"A\";\n        } else if (score >= 80) {\n            return \"B\";\n        } else if (score >= 75) {\n            return \"C\";\n        }\n        return \"F\";\n    }\n\n    public static void main(String[] args) {\n        System.out.println(grade(92));\n        System.out.println(grade(84));\n        System.out.println(grade(60));\n    }\n}",
+    "checklist": ["Declares the method as static String with an int parameter", "Every path returns a String", "Is called three times from main", "Prints A, B and F for 92, 84 and 60"]
+  },
+  "sql-reading-data-with-select": {
+    "prompt": "The books table has id, title, author, price and year. Write a query that shows only the title and author of every book.",
+    "starter_code": "-- Show the title and author of every book\n",
+    "sample_answer": "SELECT title, author\nFROM books;",
+    "checklist": ["Uses SELECT and FROM", "Names exactly two columns, title and author", "Reads from the books table", "Ends with a semicolon"]
+  },
+  "sql-filtering-with-where": {
+    "prompt": "From the books table, show the title and price of books by Jose Rizal that cost less than 370.",
+    "starter_code": "SELECT title, price\nFROM books\n-- Add a WHERE with two conditions\n;",
+    "sample_answer": "SELECT title, price\nFROM books\nWHERE author = 'Jose Rizal' AND price < 370;",
+    "checklist": ["Uses WHERE", "Puts text in single quotes", "Joins two conditions with AND", "Returns only Noli Me Tangere"]
+  },
+  "sql-sorting-and-limiting": {
+    "prompt": "Show the three newest books: their title and year, newest first.",
+    "starter_code": "SELECT title, year\nFROM books\n-- Sort newest first, then keep three\n;",
+    "sample_answer": "SELECT title, year\nFROM books\nORDER BY year DESC\nLIMIT 3;",
+    "checklist": ["Uses ORDER BY year", "Sorts with DESC for newest first", "Uses LIMIT 3", "LIMIT comes after ORDER BY"]
+  },
+  "sql-counting-and-grouping": {
+    "prompt": "From the students table, show each course with how many students take it, and name that column total.",
+    "starter_code": "-- One row per course, with its number of students\n",
+    "sample_answer": "SELECT course, COUNT(*) AS total\nFROM students\nGROUP BY course;",
+    "checklist": ["Uses COUNT(*)", "Groups with GROUP BY course", "Names the count column with AS total", "Returns one row per course"]
+  },
+  "sql-joining-tables": {
+    "prompt": "Show each student's name next to the subjects they're enrolled in, using the students and enrollments tables. Sort by name.",
+    "starter_code": "SELECT students.name, enrollments.subject\nFROM students\n-- Join enrollments, then sort by name\n;",
+    "sample_answer": "SELECT students.name, enrollments.subject\nFROM students\nJOIN enrollments ON students.id = enrollments.student_id\nORDER BY students.name;",
+    "checklist": ["Uses JOIN with ON", "Matches students.id to enrollments.student_id", "Shows the name and the subject", "Sorts by name"]
+  }
+}

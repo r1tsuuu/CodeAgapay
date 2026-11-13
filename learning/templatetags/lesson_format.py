@@ -25,6 +25,22 @@ BARE_TAG = re.compile(r"&lt;/?!?[a-zA-Z][a-zA-Z0-9]*(?: [^&]{0,30})?&gt;")
 
 
 @register.filter
+def panel_language(language, code=""):
+    """The coding panel's runner for a track slug or code language: {{ track.slug|panel_language:code }}."""
+    from learning.code_panel import panel_language as pick
+
+    return pick(language, code or "")
+
+
+@register.filter
+def can_run(language, code=""):
+    """Whether to offer "Try this code" for an example in this language."""
+    from learning.code_panel import can_run as check
+
+    return check(language, code or "")
+
+
+@register.filter
 def highlight_code(code, lang):
     """Code colored like an editor. Unknown languages are shown plain."""
     try:

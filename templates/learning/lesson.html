@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static lesson_format %}
 
 {% block title %}{{ topic.title }} · CodeAgapay{% endblock %}
 
@@ -50,6 +50,13 @@
   {% if topic.example_output %}
   <p class="nutshell-label">What it prints</p>
   <pre class="nutshell-output"><code>{{ topic.example_output }}</code></pre>
+  {% endif %}
+  {% if topic.track.slug|can_run:topic.example %}
+  <details class="try-code">
+    <summary><span aria-hidden="true">▶</span> Try this code</summary>
+    <p class="field-help">Change anything you like and press Run. Reset puts the example back.</p>
+    {% include "learning/partials/code_panel.html" with language=topic.track.slug|panel_language:topic.example code=topic.example field_id="try-example" rows=8 %}
+  </details>
   {% endif %}
   {% endif %}
   <p class="field-help">That's the core idea. The resources below go deeper, with more examples to try.</p>

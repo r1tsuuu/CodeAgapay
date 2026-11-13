@@ -1,17 +1,18 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static mascots %}
 
 {% block title %}Your learning plan · CodeAgapay{% endblock %}
+{% block head %}<script src="{% static 'js/mascots.js' %}" defer></script><script src="{% static 'js/celebrate.js' %}" defer></script>{% endblock %}
 
 {% block content %}
 <section class="plan-hero">
-  <img class="mascot plan-mascot-1" src="{% static 'img/mascots/star-pink.svg' %}" alt="">
-  <img class="mascot plan-mascot-2" src="{% static 'img/mascots/star-yellow.svg' %}" alt="">
-  <img class="mascot plan-mascot-3" src="{% static 'img/mascots/flower-teal.svg' %}" alt="">
-  <img class="mascot plan-mascot-4" src="{% static 'img/mascots/flower-yellow.svg' %}" alt="">
-  <img class="mascot plan-mascot-5" src="{% static 'img/mascots/oval-berry.svg' %}" alt="">
+  {% mascot "star-pink" "mascot plan-mascot-1" %}
+  {% mascot "star-yellow" "mascot plan-mascot-2" %}
+  {% mascot "flower-teal" "mascot plan-mascot-3" %}
+  {% mascot "flower-yellow" "mascot plan-mascot-4" %}
+  {% mascot "oval-berry" "mascot plan-mascot-5" %}
   <h1>Your {% if profile.path %}{{ profile.path.title }}{% elif profile.track %}{{ profile.track.name }}{% endif %} learning plan</h1>
-  <p class="plan-percent" aria-hidden="true">{{ progress }}%</p>
+  <p class="plan-percent" aria-hidden="true" data-count-up="{{ progress }}" data-count-suffix="%">{{ progress }}%</p>
   {% include "partials/progress_bar.html" %}
   <p class="plan-progress-note">{{ done_count }} of {{ counted }} topic{{ counted|pluralize }} done{% if starting.shown %} · plus {{ starting.shown|length }} you already showed on the check{% endif %}</p>
   {% include "learning/partials/streak.html" %}
