@@ -1,7 +1,9 @@
 {% extends "base.html" %}
+{% load static mascots %}
 
 {% block title %}Quiz result: {{ topic.title }} · CodeAgapay{% endblock %}
 {% block page_class %}page-wide{% endblock %}
+{% block head %}<script src="{% static 'js/celebrate.js' %}" defer></script>{% endblock %}
 
 {% block content %}
 <p class="breadcrumb"><a href="{% url 'plan' %}">{{ topic.track.name }}</a> / <a href="{% url 'lesson' topic.slug %}">{{ topic.title }}</a> / <strong>Quiz result</strong></p>
@@ -9,9 +11,13 @@
 
 <div class="quiz-layout">
   {# Verdict first in the source, so phones and screen readers get it before the details. #}
-  <aside class="quiz-score-panel">
+  <aside class="quiz-score-panel{% if result.passed %} quiz-score-passed{% endif %}"{% if result.passed %} data-celebrate="quiz"{% endif %}>
+    {# The mascot reacts: a cheering star for a pass, a friendly flower that says "try again" otherwise. #}
+    <div class="quiz-critter {% if result.passed %}quiz-critter-cheer{% else %}quiz-critter-nudge{% endif %}">
+      {% if result.passed %}{% mascot "star-yellow" %}{% else %}{% mascot "flower-teal" %}{% endif %}
+    </div>
     <h1>{% if result.passed %}You passed!{% else %}Not yet{% endif %}</h1>
-    <p class="quiz-score-big">{{ result.correct }} out of {{ result.total }}</p>
+    <p class="quiz-score-big"><span data-count-up="{{ result.correct }}">{{ result.correct }}</span> out of {{ result.total }}</p>
     <p class="quiz-score">{{ result.correct }} of {{ result.total }} correct ({{ result.percent }}%). You need {{ pass_percent }}% to pass.</p>
 
     {% if result.passed %}

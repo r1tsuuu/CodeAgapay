@@ -143,6 +143,12 @@
         if (!panel.hidden) return;
         greeter.classList.add("is-visible");
         try { sessionStorage.setItem(seenKey, "1"); } catch (e) { /* fine without it */ }
+        // It steps aside once they get to work, or after a while, so it never sits on a button.
+        setTimeout(hideGreeter, 12000);
+        document.addEventListener("keydown", hideGreeter, { once: true });
+        document.addEventListener("pointerdown", function (e) {
+          if (!greeter.contains(e.target)) hideGreeter();
+        }, { once: true });
       }, 3500);
     }
     greeter.querySelector("[data-greeter-close]").addEventListener("click", hideGreeter);

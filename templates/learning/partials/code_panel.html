@@ -1,0 +1,30 @@
+{% load static %}{% comment %}
+A coding panel: editor, Run, and output (static/js/code_panel.js). Include with
+`language` (python, javascript, html, sql or java), `code` (what starts in the editor), and
+optionally `name` (to send the code with a form), `field_id`, `rows`, and `label`.
+Without JavaScript it's a plain textarea, so a form still works.
+{% endcomment %}
+<div class="code-panel" data-code-panel data-language="{{ language }}"{% if language == "python" %} data-python-worker="{% static 'js/python_worker.js' %}"{% endif %}>
+  <div class="code-panel-bar">
+    <span class="code-panel-lang">{% if language == "python" %}Python{% elif language == "javascript" %}JavaScript{% elif language == "html" %}HTML &amp; CSS{% elif language == "sql" %}SQL{% elif language == "java" %}Java{% else %}Code{% endif %}</span>
+    <span class="code-panel-actions">
+      <button type="button" class="code-panel-reset" data-code-reset>Reset</button>
+      {% if language != "java" %}<button type="button" class="code-panel-run" data-code-run><span aria-hidden="true">▶</span> Run</button>{% endif %}
+    </span>
+  </div>
+  {% if label %}<label class="visually-hidden" for="{{ field_id }}">{{ label }}</label>{% endif %}
+  <textarea data-code-source{% if name %} name="{{ name }}"{% endif %}{% if field_id %} id="{{ field_id }}"{% endif %} rows="{{ rows|default:10 }}" spellcheck="false" autocapitalize="off" autocomplete="off"{% if maxlength %} maxlength="{{ maxlength }}"{% endif %}{% if required %} required{% endif %}>{{ code }}</textarea>
+  {% if language == "python" %}
+  <details class="code-stdin">
+    <summary>Input for your program</summary>
+    <label class="visually-hidden" for="{{ field_id|default:'code' }}-stdin">Input, one answer per line</label>
+    <textarea id="{{ field_id|default:'code' }}-stdin" data-code-stdin rows="2" placeholder="If your code uses input(), type the answers here, one per line."></textarea>
+  </details>
+  {% elif language == "java" %}
+  <p class="code-panel-note">Java needs to be compiled, so run it in VS Code (see the setup guide), then paste it here.</p>
+  {% elif language == "sql" %}
+  <p class="code-panel-note">Sample tables you can query: students, scores, enrollments, books.</p>
+  {% endif %}
+  <div class="code-output" data-code-output aria-live="polite" hidden></div>
+</div>
+<script src="{% static 'js/code_panel.js' %}" defer></script>

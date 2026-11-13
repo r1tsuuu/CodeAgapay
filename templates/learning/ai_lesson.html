@@ -47,6 +47,15 @@
   <p class="nutshell-label">{% if example.lang == "html" or example.lang == "css" %}What you'll see{% else %}What it prints{% endif %}</p>
   <pre class="nutshell-output"><code>{{ example.output }}</code></pre>
   {% endif %}
+  {% if example.lang|can_run:example.code %}
+  <details class="try-code">
+    <summary><span aria-hidden="true">▶</span> Try this code</summary>
+    <p class="field-help">Change anything you like and press Run. Reset puts the example back.</p>
+    {% with number=forloop.counter|stringformat:"s" %}
+    {% include "learning/partials/code_panel.html" with language=example.lang|panel_language:example.code code=example.code field_id="try-example-"|add:number rows=8 %}
+    {% endwith %}
+  </details>
+  {% endif %}
   {% endfor %}
   {% if beginner and try_steps and lesson.examples %}<p class="field-help">Want to run an example yourself? Make a new file the same way as in <a href="#try">Try it yourself</a>, and type the example in.</p>{% endif %}
 </section>

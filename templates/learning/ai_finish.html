@@ -2,6 +2,7 @@
 {% load static lesson_format %}
 
 {% block title %}You finished your plan · CodeAgapay{% endblock %}
+{% block head %}<script src="{% static 'js/mascots.js' %}" defer></script><script src="{% static 'js/celebrate.js' %}" defer></script>{% endblock %}
 {% block content %}
 {% include "learning/partials/finish_hero.html" with unit="lesson" %}
 
