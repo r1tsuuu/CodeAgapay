@@ -850,13 +850,6 @@ input[type="radio"] {
   background: var(--berry-soft);
 }
 
-.login-art img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
 
 .login-panel {
   display: flex;
@@ -871,7 +864,7 @@ input[type="radio"] {
   margin-bottom: 2rem;
 }
 
-.login-panel .navbar-brand img {
+.login-panel .brand-critter {
   width: 3.25rem;
 }
 
@@ -931,6 +924,552 @@ input[type="radio"] {
 
 .login .messages {
   max-width: 30rem;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .google-button {
+    transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+  }
+
+  .google-button:hover {
+    transform: translateY(-1px);
+  }
+}
+
+.google-button:active {
+  transform: translateY(1px) scale(0.985);
+  transition-duration: 0.09s;
+}
+
+/* ---------- Living mascots (static/js/mascots.js) ---------- */
+
+.critter {
+  display: block;
+}
+
+.critter svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+/* Blinks squash the eyes toward their own middle. */
+.critter-eyes {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.critter-pupils {
+  transition: transform 0.22s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.brand-critter {
+  width: 2.75rem;
+  flex: none;
+}
+
+/* The login panel's crowd, cropped like the Figma frame: it covers the panel the way a
+   background image would, so the edge characters stay cut off at any screen size. */
+.mascot-field {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #FCE0EA;
+  container-type: size;
+}
+
+.mascot-field-frame {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: max(100cqw, 88.889cqh); /* 960 / 1080 of the height */
+  aspect-ratio: 960 / 1080;
+  translate: -50% -50%;
+}
+
+.mascot-field .critter {
+  position: absolute;
+}
+
+/* The words arrive once, just after the mascots start to: a short rise, then they stand. */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+.landing-rise,
+.login-rise {
+  animation: rise-in 0.52s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+.landing-rise:nth-child(2),
+.login-rise:nth-child(2) { animation-delay: 0.08s; }
+.landing-rise:nth-child(3),
+.login-rise:nth-child(3) { animation-delay: 0.14s; }
+.landing-rise:nth-child(4),
+.login-rise:nth-child(4) { animation-delay: 0.2s; }
+.landing-rise:nth-child(5),
+.login-rise:nth-child(5) { animation-delay: 0.26s; }
+.landing-rise:nth-child(n + 6),
+.login-rise:nth-child(n + 6) { animation-delay: 0.32s; }
+
+/* ---------- Landing ---------- */
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -4rem;
+  z-index: 20;
+  padding: 0.6rem 1rem;
+  border-radius: var(--radius-sm);
+  background: var(--ink);
+  color: var(--white);
+  font-weight: 700;
+}
+
+.skip-link:focus {
+  top: 1rem;
+  color: var(--white);
+}
+
+.landing-links {
+  display: flex;
+  gap: 1.75rem;
+  margin-left: auto;
+}
+
+.landing-links a {
+  color: var(--ink-soft);
+  font-weight: 700;
+  text-decoration: none;
+  background: linear-gradient(currentColor, currentColor) left bottom / 0 2px no-repeat;
+  transition: color 0.15s ease, background-size 0.15s ease;
+}
+
+.landing-links a:hover {
+  color: var(--ink);
+  background-size: 100% 2px;
+}
+
+.landing-wrap {
+  width: min(100% - 2 * clamp(1rem, 4vw, 3rem), 72rem);
+  margin-inline: auto;
+}
+
+.landing-hero {
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+  gap: clamp(2rem, 5vw, 5rem);
+  align-items: center;
+  width: min(100% - 2 * clamp(1rem, 4vw, 3rem), 80rem);
+  min-height: calc(100svh - 4.5rem);
+  margin-inline: auto;
+  padding-block: clamp(2rem, 5vh, 4rem);
+}
+
+.landing-hero h1 {
+  font-size: clamp(2.4rem, 1.2rem + 3.6vw, 4.5rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  margin-bottom: 1.25rem;
+  text-wrap: balance;
+}
+
+.landing-lead {
+  margin: 0 0 2rem;
+  max-width: 34rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.landing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+}
+
+.landing .button {
+  min-height: 3rem;
+}
+
+.landing-cta {
+  padding: 0.9rem 1.75rem;
+  font-size: 1.2rem;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .landing .button {
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .landing .button:hover {
+    transform: translateY(-1px);
+  }
+}
+
+.landing .button:active {
+  transition-duration: 0.09s;
+}
+
+.landing-tracks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 2rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.landing-tracks li {
+  padding: 0.3rem 0.8rem;
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+  font-family: var(--font-code);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+/* The hero's crowd: big mascots on a panel, cropped at its edges like the login frame. */
+.landing-stage {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--teal-soft);
+}
+
+.stage-critter {
+  position: absolute;
+}
+
+.stage-1 { left: -4%; top: 4%; width: 38%; }
+.stage-2 { left: 50%; top: -6%; width: 42%; }
+.stage-3 { left: 26%; top: 34%; width: 46%; }
+.stage-4 { left: -6%; top: 58%; width: 34%; }
+.stage-5 { left: 72%; top: 38%; width: 32%; }
+.stage-6 { left: 24%; top: 80%; width: 30%; }
+.stage-7 { left: 62%; top: 72%; width: 36%; }
+
+.landing-section {
+  display: flex;
+  align-items: center;
+  min-height: 100svh;
+  padding-block: clamp(4rem, 10vh, 7rem);
+}
+
+.landing-section h2,
+.landing-close h2 {
+  margin: 0 0 0.75rem;
+  font-size: clamp(2rem, 1.3rem + 2.2vw, 3.25rem);
+  font-weight: 700;
+  text-wrap: balance;
+}
+
+.landing-sub {
+  margin: 0 0 2.5rem;
+  max-width: 38rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.how-steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.how-step {
+  padding: 1.75rem;
+}
+
+.how-step h3 {
+  margin-top: 0.75rem;
+  font-size: 1.35rem;
+}
+
+.how-step p {
+  margin: 0.25rem 0 0;
+  color: var(--ink-soft);
+}
+
+/* One height for every step's mascot, so the headings line up whatever the shape. */
+.how-critter {
+  height: 5.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.how-critter svg {
+  width: auto;
+  height: 100%;
+}
+
+.landing-hints {
+  background: var(--paper);
+  border-block: 3px solid var(--line);
+}
+
+.hints-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(2rem, 5vw, 5rem);
+  align-items: center;
+}
+
+.hints-limit {
+  margin: 0;
+  color: var(--ink-soft);
+  font-weight: 700;
+}
+
+.hint-demo {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: 32rem;
+  padding: 1.5rem;
+  border: 3px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--white);
+  box-shadow: 0 8px 0 var(--line);
+}
+
+.hint-demo .help-head {
+  display: flex;
+  gap: 0.9rem;
+  align-items: center;
+}
+
+.hint-demo h3 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.hint-demo .help-head-text p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.hint-critter {
+  width: 3.5rem;
+  flex: none;
+}
+
+.hint-log {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.hint-ask {
+  align-self: flex-end;
+  max-width: 85%;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius) var(--radius) 0.25rem var(--radius);
+  background: var(--teal-soft);
+}
+
+.hint-ask p {
+  margin: 0 0 0.5rem;
+  font-weight: 700;
+}
+
+.hint-ask pre {
+  margin: 0;
+  padding: 0.6rem 0.8rem;
+  border-radius: var(--radius-sm);
+  background: var(--code-bg);
+  color: #F8EDE3;
+  font-size: 0.9rem;
+}
+
+.hint-reply {
+  max-width: 90%;
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius) var(--radius) var(--radius) 0.25rem;
+  background: var(--marigold-soft);
+}
+
+/* A new hint arrives like a chat message: a short rise from where the log is growing. */
+.hint-reply:not([hidden]) {
+  animation: rise-in 0.24s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.hint-reply code {
+  font-size: 0.9em;
+}
+
+.hint-level {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--berry-deep);
+}
+
+.hint-next {
+  align-self: flex-start;
+}
+
+.path-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: 1.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.path-card h3 {
+  margin-top: 0;
+}
+
+.path-card p {
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+/* The close: one sign-in, and the crowd peeking up from the bottom to see if you'll come. */
+.landing-close {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-top: clamp(5rem, 14vh, 9rem);
+  background: var(--marigold-soft);
+  text-align: center;
+}
+
+.close-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.close-text p {
+  margin: 0 0 2rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.close-crowd {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: clamp(0.5rem, 2vw, 2rem);
+  padding-top: clamp(3rem, 8vh, 5rem);
+  translate: 0 22%;
+}
+
+.crowd-critter {
+  width: clamp(5rem, 12vw, 11rem);
+}
+
+.landing-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 2rem;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem clamp(1rem, 4vw, 3rem);
+  background: var(--ink);
+  color: #E8D9DE;
+  font-size: 0.95rem;
+}
+
+.landing-footer p {
+  margin: 0;
+}
+
+.landing-footer a {
+  color: var(--white);
+  font-weight: 700;
+}
+
+@media (max-width: 56rem) {
+  .landing-hero,
+  .hints-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-hero {
+    min-height: 0;
+  }
+
+  .landing-stage {
+    aspect-ratio: 4 / 3;
+  }
+
+  .how-steps {
+    grid-template-columns: 1fr;
+  }
+
+  .how-step {
+    display: grid;
+    grid-template-columns: 5rem 1fr;
+    column-gap: 1.25rem;
+    align-items: start;
+  }
+
+  .how-critter {
+    grid-row: span 3;
+    height: auto;
+    width: 5rem;
+  }
+
+  .how-critter svg {
+    width: 100%;
+    height: auto;
+  }
+
+  .how-step h3 {
+    margin-top: 0.4rem;
+  }
+
+  .landing-section {
+    min-height: 0;
+  }
+
+  .hint-demo {
+    min-height: 30rem;
+  }
+}
+
+@media (max-width: 40rem) {
+  .landing-links {
+    display: none;
+  }
+
+  .landing-login {
+    margin-left: auto;
+  }
+
+  .landing-actions .button {
+    width: 100%;
+  }
+
+  .landing-stage {
+    aspect-ratio: 1;
+  }
+
+  .crowd-critter:nth-child(n + 5) {
+    display: none;
+  }
 }
 
 /* ---------- Welcome ---------- */

@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% load static mascots %}
+
+{% block title %}CodeAgapay · Free coding plans for beginner programmers{% endblock %}
+
+{% block head %}
+<meta name="description" content="Tell CodeAgapay what you want to make and get a free week-by-week coding plan from trusted free lessons, with hints when you get stuck.">
+<meta property="og:title" content="CodeAgapay · Free coding plans for beginner programmers">
+<meta property="og:description" content="A week-by-week plan from free lessons, built around what you want to make, with hints when you get stuck.">
+<meta name="theme-color" content="#FBEFE1">
+<script src="{% static 'js/mascots.js' %}" defer></script>
+<script src="{% static 'js/landing.js' %}" defer></script>
+{% endblock %}
+
+{% block navbar %}
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="navbar landing-nav">
+  <a class="navbar-brand" href="{% url 'home' %}">
+    {% mascot "cloud-yellow" "brand-critter" %}
+    <span>Code<span class="brand-accent">Agapay</span></span>
+  </a>
+  <nav class="landing-links" aria-label="Sections">
+    <a href="#how">How it works</a>
+    <a href="#hints">Hints</a>
+    {% if paths %}<a href="#paths">Paths</a>{% endif %}
+  </nav>
+  <a class="button button-small landing-login" href="{% url 'account_login' %}">Log in</a>
+</header>
+{% endblock %}
+
+{% block main %}
+<main id="main" class="landing">
+
+  <section class="landing-hero" aria-labelledby="hero-title">
+    <div class="landing-hero-text">
+      <h1 id="hero-title" class="landing-rise">Free coding plans for beginner programmers</h1>
+      <p class="landing-lead landing-rise">Tell us what you want to make. A short check finds what you already know, then you get a week-by-week plan from free lessons on MDN, freeCodeCamp and the official docs.</p>
+      <div class="landing-actions landing-rise">
+        <a class="button button-primary landing-cta" href="{% url 'account_login' %}" data-mascot-cheer>Start your free plan</a>
+        <a class="button landing-secondary" href="#how">See how it works</a>
+      </div>
+      {% if tracks %}
+      <ul class="landing-tracks landing-rise" aria-label="Languages you can learn">
+        {% for track in tracks %}<li>{{ track.name }}</li>{% endfor %}
+      </ul>
+      {% endif %}
+    </div>
+
+    <div class="landing-stage">
+      {% mascot "cloud-teal" "stage-critter stage-1" %}
+      {% mascot "star-yellow-tilt" "stage-critter stage-2" %}
+      {% mascot "oval-berry" "stage-critter stage-3" %}
+      {% mascot "flower-pink" "stage-critter stage-4" %}
+      {% mascot "hex-orange" "stage-critter stage-5" %}
+      {% mascot "star-lime" "stage-critter stage-6" %}
+      {% mascot "flower-yellow" "stage-critter stage-7" %}
+    </div>
+  </section>
+
+  <section id="how" class="landing-section" aria-labelledby="how-title">
+    <div class="landing-wrap">
+      <h2 id="how-title">Your plan in three steps</h2>
+      <p class="landing-sub">Nothing is graded, and "not sure" is always an answer.</p>
+      <ol class="how-steps">
+        <li class="tile how-step">
+          {% mascot "star-pink" "how-critter" %}
+          <span class="step-pill">Step 1</span>
+          <h3>Choose what to make</h3>
+          <p>A website, a game, a script for boring tasks. Your goal decides which languages come first.</p>
+        </li>
+        <li class="tile how-step">
+          {% mascot "oval-teal" "how-critter" %}
+          <span class="step-pill">Step 2</span>
+          <h3>Show what you know</h3>
+          <p>A short check on only the topics you've used, so your plan skips what you already know.</p>
+        </li>
+        <li class="tile how-step">
+          {% mascot "flower-orange" "how-critter" %}
+          <span class="step-pill">Step 3</span>
+          <h3>Follow one step a week</h3>
+          <p>Each topic links to trusted free lessons, then a short quiz checks that it stuck.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="hints" class="landing-section landing-hints" aria-labelledby="hints-title">
+    <div class="landing-wrap hints-layout">
+      <div class="hints-text">
+        <h2 id="hints-title">Hints that keep you thinking</h2>
+        <p class="landing-sub">Agapay, the AI helper, only reads the topic you're on. It gives three levels of hints, in English or Taglish, and never hands over the answer.</p>
+        <p class="hints-limit">AI help has a daily limit of {{ ai_daily_limit }} messages, and resets every day.</p>
+      </div>
+
+      {# A working copy of the real "Need help?" panel, with a sample question. #}
+      <div class="hint-demo" data-hint-demo>
+        <div class="help-head">
+          {% mascot "flower-yellow" "hint-critter" %}
+          <div class="help-head-text">
+            <h3>Agapay</h3>
+            <p>Helping with: Loops in Python</p>
+          </div>
+        </div>
+        <div class="hint-log" aria-live="polite">
+          <div class="hint-ask">
+            <p>My loop prints 0 to 4, but I want 1 to 5.</p>
+            <pre><code>for i in range(5):
+    print(i)</code></pre>
+          </div>
+          <p class="hint-reply" data-hint><span class="hint-level">Hint 1</span> Look at where <code>range()</code> starts counting. What's the first number it gives you?</p>
+          <p class="hint-reply" data-hint hidden><span class="hint-level">Hint 2</span> <code>range()</code> can take two numbers: where to start and where to stop. The stop number is never included.</p>
+          <p class="hint-reply" data-hint hidden><span class="hint-level">Hint 3</span> Try <code>range(1, ...)</code>. Which stop number makes the last value 5?</p>
+        </div>
+        <button type="button" class="button button-lagoon hint-next" data-hint-next>Show the next hint</button>
+      </div>
+    </div>
+  </section>
+
+  {% if paths %}
+  <section id="paths" class="landing-section" aria-labelledby="paths-title">
+    <div class="landing-wrap">
+      <h2 id="paths-title">Paths you can start today</h2>
+      <p class="landing-sub">Pick a goal, and the path picks the order you learn things in.</p>
+      <ul class="path-list">
+        {% for path in paths %}
+        <li class="tile path-card">
+          <h3>{{ path.title }}</h3>
+          <p>{{ path.tagline }}</p>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </section>
+  {% endif %}
+
+  <section class="landing-close" aria-labelledby="close-title">
+    <div class="landing-wrap close-text">
+      <h2 id="close-title">Your free plan starts with one sign-in</h2>
+      <p>Sign in with Google. We only use your name and email.</p>
+      <a class="button button-primary landing-cta" href="{% url 'account_login' %}" data-mascot-cheer>Start your free plan</a>
+    </div>
+    <div class="close-crowd">
+      {% mascot "sun-yellow" "crowd-critter" %}
+      {% mascot "star-yellow" "crowd-critter" %}
+      {% mascot "oval-pink" "crowd-critter" %}
+      {% mascot "cloud-pink" "crowd-critter" %}
+      {% mascot "hex-teal" "crowd-critter" %}
+      {% mascot "flower-teal" "crowd-critter" %}
+    </div>
+  </section>
+</main>
+
+<footer class="landing-footer">
+  <p><strong>CodeAgapay.</strong> <em>Agapay</em> is Filipino for support. Built by Group 5 (ST2A) with CompSAt at Ateneo de Manila University.</p>
+  <a href="https://github.com/r1tsuuu/CodeAgapay" rel="noopener">Source code on GitHub</a>
+</footer>
+{% endblock %}

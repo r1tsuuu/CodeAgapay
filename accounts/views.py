@@ -13,11 +13,26 @@ from .forms import AvatarForm, DetailsForm, LearningSetupForm, SettingsForm
 from .models import LearnerProfile, get_profile
 
 
+@login_not_required
 def home(request):
+    if not request.user.is_authenticated:
+        return landing(request)
     profile = get_profile(request.user)
     if not profile.onboarded:
         return redirect("welcome")
     return redirect("plan")
+
+
+def landing(request):
+    """The front page for visitors who aren't signed in. Paths and tracks are the live ones, never a fixed list."""
+    from content.models import Track
+    from diagnose.onboarding import available_paths
+
+    return render(request, "accounts/landing.html", {
+        "paths": available_paths(),
+        "tracks": Track.objects.filter(is_active=True),
+        "ai_daily_limit": settings.AI_DAILY_LIMIT,
+    })
 
 
 def welcome(request):

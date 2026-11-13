@@ -1,30 +1,32 @@
 {% extends "base.html" %}
-{% load socialaccount static %}
+{% load socialaccount static mascots %}
 
 {% block title %}Log in · CodeAgapay{% endblock %}
+
+{% block head %}<script src="{% static 'js/mascots.js' %}" defer></script>{% endblock %}
 
 {% block navbar %}{% endblock %}
 
 {% block main %}
 <main class="login">
-  {# The full mascot panel from the Figma frame "Login Option 2", as one drawing. #}
-  <div class="login-art" aria-hidden="true">
-    <img src="{% static 'img/login-mascots.svg' %}" alt="">
+  {# The mascot panel from the Figma frame "Login Option 2"; mascots.js brings them to life. #}
+  <div class="login-art">
+    {% include "partials/mascot_field.html" %}
   </div>
 
   <section class="login-panel">
-    <span class="navbar-brand">
-      <img src="{% static 'img/mascots/cloud-yellow.svg' %}" alt="" width="52" height="42">
+    <a class="navbar-brand login-rise" href="{% url 'home' %}">
+      {% mascot "cloud-yellow" "brand-critter" %}
       <span>Code<span class="brand-accent">Agapay</span></span>
-    </span>
+    </a>
     {% include "partials/messages.html" %}
-    <h1>Learn to code, one easy step at a time.</h1>
-    <p class="login-intro">Get a free learning plan made just for you, with a friendly AI helper for when you get stuck.</p>
-    <a class="google-button" href="{% provider_login_url 'google' process='login' %}">
+    <h1 class="login-rise">Learn to code, one easy step at a time.</h1>
+    <p class="login-intro login-rise">Get a free learning plan made just for you, with a friendly AI helper for when you get stuck.</p>
+    <a class="google-button login-rise" href="{% provider_login_url 'google' process='login' %}" data-mascot-cheer>
       <svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
       Continue with Google
     </a>
-    <p class="login-note">New here? The same button creates your account. We only use your name and email.</p>
+    <p class="login-note login-rise">New here? The same button creates your account. We only use your name and email.</p>
   </section>
 </main>
 {% endblock %}

@@ -12,9 +12,33 @@ from .models import LearnerProfile, get_profile
 
 
 class LoginRequiredTests(TestCase):
-    def test_anonymous_home_redirects_to_login(self):
+    def test_anonymous_home_shows_the_landing_page(self):
         response = self.client.get(reverse("home"))
-        self.assertRedirects(response, f"{reverse('account_login')}?next=/", fetch_redirect_response=False)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "accounts/landing.html")
+        self.assertContains(response, f'href="{reverse("account_login")}"')
+        self.assertContains(response, 'class="critter')
+
+    def test_landing_lists_only_paths_learners_can_start(self):
+        from content.models import Path, PathTrack
+
+        track = Track.objects.create(name="HTML", slug="html-landing", is_active=True)
+        live = Path.objects.create(title="Make a website", slug="web-landing", tagline="A page for your org.")
+        PathTrack.objects.create(path=live, track=track, order=1)
+        Path.objects.create(title="Hidden path", slug="hidden-landing", tagline="x", is_active=False)
+        with self.settings(AI_PLANS=True):
+            response = self.client.get(reverse("home"))
+        self.assertContains(response, "Make a website")
+        self.assertNotContains(response, "Hidden path")
+
+    def test_other_pages_still_need_a_login(self):
+        response = self.client.get(reverse("profile"))
+        self.assertRedirects(response, f"{reverse('account_login')}?next=/profile/", fetch_redirect_response=False)
+
+    def test_login_page_has_living_mascots(self):
+        response = self.client.get(reverse("account_login"))
+        self.assertContains(response, 'class="mascot-field"')
+        self.assertContains(response, "js/mascots.js")
 
     def test_login_page_offers_google_only(self):
         response = self.client.get(reverse("account_login"))
@@ -200,7 +224,7 @@ class DeleteAccountTests(TestCase):
         self.assertRedirects(response, reverse("account_login"), fetch_redirect_response=False)
         self.assertFalse(get_user_model().objects.filter(pk=self.user.pk).exists())
         self.assertFalse(LearnerProfile.objects.filter(pk=self.profile.pk).exists())
-        self.assertEqual(self.client.get(reverse("home")).status_code, 302)  # logged out
+        self.assertTemplateUsed(self.client.get(reverse("home")), "accounts/landing.html")  # logged out
 
 
 class ReminderChoiceTests(TestCase):
