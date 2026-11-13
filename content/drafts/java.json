@@ -1,0 +1,345 @@
+{
+  "track": "java",
+  "setup_steps": [
+    {
+      "title": "Install Java (the JDK)",
+      "body": "Download the latest LTS version of Temurin from Adoptium and run the installer. When it asks, tick the option to set JAVA_HOME and add Java to your PATH.",
+      "link": "https://adoptium.net/"
+    },
+    {
+      "title": "Install a code editor",
+      "body": "Download Visual Studio Code, then open the Extensions panel and install the Extension Pack for Java. It adds a Run button above your code.",
+      "link": "https://code.visualstudio.com/docs/languages/java"
+    },
+    {
+      "title": "Run your first program",
+      "body": "Make a file called Hello.java with a class Hello and a main method that prints \"Hello!\". Click Run above main. If the terminal shows Hello!, you're set up.",
+      "link": "https://dev.java/learn/getting-started/"
+    }
+  ],
+  "project_ideas": [
+    {
+      "title": "A grade calculator",
+      "brief": "Write a program that stores a list of quiz scores, works out the average, and prints a letter grade. It uses variables, arrays, loops, conditions and methods together.",
+      "done_when": [
+        "It runs without errors.",
+        "It prints the average of the scores.",
+        "It prints the right letter grade for the average.",
+        "The average is worked out in its own method."
+      ]
+    }
+  ],
+  "topics": [
+    {
+      "title": "Variables and types",
+      "summary": "Declare variables with a type, store values, and print them.",
+      "why_it_matters": "Java checks every value's type before the program runs, which catches many mistakes early. You need to know the basic types to write anything.",
+      "key_terms": [
+        {"term": "int", "definition": "A whole number, like 7 or -3."},
+        {"term": "String", "definition": "Text in double quotes, like \"Hello\". It starts with a capital S."},
+        {"term": "System.out.println", "definition": "Prints a value and moves to a new line."}
+      ],
+      "explanation": "In Java, every variable has a type that you write before its name. The type says what kind of value it can hold, and Java won't let you put the wrong kind in.\n\nThe ones you'll use most are int for whole numbers, double for numbers with a decimal point, boolean for true or false, and String for text. Every statement ends with a semicolon.\n\nAll code lives inside a class, and the program starts at the main method. System.out.println() prints a value on its own line, and + joins text and values together.",
+      "example": "public class Main {\n    public static void main(String[] args) {\n        String name = \"Maria\";\n        int age = 18;\n        double gpa = 1.75;\n        boolean enrolled = true;\n\n        System.out.println(name + \" is \" + age);\n        System.out.println(gpa);\n        System.out.println(enrolled);\n    }\n}",
+      "example_output": "Maria is 18\n1.75\ntrue",
+      "estimated_minutes": 50,
+      "tips": [
+        "Java is case-sensitive: String works, string doesn't. System has a capital S too.",
+        "A missing semicolon is the most common first error. Read the line number in the error message."
+      ],
+      "skill_questions": [
+        {
+          "prompt": "Which type holds 3.5?",
+          "code_snippet": "",
+          "choices": ["int", "double", "boolean", "char"],
+          "correct_index": 1
+        },
+        {
+          "prompt": "What does this print?",
+          "code_snippet": "int a = 7;\nint b = 2;\nSystem.out.println(a + b);",
+          "choices": ["72", "9", "a + b", "An error"],
+          "correct_index": 1
+        }
+      ],
+      "quiz_items": [
+        {
+          "prompt": "A whole number variable: ___ count = 5;",
+          "accepted_answers": ["int"],
+          "hint": "Short for integer.",
+          "explanation": "int holds whole numbers. For numbers with a decimal point, use double."
+        },
+        {
+          "prompt": "A text variable: ___ name = \"Ken\";",
+          "accepted_answers": ["String"],
+          "case_sensitive": true,
+          "hint": "It starts with a capital letter.",
+          "explanation": "String holds text and is spelled with a capital S, because it's a class."
+        },
+        {
+          "prompt": "Every Java statement ends with a ___",
+          "accepted_answers": [";", "semicolon"],
+          "hint": "A dot above a comma.",
+          "explanation": "The semicolon marks the end of each statement, like a full stop in a sentence."
+        },
+        {
+          "prompt": "Print a line: System.out.___(\"Hi\");",
+          "accepted_answers": ["println"],
+          "hint": "print + ln, for line.",
+          "explanation": "println prints the value and then moves to a new line; print stays on the same line."
+        }
+      ],
+      "resources": [
+        {"title": "Creating Variables and Naming Them", "url": "https://dev.java/learn/language-basics/variables/", "kind": "docs", "estimated_minutes": 25},
+        {"title": "Java Variables", "url": "https://www.w3schools.com/java/java_variables.asp", "kind": "interactive", "estimated_minutes": 15}
+      ]
+    },
+    {
+      "title": "Conditions",
+      "summary": "Choose what runs with if, else if and else.",
+      "why_it_matters": "Real programs make choices: pass or fail, valid or invalid input. Conditions let your code decide.",
+      "key_terms": [
+        {"term": "if", "definition": "Runs a block only when its condition is true."},
+        {"term": "==", "definition": "Checks whether two numbers are equal."},
+        {"term": "equals()", "definition": "Checks whether two Strings have the same text."}
+      ],
+      "explanation": "An if statement takes a condition in round brackets and runs the block in curly braces only when it's true. Add else if for more checks, and else for everything left. Java runs the first branch whose condition is true and skips the rest.\n\nCompare numbers with ==, !=, <, >, <= and >=. Combine conditions with && (and) and || (or).\n\nOne Java catch: to compare two Strings, use name.equals(\"Ken\"), not ==. The == operator checks whether they are the same object, which can be false even when the text matches.",
+      "example": "public class Main {\n    public static void main(String[] args) {\n        int score = 82;\n\n        if (score >= 90) {\n            System.out.println(\"Excellent\");\n        } else if (score >= 75) {\n            System.out.println(\"Passed\");\n        } else {\n            System.out.println(\"Try again\");\n        }\n    }\n}",
+      "example_output": "Passed",
+      "estimated_minutes": 45,
+      "tips": [
+        "Compare text with .equals(), never ==.",
+        "Use = to store a value and == to compare. if (x = 5) won't compile."
+      ],
+      "skill_questions": [
+        {
+          "prompt": "What does this print?",
+          "code_snippet": "int temp = 30;\nif (temp > 25) {\n    System.out.println(\"Hot\");\n} else {\n    System.out.println(\"Cool\");\n}",
+          "choices": ["Hot", "Cool", "Hot Cool", "Nothing"],
+          "correct_index": 0
+        },
+        {
+          "prompt": "How should you check whether the String day is \"Monday\"?",
+          "code_snippet": "",
+          "choices": ["day == \"Monday\"", "day.equals(\"Monday\")", "day = \"Monday\"", "equals(day, Monday)"],
+          "correct_index": 1
+        }
+      ],
+      "quiz_items": [
+        {
+          "prompt": "Check whether two ints are equal: if (a ___ b)",
+          "accepted_answers": ["=="],
+          "hint": "Two equals signs.",
+          "explanation": "== compares numbers. A single = would try to store b in a."
+        },
+        {
+          "prompt": "Compare two Strings: if (word.___(\"yes\"))",
+          "accepted_answers": ["equals"],
+          "hint": "Are they equal?",
+          "explanation": "equals() compares the text of two Strings. == only checks whether they are the very same object."
+        },
+        {
+          "prompt": "The branch for every other case starts with ___",
+          "accepted_answers": ["else"],
+          "hint": "It means otherwise.",
+          "explanation": "else runs when none of the conditions above it were true."
+        },
+        {
+          "prompt": "Both must be true: if (age >= 18 ___ hasId)",
+          "accepted_answers": ["&&"],
+          "hint": "Two ampersands.",
+          "explanation": "&& means and: the condition is true only when both sides are true."
+        }
+      ],
+      "resources": [
+        {"title": "Java If ... Else", "url": "https://www.w3schools.com/java/java_conditions.asp", "kind": "interactive", "estimated_minutes": 15},
+        {"title": "The if-then and if-then-else Statements", "url": "https://docs.oracle.com/javase/tutorial/java/nutsandbolts/if.html", "kind": "docs", "estimated_minutes": 20}
+      ]
+    },
+    {
+      "title": "Loops",
+      "summary": "Repeat code a set number of times with for, or until something changes with while.",
+      "why_it_matters": "Counting, going through every item, or asking again until the input is right all need repetition. Loops do it without copying code.",
+      "key_terms": [
+        {"term": "for loop", "definition": "Repeats a set number of times, using a counter."},
+        {"term": "while loop", "definition": "Repeats as long as a condition stays true."},
+        {"term": "i++", "definition": "Adds 1 to i. Short for i = i + 1."}
+      ],
+      "explanation": "A for loop has three parts in its brackets, separated by semicolons: where the counter starts, the condition to keep going, and how the counter changes each time. for (int i = 1; i <= 3; i++) runs with i as 1, then 2, then 3.\n\nA while loop only has a condition. It keeps running as long as the condition is true, so something inside the loop must eventually make it false.\n\nIf the condition never becomes false, the loop never stops. That's called an infinite loop; press the stop button in your editor to end it.",
+      "example": "public class Main {\n    public static void main(String[] args) {\n        for (int i = 1; i <= 3; i++) {\n            System.out.println(\"Round \" + i);\n        }\n\n        int countdown = 3;\n        while (countdown > 0) {\n            System.out.println(countdown);\n            countdown--;\n        }\n    }\n}",
+      "example_output": "Round 1\nRound 2\nRound 3\n3\n2\n1",
+      "estimated_minutes": 50,
+      "tips": [
+        "Check your stopping condition: i < 3 runs 3 times from 0, but i <= 3 runs 4 times.",
+        "In a while loop, make sure something inside changes the condition, or it will never end."
+      ],
+      "skill_questions": [
+        {
+          "prompt": "How many lines does this print?",
+          "code_snippet": "for (int i = 0; i < 4; i++) {\n    System.out.println(i);\n}",
+          "choices": ["3", "4", "5", "It never stops"],
+          "correct_index": 1
+        },
+        {
+          "prompt": "When does a while loop stop?",
+          "code_snippet": "",
+          "choices": ["After 10 runs", "When its condition becomes false", "When it reaches the end of the file", "Never"],
+          "correct_index": 1
+        }
+      ],
+      "quiz_items": [
+        {
+          "prompt": "Add one to i: i___;",
+          "accepted_answers": ["++"],
+          "hint": "Two plus signs.",
+          "explanation": "i++ is short for i = i + 1. i-- takes one away."
+        },
+        {
+          "prompt": "Repeat while a condition is true: ___ (lives > 0) { ... }",
+          "accepted_answers": ["while"],
+          "hint": "As long as...",
+          "explanation": "A while loop checks its condition before every run and stops once it's false."
+        },
+        {
+          "prompt": "Count from 0 to 4: for (int i = 0; i ___ 5; i++)",
+          "accepted_answers": ["<"],
+          "hint": "Stop before 5.",
+          "explanation": "i < 5 keeps going while i is 0, 1, 2, 3 or 4, which is five runs."
+        },
+        {
+          "prompt": "A loop that never ends is called an ___ loop.",
+          "accepted_answers": ["infinite", "endless"],
+          "hint": "It goes on forever.",
+          "explanation": "If the condition never becomes false, the loop runs forever. Stop it from your editor."
+        }
+      ],
+      "resources": [
+        {"title": "Java For Loop", "url": "https://www.w3schools.com/java/java_for_loop.asp", "kind": "interactive", "estimated_minutes": 15},
+        {"title": "The for Statement", "url": "https://docs.oracle.com/javase/tutorial/java/nutsandbolts/for.html", "kind": "docs", "estimated_minutes": 20}
+      ]
+    },
+    {
+      "title": "Arrays",
+      "summary": "Keep many values of one type in an array, and loop through them.",
+      "why_it_matters": "Scores, names, prices: real data comes in lists. Arrays hold a list in one variable so a loop can work through it.",
+      "key_terms": [
+        {"term": "array", "definition": "A fixed-size list of values that all have the same type."},
+        {"term": "index", "definition": "An item's position, counting from 0."},
+        {"term": "length", "definition": "How many items the array holds."}
+      ],
+      "explanation": "An array stores several values of the same type under one name. You write the type followed by square brackets, like int[] scores, and can fill it straight away with values in curly braces.\n\nEach item has an index, starting at 0. scores[0] is the first item, and scores.length tells you how many there are. Once made, an array's size can't change.\n\nTo visit every item, use a for-each loop: for (int s : scores) gives you each value in turn. Asking for an index that doesn't exist, like scores[3] in a three-item array, stops the program with an error.",
+      "example": "public class Main {\n    public static void main(String[] args) {\n        int[] scores = {85, 92, 78};\n        int total = 0;\n\n        for (int s : scores) {\n            total += s;\n        }\n\n        System.out.println(scores.length);\n        System.out.println(scores[0]);\n        System.out.println(total);\n    }\n}",
+      "example_output": "3\n85\n255",
+      "estimated_minutes": 50,
+      "tips": [
+        "The last item is at index length - 1. Going one past it throws ArrayIndexOutOfBoundsException.",
+        "For arrays, length has no brackets: scores.length, not scores.length()."
+      ],
+      "skill_questions": [
+        {
+          "prompt": "What does this print?",
+          "code_snippet": "String[] days = {\"Mon\", \"Tue\", \"Wed\"};\nSystem.out.println(days[2]);",
+          "choices": ["Mon", "Tue", "Wed", "An error"],
+          "correct_index": 2
+        },
+        {
+          "prompt": "How many items does this array hold?",
+          "code_snippet": "int[] nums = {4, 4, 4, 4};",
+          "choices": ["1", "3", "4", "16"],
+          "correct_index": 2
+        }
+      ],
+      "quiz_items": [
+        {
+          "prompt": "The first item of an array is at index ___",
+          "accepted_answers": ["0", "zero"],
+          "hint": "Counting starts lower than you'd think.",
+          "explanation": "Java arrays count from 0, so the first item is array[0]."
+        },
+        {
+          "prompt": "How many items: names.___",
+          "accepted_answers": ["length"],
+          "hint": "How long is it?",
+          "explanation": "length gives the number of items. For arrays it has no brackets."
+        },
+        {
+          "prompt": "An array of whole numbers has the type int___",
+          "accepted_answers": ["[]"],
+          "hint": "Square brackets.",
+          "explanation": "Square brackets after the type make it an array type: int[], String[], double[]."
+        },
+        {
+          "prompt": "Visit every value: for (int n ___ nums) { ... }",
+          "accepted_answers": [":"],
+          "hint": "One punctuation mark, read as \"in\".",
+          "explanation": "The for-each loop uses a colon: for each n in nums."
+        }
+      ],
+      "resources": [
+        {"title": "Java Arrays", "url": "https://www.w3schools.com/java/java_arrays.asp", "kind": "interactive", "estimated_minutes": 15},
+        {"title": "Arrays", "url": "https://dev.java/learn/language-basics/arrays/", "kind": "docs", "estimated_minutes": 25}
+      ]
+    },
+    {
+      "title": "Methods",
+      "summary": "Write your own methods with parameters and return values.",
+      "why_it_matters": "Methods split a program into small named pieces. That makes code shorter, easier to read, and easier to fix.",
+      "key_terms": [
+        {"term": "method", "definition": "A named block of code inside a class that runs when called."},
+        {"term": "parameter", "definition": "A typed name in the brackets that receives a value."},
+        {"term": "void", "definition": "Means the method doesn't return a value."}
+      ],
+      "explanation": "A method is a named set of steps. Before its name you write the type of value it gives back, or void if it gives nothing back. In the brackets you list its parameters, each with a type.\n\nFor now, write your methods as static inside the same class as main, so main can call them directly by name.\n\nreturn sends a value back to the caller and ends the method. The returned value must match the type you declared, so a method declared as int must return an int.",
+      "example": "public class Main {\n    static int square(int n) {\n        return n * n;\n    }\n\n    static void greet(String name) {\n        System.out.println(\"Hello, \" + name);\n    }\n\n    public static void main(String[] args) {\n        greet(\"Ana\");\n        System.out.println(square(4));\n    }\n}",
+      "example_output": "Hello, Ana\n16",
+      "estimated_minutes": 50,
+      "tips": [
+        "If a method promises a type, like int, every path through it must return one, or it won't compile.",
+        "Pick names that say what the method does, like average or isPassing."
+      ],
+      "skill_questions": [
+        {
+          "prompt": "What does this print?",
+          "code_snippet": "static int add(int a, int b) {\n    return a + b;\n}\n// in main:\nSystem.out.println(add(2, 3));",
+          "choices": ["23", "5", "add(2, 3)", "Nothing"],
+          "correct_index": 1
+        },
+        {
+          "prompt": "What does void mean before a method's name?",
+          "code_snippet": "",
+          "choices": ["The method is empty", "It returns nothing", "It can't be called", "It returns 0"],
+          "correct_index": 1
+        }
+      ],
+      "quiz_items": [
+        {
+          "prompt": "A method that gives nothing back: static ___ show() { ... }",
+          "accepted_answers": ["void"],
+          "hint": "An empty space.",
+          "explanation": "void means the method does its job but doesn't return a value."
+        },
+        {
+          "prompt": "Send back the result: ___ total;",
+          "accepted_answers": ["return"],
+          "hint": "The value goes back to the caller.",
+          "explanation": "return ends the method and passes the value to the code that called it."
+        },
+        {
+          "prompt": "A method returning a whole number: static ___ count() { ... }",
+          "accepted_answers": ["int"],
+          "hint": "The type for whole numbers.",
+          "explanation": "The type before the name is what the method returns, so int means it returns a whole number."
+        },
+        {
+          "prompt": "So main can call it directly, write the method as ___ for now.",
+          "accepted_answers": ["static"],
+          "hint": "The same word that's in front of main.",
+          "explanation": "static methods belong to the class, so main can call them without making an object first."
+        }
+      ],
+      "resources": [
+        {"title": "Java Methods", "url": "https://www.w3schools.com/java/java_methods.asp", "kind": "interactive", "estimated_minutes": 15},
+        {"title": "Defining Methods", "url": "https://docs.oracle.com/javase/tutorial/java/javaOO/methods.html", "kind": "docs", "estimated_minutes": 20}
+      ]
+    }
+  ]
+}

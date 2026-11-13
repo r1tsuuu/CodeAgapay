@@ -1,0 +1,345 @@
+{
+  "track": "javascript",
+  "setup_steps": [
+    {
+      "title": "Open your browser's console",
+      "body": "In Chrome or Edge, press F12 (or Ctrl+Shift+J; Cmd+Option+J on a Mac) and choose the Console tab. Type 2 + 2 and press Enter. The console runs JavaScript right away, so it's the quickest place to try things.",
+      "link": "https://developer.chrome.com/docs/devtools/console/javascript"
+    },
+    {
+      "title": "Install a code editor",
+      "body": "Download Visual Studio Code and run the installer. It's free, and it colors your code so mistakes are easier to spot.",
+      "link": "https://code.visualstudio.com/download"
+    },
+    {
+      "title": "Run a script from a page",
+      "body": "Make a folder with two files: index.html and script.js. In index.html, add <script src=\"script.js\"></script> just before </body>. In script.js, write console.log(\"Hello!\"). Open index.html in your browser and look in the console.",
+      "link": ""
+    }
+  ],
+  "project_ideas": [
+    {
+      "title": "A to-do list page",
+      "brief": "Build a page where you type a task, press a button, and it appears in a list. Clicking a task marks it done. It's small, but it uses variables, functions, conditions, loops and the page itself.",
+      "done_when": [
+        "Typing a task and pressing Add puts it in the list.",
+        "An empty box doesn't add a blank task.",
+        "Clicking a task crosses it out.",
+        "The browser console shows no errors."
+      ]
+    }
+  ],
+  "topics": [
+    {
+      "title": "Variables and values",
+      "summary": "Store numbers, text and true/false values in variables, and print them.",
+      "why_it_matters": "Every program has to remember things, like a score or a name. Variables are how JavaScript keeps them.",
+      "key_terms": [
+        {"term": "variable", "definition": "A name that holds a value so you can use it later."},
+        {"term": "string", "definition": "Text, written inside quotes, like \"hello\"."},
+        {"term": "const", "definition": "Makes a variable that can't be given a new value."}
+      ],
+      "explanation": "A variable is a labelled box for a value. You make one with let or const, give it a name, and put a value in it with =.\n\nUse const when the value won't change, and let when it will. Most of the time const is the right choice.\n\nValues come in a few basic types. Numbers are written as they are, like 18 or 2.5. Strings are text in quotes, like \"Maria\". Booleans are true or false. To see a value, pass it to console.log(), which prints it in the browser's console.",
+      "example": "const name = \"Maria\";   // text never changes, so const\nlet age = 18;            // this will change, so let\nage = age + 1;\nconst isStudent = true;\n\nconsole.log(name);\nconsole.log(age);\nconsole.log(isStudent);",
+      "example_output": "Maria\n19\ntrue",
+      "estimated_minutes": 45,
+      "tips": [
+        "Changing a const gives an error. If you need to change it later, use let.",
+        "\"5\" + 1 is \"51\", not 6: adding a number to text joins them. Use Number(\"5\") to turn text into a number."
+      ],
+      "skill_questions": [
+        {
+          "prompt": "What does this print?",
+          "code_snippet": "let score = 10;\nscore = score + 5;\nconsole.log(score);",
+          "choices": ["10", "15", "score + 5", "An error"],
+          "correct_index": 1
+        },
+        {
+          "prompt": "Which value is a string?",
+          "code_snippet": "",
+          "choices": ["42", "true", "\"42\"", "null"],
+          "correct_index": 2
+        }
+      ],
+      "quiz_items": [
+        {
+          "prompt": "To make a variable that never changes, write: ___ pi = 3.14;",
+          "accepted_answers": ["const"],
+          "hint": "It's short for constant.",
+          "explanation": "const makes a variable whose value can't be replaced. Use let only when the value has to change."
+        },
+        {
+          "prompt": "To make a variable you can change later, write: ___ count = 0;",
+          "accepted_answers": ["let"],
+          "hint": "Three letters, the other way to make a variable.",
+          "explanation": "let makes a variable you can give a new value later, like count = count + 1."
+        },
+        {
+          "prompt": "To print a value in the console: console.___(\"Hi\");",
+          "accepted_answers": ["log"],
+          "hint": "Think of a ship's log, where you write things down.",
+          "explanation": "console.log() prints whatever you give it in the browser's console."
+        },
+        {
+          "prompt": "A value that is either true or false is called a ___.",
+          "accepted_answers": ["boolean", "bool"],
+          "hint": "Named after the mathematician George Boole.",
+          "explanation": "Booleans have only two values, true and false. Conditions use them to decide what runs."
+        }
+      ],
+      "resources": [
+        {"title": "Storing the information you need: variables", "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Scripting/Variables", "kind": "docs", "estimated_minutes": 25},
+        {"title": "JavaScript Variables", "url": "https://www.w3schools.com/js/js_variables.asp", "kind": "interactive", "estimated_minutes": 15}
+      ]
+    },
+    {
+      "title": "Making decisions",
+      "summary": "Run different code depending on a condition, with if, else if and else.",
+      "why_it_matters": "Programs need to react: show a message only if a form is empty, or a different greeting in the morning. Conditions make that possible.",
+      "key_terms": [
+        {"term": "condition", "definition": "Something that is either true or false, like age >= 18."},
+        {"term": "===", "definition": "Checks that two values are equal and of the same type."},
+        {"term": "else", "definition": "The code that runs when the if condition is false."}
+      ],
+      "explanation": "An if statement runs a block of code only when its condition is true. The condition goes in round brackets and the code goes in curly braces.\n\nAdd else if to check another condition, and else to catch everything left. JavaScript checks them from top to bottom and runs only the first one that's true.\n\nTo compare, use === for equal, !== for not equal, and <, >, <= and >= for sizes. Use && when both things must be true and || when either one is enough.",
+      "example": "const hour = 14;\n\nif (hour < 12) {\n  console.log(\"Good morning\");\n} else if (hour < 18) {\n  console.log(\"Good afternoon\");\n} else {\n  console.log(\"Good evening\");\n}",
+      "example_output": "Good afternoon",
+      "estimated_minutes": 45,
+      "tips": [
+        "Use ===, not =, to compare. A single = puts a value into a variable.",
+        "Only the first true branch runs, so put the most specific check first."
+      ],
+      "skill_questions": [
+        {
+          "prompt": "What does this print?",
+          "code_snippet": "const age = 16;\nif (age >= 18) {\n  console.log(\"Adult\");\n} else {\n  console.log(\"Minor\");\n}",
+          "choices": ["Adult", "Minor", "Both", "Nothing"],
+          "correct_index": 1
+        },
+        {
+          "prompt": "Which operator means \"and\"?",
+          "code_snippet": "",
+          "choices": ["||", "&&", "==", "!"],
+          "correct_index": 1
+        }
+      ],
+      "quiz_items": [
+        {
+          "prompt": "To check that x is exactly 5: if (x ___ 5)",
+          "accepted_answers": ["==="],
+          "hint": "Three characters, all the same.",
+          "explanation": "=== checks the value and the type. == also works for numbers but can surprise you with mixed types."
+        },
+        {
+          "prompt": "The code that runs when the if condition is false goes after the word ___",
+          "accepted_answers": ["else"],
+          "hint": "It means \"otherwise\".",
+          "explanation": "else catches every case the if (and any else if) didn't match."
+        },
+        {
+          "prompt": "Both must be true: if (a > 0 ___ b > 0)",
+          "accepted_answers": ["&&"],
+          "hint": "Two ampersands.",
+          "explanation": "&& is \"and\": the whole condition is true only when both sides are true."
+        },
+        {
+          "prompt": "Either one is enough: if (day === \"Sat\" ___ day === \"Sun\")",
+          "accepted_answers": ["||"],
+          "hint": "Two vertical bars.",
+          "explanation": "|| is \"or\": the condition is true when at least one side is true."
+        }
+      ],
+      "resources": [
+        {"title": "Making decisions in your code: conditionals", "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Scripting/Conditionals", "kind": "docs", "estimated_minutes": 25},
+        {"title": "JavaScript if, else, and else if", "url": "https://www.w3schools.com/js/js_if_else.asp", "kind": "interactive", "estimated_minutes": 15}
+      ]
+    },
+    {
+      "title": "Loops and arrays",
+      "summary": "Keep many values in an array and repeat code for each one with a loop.",
+      "why_it_matters": "Lists are everywhere: tasks, scores, names. A loop lets you handle a hundred items with the same few lines you'd write for one.",
+      "key_terms": [
+        {"term": "array", "definition": "A list of values in square brackets, like [3, 7, 9]."},
+        {"term": "index", "definition": "An item's position in an array, counting from 0."},
+        {"term": "loop", "definition": "Code that repeats, once for each item or until a condition is false."}
+      ],
+      "explanation": "An array holds a list of values in order, inside square brackets. Each item has an index, and the first one is 0, not 1. So fruits[0] is the first item, and fruits.length is how many there are.\n\nTo add an item to the end, use push(). To go through every item, use a for...of loop: it gives you each item in turn.\n\nWhen you need the position as well, use a classic for loop. It has three parts: where to start, when to keep going, and how to step, like for (let i = 0; i < fruits.length; i++).",
+      "example": "const fruits = [\"mango\", \"banana\"];\nfruits.push(\"calamansi\");   // add to the end\n\nfor (const fruit of fruits) {\n  console.log(fruit);\n}\n\nconsole.log(fruits.length);\nconsole.log(fruits[0]);",
+      "example_output": "mango\nbanana\ncalamansi\n3\nmango",
+      "estimated_minutes": 60,
+      "tips": [
+        "The last item is at index length - 1. Asking for fruits[fruits.length] gives undefined.",
+        "Use for...of when you only need the items. It's shorter and harder to get wrong than a counting loop."
+      ],
+      "skill_questions": [
+        {
+          "prompt": "What does this print?",
+          "code_snippet": "const nums = [4, 8, 15];\nconsole.log(nums[1]);",
+          "choices": ["4", "8", "15", "undefined"],
+          "correct_index": 1
+        },
+        {
+          "prompt": "How many times does this loop print?",
+          "code_snippet": "for (let i = 0; i < 3; i++) {\n  console.log(i);\n}",
+          "choices": ["2", "3", "4", "Forever"],
+          "correct_index": 1
+        }
+      ],
+      "quiz_items": [
+        {
+          "prompt": "The first item of an array is at index ___",
+          "accepted_answers": ["0", "zero"],
+          "hint": "Counting starts lower than you might think.",
+          "explanation": "Arrays count from 0, so the first item is list[0] and the last is list[list.length - 1]."
+        },
+        {
+          "prompt": "To add \"ube\" to the end of an array: flavors.___(\"ube\");",
+          "accepted_answers": ["push"],
+          "hint": "You push it onto the end.",
+          "explanation": "push() adds one or more items to the end of an array."
+        },
+        {
+          "prompt": "How many items an array has: names.___",
+          "accepted_answers": ["length"],
+          "hint": "How long is it?",
+          "explanation": "length is the number of items. It's a property, so there are no brackets after it."
+        },
+        {
+          "prompt": "Go through each item: for (const item ___ items) { ... }",
+          "accepted_answers": ["of"],
+          "hint": "A two-letter word: each item of the list.",
+          "explanation": "for...of gives you each item of the array in turn."
+        }
+      ],
+      "resources": [
+        {"title": "Looping code", "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Scripting/Loops", "kind": "docs", "estimated_minutes": 30},
+        {"title": "JavaScript Arrays", "url": "https://www.w3schools.com/js/js_arrays.asp", "kind": "interactive", "estimated_minutes": 15}
+      ]
+    },
+    {
+      "title": "Functions",
+      "summary": "Wrap steps in a function, pass it values, and get a result back.",
+      "why_it_matters": "Without functions you copy the same code again and again. A function lets you write it once, give it a name, and use it anywhere.",
+      "key_terms": [
+        {"term": "function", "definition": "A named block of code that runs when you call it."},
+        {"term": "parameter", "definition": "A name in the brackets that receives a value when the function is called."},
+        {"term": "return", "definition": "Sends a value back to the code that called the function."}
+      ],
+      "explanation": "A function is a recipe with a name. You write it once with the function keyword, a name, brackets for its inputs, and curly braces for its steps.\n\nThe inputs are called parameters. When you call the function, you put values in the brackets, and each one fills a parameter.\n\nreturn hands a result back. Whatever follows return becomes the value of the call, so you can store it or print it. A function stops as soon as it reaches return.",
+      "example": "function greet(name) {\n  return \"Hi, \" + name + \"!\";\n}\n\nfunction area(width, height) {\n  return width * height;\n}\n\nconsole.log(greet(\"Ken\"));\nconsole.log(area(3, 4));",
+      "example_output": "Hi, Ken!\n12",
+      "estimated_minutes": 50,
+      "tips": [
+        "Writing a function doesn't run it. It only runs when you call it, with brackets: greet(\"Ken\").",
+        "If you forget return, the call gives undefined, even when the function works out the right answer."
+      ],
+      "skill_questions": [
+        {
+          "prompt": "What does this print?",
+          "code_snippet": "function double(n) {\n  return n * 2;\n}\nconsole.log(double(5));",
+          "choices": ["5", "10", "n * 2", "undefined"],
+          "correct_index": 1
+        },
+        {
+          "prompt": "In function add(a, b), what are a and b called?",
+          "code_snippet": "",
+          "choices": ["Parameters", "Returns", "Loops", "Strings"],
+          "correct_index": 0
+        }
+      ],
+      "quiz_items": [
+        {
+          "prompt": "Start a function: ___ sayHi() { ... }",
+          "accepted_answers": ["function"],
+          "hint": "The word is the same as the thing you're making.",
+          "explanation": "The function keyword starts a function, followed by its name and brackets."
+        },
+        {
+          "prompt": "Send a value back from a function: ___ total;",
+          "accepted_answers": ["return"],
+          "hint": "The value goes back to where the function was called.",
+          "explanation": "return ends the function and gives its value to the code that called it."
+        },
+        {
+          "prompt": "Call a function named start: start___;",
+          "accepted_answers": ["()"],
+          "hint": "Two characters that run it.",
+          "explanation": "Brackets after the name run the function. Without them you only refer to it."
+        },
+        {
+          "prompt": "In function square(n), n is called a ___",
+          "accepted_answers": ["parameter", "param"],
+          "hint": "It receives the value you pass in.",
+          "explanation": "A parameter is the name inside the brackets; the value you pass when calling is the argument."
+        }
+      ],
+      "resources": [
+        {"title": "Functions: reusable blocks of code", "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Scripting/Functions", "kind": "docs", "estimated_minutes": 30},
+        {"title": "JavaScript Functions", "url": "https://www.w3schools.com/js/js_functions.asp", "kind": "interactive", "estimated_minutes": 15}
+      ]
+    },
+    {
+      "title": "Changing the page",
+      "summary": "Find elements on a page, change their text, and react to clicks.",
+      "why_it_matters": "This is what makes websites interactive. Buttons that do something, forms that answer back, and lists that grow all work this way.",
+      "key_terms": [
+        {"term": "DOM", "definition": "The page as JavaScript sees it: every element as an object you can change."},
+        {"term": "querySelector", "definition": "Finds the first element that matches a CSS selector."},
+        {"term": "event", "definition": "Something that happens on the page, like a click or a key press."}
+      ],
+      "explanation": "When a page loads, the browser turns its HTML into the DOM, a tree of objects that JavaScript can read and change.\n\ndocument.querySelector() finds an element using the same selectors as CSS: \"#title\" for an id, \".card\" for a class, \"button\" for a tag. Once you have it, change textContent to replace its text, or classList.add() to give it a class.\n\nTo react to the user, add an event listener. addEventListener(\"click\", ...) takes the event's name and a function to run each time it happens.",
+      "example": "<h1 id=\"title\">Hello</h1>\n<button id=\"btn\">Click me</button>\n\n<script>\n  const title = document.querySelector(\"#title\");\n  const button = document.querySelector(\"#btn\");\n\n  button.addEventListener(\"click\", function () {\n    title.textContent = \"You clicked!\";\n  });\n</script>",
+      "example_output": "",
+      "estimated_minutes": 60,
+      "tips": [
+        "Put your <script> just before </body>, so the elements exist by the time it runs. Otherwise querySelector gives null.",
+        "Pass the function, don't call it: addEventListener(\"click\", show), not show()."
+      ],
+      "skill_questions": [
+        {
+          "prompt": "Which finds the element with id=\"menu\"?",
+          "code_snippet": "",
+          "choices": ["document.querySelector(\"menu\")", "document.querySelector(\"#menu\")", "document.querySelector(\".menu\")", "document.menu"],
+          "correct_index": 1
+        },
+        {
+          "prompt": "What happens when the button is clicked?",
+          "code_snippet": "button.addEventListener(\"click\", function () {\n  box.textContent = \"Done\";\n});",
+          "choices": ["Nothing", "The page reloads", "box shows the text Done", "The button disappears"],
+          "correct_index": 2
+        }
+      ],
+      "quiz_items": [
+        {
+          "prompt": "Find the first <p> on the page: document.___(\"p\")",
+          "accepted_answers": ["querySelector"],
+          "case_sensitive": true,
+          "hint": "query + Selector, with a capital S.",
+          "explanation": "querySelector takes a CSS selector and returns the first element that matches it."
+        },
+        {
+          "prompt": "Change an element's text: el.___ = \"New text\";",
+          "accepted_answers": ["textContent"],
+          "hint": "The text content of the element.",
+          "explanation": "textContent replaces everything inside the element with plain text."
+        },
+        {
+          "prompt": "React to a click: btn.addEventListener(\"___\", run);",
+          "accepted_answers": ["click"],
+          "hint": "What a mouse does to a button.",
+          "explanation": "The first argument is the event's name; \"click\" fires when the element is clicked or tapped."
+        },
+        {
+          "prompt": "The page as JavaScript sees it is called the ___",
+          "accepted_answers": ["DOM", "Document Object Model"],
+          "hint": "Three capital letters: Document Object Model.",
+          "explanation": "The DOM is the tree of objects the browser builds from your HTML, which scripts can read and change."
+        }
+      ],
+      "resources": [
+        {"title": "DOM scripting introduction", "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Scripting/DOM_scripting", "kind": "docs", "estimated_minutes": 30},
+        {"title": "JavaScript HTML DOM Events", "url": "https://www.w3schools.com/js/js_htmldom_events.asp", "kind": "interactive", "estimated_minutes": 15}
+      ]
+    }
+  ]
+}

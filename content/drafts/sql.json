@@ -1,0 +1,344 @@
+{
+  "track": "sql",
+  "setup_steps": [
+    {
+      "title": "Try SQL in your browser",
+      "body": "Open SQLBolt. Each lesson has a small table and a box where you type SQL and see the result straight away, with nothing to install.",
+      "link": "https://sqlbolt.com/"
+    },
+    {
+      "title": "Install DB Browser for SQLite",
+      "body": "When you're ready to make your own tables, download DB Browser for SQLite and install it. It's free and works on Windows, Mac and Linux.",
+      "link": "https://sqlitebrowser.org/dl/"
+    },
+    {
+      "title": "Make your first database",
+      "body": "In DB Browser, click New Database and save it as practice.db. Open the Execute SQL tab, type SELECT 1 + 1; and press the play button. If you see 2, you're set up.",
+      "link": ""
+    }
+  ],
+  "project_ideas": [
+    {
+      "title": "An org's member list",
+      "brief": "Make two tables, members and events, fill them with a few rows, and write queries that answer real questions: who joined this year, who attended each event, and how many came.",
+      "done_when": [
+        "Both tables exist and have at least five rows each.",
+        "One query filters members with WHERE.",
+        "One query joins members to events.",
+        "One query counts attendees with GROUP BY."
+      ]
+    }
+  ],
+  "topics": [
+    {
+      "title": "Reading data with SELECT",
+      "summary": "Get rows and columns out of a table with SELECT and FROM.",
+      "why_it_matters": "Almost every app keeps its data in tables. SELECT is how you read it, and it's the first thing anyone writes in SQL.",
+      "key_terms": [
+        {"term": "table", "definition": "Data in rows and columns, like a spreadsheet."},
+        {"term": "row", "definition": "One record in a table, like one student."},
+        {"term": "SELECT", "definition": "Chooses which columns to get back."}
+      ],
+      "explanation": "A database keeps data in tables. Each table has columns, like name and course, and rows, one for each record.\n\nA query asks the database a question. SELECT says which columns you want, and FROM says which table they come from. SELECT name, course FROM students; gives every student's name and course.\n\nUse * to get every column. End each query with a semicolon. SQL keywords aren't case-sensitive, but writing them in capitals makes queries easier to read.",
+      "example": "-- The students table:\n-- id | name  | course | year\n--  1 | Ana   | BSCS   | 2\n--  2 | Ben   | BSIT   | 1\n--  3 | Carla | BSCS   | 3\n\nSELECT name, course FROM students;",
+      "example_output": "name  | course\nAna   | BSCS\nBen   | BSIT\nCarla | BSCS",
+      "estimated_minutes": 40,
+      "tips": [
+        "Spell column names exactly as they are in the table, or you'll get a \"no such column\" error.",
+        "SELECT * is handy for looking around, but name the columns you need in real queries."
+      ],
+      "skill_questions": [
+        {
+          "prompt": "Which query gets every column of the books table?",
+          "code_snippet": "",
+          "choices": ["GET * FROM books;", "SELECT * FROM books;", "SELECT books;", "SELECT ALL books;"],
+          "correct_index": 1
+        },
+        {
+          "prompt": "In a table, what is one record called?",
+          "code_snippet": "",
+          "choices": ["A column", "A row", "A key", "A query"],
+          "correct_index": 1
+        }
+      ],
+      "quiz_items": [
+        {
+          "prompt": "Choose columns: ___ name FROM students;",
+          "accepted_answers": ["SELECT"],
+          "hint": "You select what you want.",
+          "explanation": "SELECT lists the columns you want back."
+        },
+        {
+          "prompt": "Say which table: SELECT name ___ students;",
+          "accepted_answers": ["FROM"],
+          "hint": "Where does the data come from?",
+          "explanation": "FROM names the table the columns come from."
+        },
+        {
+          "prompt": "Get every column: SELECT ___ FROM students;",
+          "accepted_answers": ["*"],
+          "hint": "A star.",
+          "explanation": "* stands for all columns."
+        },
+        {
+          "prompt": "End a query with a ___",
+          "accepted_answers": [";", "semicolon"],
+          "hint": "A dot above a comma.",
+          "explanation": "The semicolon marks where one query ends, so you can write several in a row."
+        }
+      ],
+      "resources": [
+        {"title": "SQL Lesson 1: SELECT queries 101", "url": "https://sqlbolt.com/lesson/select_queries_introduction", "kind": "interactive", "estimated_minutes": 15},
+        {"title": "SQL SELECT Statement", "url": "https://www.w3schools.com/sql/sql_select.asp", "kind": "docs", "estimated_minutes": 15}
+      ]
+    },
+    {
+      "title": "Filtering with WHERE",
+      "summary": "Keep only the rows you need with WHERE, AND, OR and LIKE.",
+      "why_it_matters": "Tables can have thousands of rows, and you rarely want them all. WHERE asks for just the ones that match.",
+      "key_terms": [
+        {"term": "WHERE", "definition": "Keeps only the rows where a condition is true."},
+        {"term": "AND / OR", "definition": "Join two conditions: both must be true, or either one."},
+        {"term": "LIKE", "definition": "Matches text against a pattern, with % for any characters."}
+      ],
+      "explanation": "WHERE comes after FROM and holds a condition. Only rows where the condition is true come back.\n\nCompare with =, <> (not equal), <, >, <= and >=. Text goes in single quotes, like course = 'BSCS'. Join conditions with AND when both must be true, or OR when either is enough.\n\nLIKE matches patterns in text. % stands for any number of characters, so name LIKE 'A%' finds names that start with A.",
+      "example": "-- The students table:\n-- id | name  | course | year\n--  1 | Ana   | BSCS   | 2\n--  2 | Ben   | BSIT   | 1\n--  3 | Carla | BSCS   | 3\n\nSELECT name, year\nFROM students\nWHERE course = 'BSCS' AND year >= 2;",
+      "example_output": "name  | year\nAna   | 2\nCarla | 3",
+      "estimated_minutes": 45,
+      "tips": [
+        "Put text in single quotes: 'BSCS'. Without them, SQL thinks it's a column name.",
+        "In SQL, = compares; there's no == like in other languages."
+      ],
+      "skill_questions": [
+        {
+          "prompt": "Which rows does this return?",
+          "code_snippet": "SELECT name FROM students\nWHERE year = 1;",
+          "choices": ["Every student", "Only first-year students", "Only the first row", "Nothing, it's an error"],
+          "correct_index": 1
+        },
+        {
+          "prompt": "Which pattern finds names ending in \"a\"?",
+          "code_snippet": "",
+          "choices": ["LIKE 'a%'", "LIKE '%a'", "LIKE 'a'", "= '%a'"],
+          "correct_index": 1
+        }
+      ],
+      "quiz_items": [
+        {
+          "prompt": "Keep only matching rows: SELECT * FROM students ___ year = 3;",
+          "accepted_answers": ["WHERE"],
+          "hint": "Where is the condition true?",
+          "explanation": "WHERE filters the rows, keeping only those where the condition is true."
+        },
+        {
+          "prompt": "Both must be true: WHERE year = 2 ___ course = 'BSIT'",
+          "accepted_answers": ["AND"],
+          "hint": "This one and that one.",
+          "explanation": "AND keeps a row only when both conditions are true."
+        },
+        {
+          "prompt": "Match a pattern: WHERE name ___ 'J%'",
+          "accepted_answers": ["LIKE"],
+          "hint": "It's like this pattern.",
+          "explanation": "LIKE compares text to a pattern; % matches any characters."
+        },
+        {
+          "prompt": "In a LIKE pattern, any number of characters is written as ___",
+          "accepted_answers": ["%"],
+          "hint": "The percent sign.",
+          "explanation": "% matches zero or more characters, so 'A%' means anything that starts with A."
+        }
+      ],
+      "resources": [
+        {"title": "SQL Lesson 2: Queries with constraints", "url": "https://sqlbolt.com/lesson/select_queries_with_constraints", "kind": "interactive", "estimated_minutes": 15},
+        {"title": "SQL WHERE Clause", "url": "https://www.w3schools.com/sql/sql_where.asp", "kind": "docs", "estimated_minutes": 15}
+      ]
+    },
+    {
+      "title": "Sorting and limiting",
+      "summary": "Put results in order with ORDER BY, and keep the top few with LIMIT.",
+      "why_it_matters": "Leaderboards, newest posts first, the five cheapest items: most lists people see are sorted and cut short.",
+      "key_terms": [
+        {"term": "ORDER BY", "definition": "Sorts the results by one or more columns."},
+        {"term": "DESC", "definition": "Sorts from highest to lowest (descending)."},
+        {"term": "LIMIT", "definition": "Returns at most a set number of rows."}
+      ],
+      "explanation": "Without ORDER BY, rows come back in whatever order the database likes. ORDER BY column sorts them, lowest first, or A to Z for text.\n\nAdd DESC after the column to sort highest first. ASC means lowest first and is the default, so you rarely need to write it.\n\nLIMIT goes at the very end and caps how many rows come back. Together, ORDER BY score DESC LIMIT 3 gives the top three.",
+      "example": "-- The scores table:\n-- name  | score\n-- Ana   | 88\n-- Ben   | 95\n-- Carla | 79\n-- Dan   | 91\n\nSELECT name, score\nFROM scores\nORDER BY score DESC\nLIMIT 2;",
+      "example_output": "name | score\nBen  | 95\nDan  | 91",
+      "estimated_minutes": 35,
+      "tips": [
+        "The order of the parts matters: SELECT, FROM, WHERE, ORDER BY, then LIMIT.",
+        "Sort by more than one column with commas: ORDER BY course, name."
+      ],
+      "skill_questions": [
+        {
+          "prompt": "Which query lists products from the cheapest?",
+          "code_snippet": "",
+          "choices": ["ORDER BY price DESC", "ORDER BY price", "SORT price", "LIMIT price"],
+          "correct_index": 1
+        },
+        {
+          "prompt": "What does LIMIT 5 do?",
+          "code_snippet": "",
+          "choices": ["Returns rows 5 and up", "Returns at most 5 rows", "Skips 5 rows", "Sorts by the 5th column"],
+          "correct_index": 1
+        }
+      ],
+      "quiz_items": [
+        {
+          "prompt": "Sort the results: SELECT * FROM books ___ BY title;",
+          "accepted_answers": ["ORDER"],
+          "hint": "Put them in order.",
+          "explanation": "ORDER BY sorts the rows by the column you name."
+        },
+        {
+          "prompt": "Highest first: ORDER BY score ___",
+          "accepted_answers": ["DESC"],
+          "hint": "Short for descending.",
+          "explanation": "DESC sorts from highest to lowest; the default, ASC, is lowest first."
+        },
+        {
+          "prompt": "Only the first 10 rows: ... ___ 10;",
+          "accepted_answers": ["LIMIT"],
+          "hint": "It sets a limit.",
+          "explanation": "LIMIT caps how many rows come back and goes at the end of the query."
+        },
+        {
+          "prompt": "LIMIT comes ___ ORDER BY in a query.",
+          "accepted_answers": ["after"],
+          "hint": "Before or after?",
+          "explanation": "Rows are sorted first, then cut down, so LIMIT is written after ORDER BY."
+        }
+      ],
+      "resources": [
+        {"title": "SQL Lesson 4: Filtering and sorting query results", "url": "https://sqlbolt.com/lesson/filtering_sorting_query_results", "kind": "interactive", "estimated_minutes": 15},
+        {"title": "SQL ORDER BY Keyword", "url": "https://www.w3schools.com/sql/sql_orderby.asp", "kind": "docs", "estimated_minutes": 10}
+      ]
+    },
+    {
+      "title": "Counting and grouping",
+      "summary": "Count, add up and average rows with COUNT, SUM and AVG, per group with GROUP BY.",
+      "why_it_matters": "Reports ask summary questions: how many students per course, the average grade, total sales this month. Aggregates answer them.",
+      "key_terms": [
+        {"term": "COUNT()", "definition": "Counts rows."},
+        {"term": "AVG()", "definition": "Works out the average of a column."},
+        {"term": "GROUP BY", "definition": "Splits rows into groups so each gets its own summary."}
+      ],
+      "explanation": "Aggregate functions turn many rows into one value. COUNT(*) counts rows, SUM(column) adds them up, AVG(column) averages them, and MIN() and MAX() find the smallest and largest.\n\nOn its own, an aggregate summarises the whole table. Add GROUP BY column and you get one row per group instead, like one count for each course.\n\nGive a summary column a readable name with AS, like COUNT(*) AS total. To filter groups after counting, use HAVING instead of WHERE.",
+      "example": "-- The students table:\n-- id | name  | course | year\n--  1 | Ana   | BSCS   | 2\n--  2 | Ben   | BSIT   | 1\n--  3 | Carla | BSCS   | 3\n\nSELECT course, COUNT(*) AS total\nFROM students\nGROUP BY course;",
+      "example_output": "course | total\nBSCS   | 2\nBSIT   | 1",
+      "estimated_minutes": 45,
+      "tips": [
+        "Every column in SELECT that isn't inside an aggregate should be in GROUP BY.",
+        "WHERE filters rows before grouping; HAVING filters the groups after."
+      ],
+      "skill_questions": [
+        {
+          "prompt": "What does this return?",
+          "code_snippet": "SELECT COUNT(*) FROM students;",
+          "choices": ["Every student's name", "The number of students", "The first student", "An error"],
+          "correct_index": 1
+        },
+        {
+          "prompt": "Which gets the average of the grade column?",
+          "code_snippet": "",
+          "choices": ["MEAN(grade)", "AVG(grade)", "AVERAGE grade", "SUM(grade) / *"],
+          "correct_index": 1
+        }
+      ],
+      "quiz_items": [
+        {
+          "prompt": "Count the rows: SELECT ___(*) FROM orders;",
+          "accepted_answers": ["COUNT"],
+          "hint": "How many are there?",
+          "explanation": "COUNT(*) counts every row."
+        },
+        {
+          "prompt": "One result per course: ... ___ BY course;",
+          "accepted_answers": ["GROUP"],
+          "hint": "Put the rows into groups.",
+          "explanation": "GROUP BY makes one group per value, and aggregates are worked out for each group."
+        },
+        {
+          "prompt": "The average price: SELECT ___(price) FROM items;",
+          "accepted_answers": ["AVG"],
+          "hint": "Short for average.",
+          "explanation": "AVG() returns the average of a number column."
+        },
+        {
+          "prompt": "Name a result column: SELECT COUNT(*) ___ total FROM students;",
+          "accepted_answers": ["AS"],
+          "hint": "Two letters: call it this.",
+          "explanation": "AS gives a column a new name in the results."
+        }
+      ],
+      "resources": [
+        {"title": "SQL Lesson 10: Queries with aggregates", "url": "https://sqlbolt.com/lesson/select_queries_with_aggregates", "kind": "interactive", "estimated_minutes": 15},
+        {"title": "SQL GROUP BY Statement", "url": "https://www.w3schools.com/sql/sql_groupby.asp", "kind": "docs", "estimated_minutes": 15}
+      ]
+    },
+    {
+      "title": "Joining tables",
+      "summary": "Combine rows from two tables that share a column, with JOIN and ON.",
+      "why_it_matters": "Real data is split across tables, like students in one and their enrollments in another. JOIN puts them back together to answer a question.",
+      "key_terms": [
+        {"term": "JOIN", "definition": "Combines rows from two tables."},
+        {"term": "ON", "definition": "Says which columns must match to pair rows up."},
+        {"term": "foreign key", "definition": "A column that points to a row in another table, like student_id."}
+      ],
+      "explanation": "Databases avoid repeating information. Instead of writing a student's name on every enrollment, the enrollments table keeps a student_id that points to the students table. That pointer is called a foreign key.\n\nJOIN pairs up rows from two tables, and ON says which columns must match: ON students.id = enrollments.student_id.\n\nWhen both tables have a column with the same name, write table.column so SQL knows which you mean. A plain JOIN (an inner join) keeps only rows that found a match; LEFT JOIN also keeps rows from the first table that have none.",
+      "example": "-- students:\n-- id | name\n--  1 | Ana\n--  2 | Ben\n\n-- enrollments:\n-- student_id | subject\n--  1         | Math\n--  1         | Art\n--  2         | Math\n\nSELECT students.name, enrollments.subject\nFROM students\nJOIN enrollments\n  ON students.id = enrollments.student_id;",
+      "example_output": "name | subject\nAna  | Math\nAna  | Art\nBen  | Math",
+      "estimated_minutes": 60,
+      "tips": [
+        "Forgetting ON pairs every row with every other row. If you get far too many results, check your ON.",
+        "Short table names save typing: FROM students s JOIN enrollments e ON s.id = e.student_id."
+      ],
+      "skill_questions": [
+        {
+          "prompt": "What does ON do in a JOIN?",
+          "code_snippet": "",
+          "choices": ["Turns the join on", "Says which columns must match", "Sorts the result", "Limits the rows"],
+          "correct_index": 1
+        },
+        {
+          "prompt": "Which join also keeps students with no enrollments?",
+          "code_snippet": "",
+          "choices": ["JOIN", "LEFT JOIN", "INNER JOIN", "GROUP JOIN"],
+          "correct_index": 1
+        }
+      ],
+      "quiz_items": [
+        {
+          "prompt": "Combine two tables: FROM students ___ enrollments ON ...",
+          "accepted_answers": ["JOIN", "INNER JOIN"],
+          "hint": "Join them together.",
+          "explanation": "JOIN combines rows from two tables that match on the ON condition."
+        },
+        {
+          "prompt": "Say how rows match: JOIN enrollments ___ students.id = enrollments.student_id",
+          "accepted_answers": ["ON"],
+          "hint": "Two letters.",
+          "explanation": "ON gives the condition that pairs a row from one table with a row from the other."
+        },
+        {
+          "prompt": "Keep every student, even without a match: ___ JOIN enrollments",
+          "accepted_answers": ["LEFT"],
+          "hint": "The table on the left side stays complete.",
+          "explanation": "LEFT JOIN keeps all rows from the first table and fills missing matches with NULL."
+        },
+        {
+          "prompt": "A column that points to a row in another table is a ___ key.",
+          "accepted_answers": ["foreign"],
+          "hint": "It belongs to another table.",
+          "explanation": "A foreign key, like student_id, holds the id of a row in another table."
+        }
+      ],
+      "resources": [
+        {"title": "SQL Lesson 6: Multi-table queries with JOINs", "url": "https://sqlbolt.com/lesson/select_queries_with_joins", "kind": "interactive", "estimated_minutes": 20},
+        {"title": "SQL Joins", "url": "https://www.w3schools.com/sql/sql_join.asp", "kind": "docs", "estimated_minutes": 15}
+      ]
+    }
+  ]
+}

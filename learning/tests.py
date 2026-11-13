@@ -679,6 +679,20 @@ class HelpPanelTests(PlanTestMixin, TestCase):
         self.assertContains(page, 'data-topic="topic-1"')
         self.assertContains(page, "2 of 2 messages left today")
 
+    def test_agapay_says_hi_on_topic_screens(self):
+        page = self.client.get(reverse("lesson", args=["topic-1"]))
+        self.assertContains(page, "data-help-greeter")
+        self.assertContains(page, "Hi, I'm Agapay!")
+        self.assertContains(page, "Need a hand with Topic 1?")
+        self.assertContains(page, 'class="critter greeter-critter"')
+        self.assertContains(page, "js/mascots.js")
+
+    def test_no_greeting_when_out_of_messages(self):
+        from assistant.models import AIUsage
+        from django.utils import timezone
+        AIUsage.objects.create(learner=self.profile, date=timezone.localdate(), messages_used=2)
+        self.assertNotContains(self.client.get(reverse("lesson", args=["topic-1"])), "data-help-greeter")
+
     def test_out_of_messages_shows_tips_and_a_greyed_box(self):
         from assistant.models import AIUsage
         from django.utils import timezone

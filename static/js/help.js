@@ -129,7 +129,31 @@
       });
   }
 
+  // Agapay says hi a few seconds in, once per lesson per visit, unless the panel is already open.
+  var greeter = document.querySelector("[data-help-greeter]");
+  function hideGreeter() {
+    if (greeter) greeter.classList.remove("is-visible");
+  }
+  if (greeter) {
+    var seenKey = "agapay-hi:" + greeter.dataset.key;
+    var seen = false;
+    try { seen = sessionStorage.getItem(seenKey) === "1"; } catch (e) { /* storage blocked: just show it */ }
+    if (!seen) {
+      setTimeout(function () {
+        if (!panel.hidden) return;
+        greeter.classList.add("is-visible");
+        try { sessionStorage.setItem(seenKey, "1"); } catch (e) { /* fine without it */ }
+      }, 3500);
+    }
+    greeter.querySelector("[data-greeter-close]").addEventListener("click", hideGreeter);
+    greeter.querySelector("[data-greeter-ask]").addEventListener("click", function () {
+      hideGreeter();
+      open();
+    });
+  }
+
   openButton.addEventListener("click", function () {
+    hideGreeter();
     if (panel.hidden) open(); else close();
   });
   panel.querySelector("[data-help-close]").addEventListener("click", close);

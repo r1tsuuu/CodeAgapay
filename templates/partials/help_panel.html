@@ -1,10 +1,10 @@
-{% load static %}{% comment %}
+{% load static mascots %}{% comment %}
 The "Need help?" button and the Agapay panel. Include on topic screens with `topic`, `help_screen`
 (lesson, practice or quiz), `help_remaining` and `help_limit`. On an AI lesson, pass `help_lesson` (its key)
 and `help_title` instead of `topic`. Replies are added by static/js/help.js.
 {% endcomment %}
 <button type="button" class="help-button" aria-expanded="false" aria-controls="help-panel" data-help-open{% if not help_remaining %} data-out="1"{% endif %}>
-  <img src="{% static 'img/mascots/flower-yellow.svg' %}" alt="" width="28" height="25"> Need help?
+  {% mascot "flower-yellow" "help-button-critter" %} Need help?
 </button>
 
 <aside id="help-panel" class="help-panel" hidden aria-labelledby="help-title"
@@ -45,4 +45,18 @@ and `help_title` instead of `topic`. Replies are added by static/js/help.js.
   </form>
   <p class="help-note">AI can make mistakes. Check the linked resources.</p>
 </aside>
+
+{# Agapay says hi: pops up beside "Need help?" once per lesson per visit (static/js/help.js). #}
+{% if help_remaining %}
+<div class="agapay-greeter" data-help-greeter data-key="{{ help_screen }}:{% firstof help_lesson topic.slug %}">
+  <div class="greeter-bubble">
+    <button type="button" class="greeter-close" data-greeter-close aria-label="Close">×</button>
+    <p><strong>Hi, I'm Agapay!</strong>
+      {% if help_screen == "quiz" %}Stuck on a question? I can give you a hint, not the answer.{% else %}Need a hand with {% firstof help_title topic.title %}? Just ask me.{% endif %}</p>
+    <button type="button" class="greeter-ask" data-greeter-ask>Ask Agapay</button>
+  </div>
+  {% mascot "flower-yellow" "greeter-critter" %}
+</div>
+{% endif %}
+<script src="{% static 'js/mascots.js' %}" defer></script>
 <script src="{% static 'js/help.js' %}" defer></script>
