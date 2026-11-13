@@ -5163,3 +5163,114 @@ kbd {
   .finish-next-art-1 { width: 4rem; right: 1rem; top: -1.5rem; }
   .finish-next-art-2 { display: none; }
 }
+
+/* ---------- Agapay says hi (help panel greeter) ---------- */
+
+.help-button-critter {
+  width: 1.9rem;
+  flex: none;
+}
+
+/* Sits just above "Need help?". Kept in the layout (not display: none) while hidden, so
+   mascots.js can measure its eyes when the page loads. */
+.agapay-greeter {
+  position: fixed;
+  right: clamp(1rem, 3vw, 2rem);
+  bottom: calc(clamp(1rem, 3vw, 2rem) + 3.6rem);
+  z-index: 21;
+  display: flex;
+  align-items: flex-end;
+  gap: 0.4rem;
+  max-width: min(22rem, calc(100vw - 2rem));
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(1rem) scale(0.96);
+  transform-origin: bottom right;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.35s cubic-bezier(0.23, 1, 0.32, 1), visibility 0s linear 0.35s;
+}
+
+.agapay-greeter.is-visible {
+  visibility: visible;
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+  transition: opacity 0.25s ease, transform 0.35s cubic-bezier(0.23, 1, 0.32, 1), visibility 0s;
+}
+
+.greeter-critter {
+  width: 4.25rem;
+  flex: none;
+}
+
+.greeter-bubble {
+  position: relative;
+  padding: 0.85rem 1rem 0.95rem;
+  border: 3px solid var(--line);
+  border-radius: 1.25rem 1.25rem 0.35rem 1.25rem;
+  background: var(--white);
+  box-shadow: 0 10px 24px rgba(42, 26, 32, 0.16);
+  color: var(--ink);
+}
+
+.greeter-bubble p {
+  margin: 0 1.25rem 0.7rem 0;
+  font-size: 0.98rem;
+  line-height: 1.4;
+}
+
+.greeter-bubble strong {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--berry);
+}
+
+.greeter-ask {
+  padding: 0.4rem 0.95rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--lagoon);
+  box-shadow: 0 3px 0 var(--teal-deep);
+  color: var(--white);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.98rem;
+  cursor: pointer;
+}
+
+.greeter-ask:hover {
+  background: var(--teal);
+}
+
+.greeter-close {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.45rem;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.greeter-close:hover {
+  background: var(--cream);
+}
+
+body.help-open .agapay-greeter {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agapay-greeter,
+  .agapay-greeter.is-visible {
+    transform: none;
+    transition: opacity 0.2s ease, visibility 0s;
+  }
+}
