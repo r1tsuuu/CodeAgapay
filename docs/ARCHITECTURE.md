@@ -42,7 +42,7 @@ flowchart LR
 
 | Layer | Where | Rule |
 | --- | --- | --- |
-| UI | `templates/`, `static/css/main.css`, `static/js/*.js` | No logic in templates beyond display. JS only enhances: every page works without it, and AI text is only ever set with `textContent` |
+| UI | `templates/`, `static/css/main.css`, `static/js/*.js` | No logic in templates beyond display. JS only enhances: every page works without it, and AI text is only ever set with `textContent`. The landing page alone loads GSAP 3.13 and ScrollTrigger from cdnjs, pinned with integrity hashes, for the hero entrance and the scroll-linked steps; without it the page shows everything at once |
 | Views | `*/views.py`, `learning/ai_views.py` | Thin: read and validate the request, call the rules, redirect after every POST, use Django messages for feedback. Every learner object is fetched through `request.user` |
 | Rules | `learning/planner.py`, `diagnose/scoring.py`, `learning/grading.py`, `learning/journey.py`, `learning/preview.py`, `learning/rewards.py` | Pure, deterministic and unit-tested. No AI calls |
 | Data | `*/models.py` | Progress is computed from statuses, never stored. Constraints in the database: one active plan per learner and track, one mastery row per learner and topic, one usage row per learner and day |

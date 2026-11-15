@@ -1872,12 +1872,61 @@ input[type="radio"] {
   pointer-events: none;
 }
 
+/* The headline at full display strength: three lines, the last one highlighted in marigold. */
+.landing-hero .hero-title {
+  margin-bottom: 1.75rem;
+  font-size: clamp(2.6rem, 1.1rem + 4.6vw, 4.9rem);
+  line-height: 1.02;
+  letter-spacing: -0.025em;
+}
+
+.hero-line {
+  display: block;
+}
+
 .hero-mark {
+  position: relative;
+  z-index: 0;
   color: var(--berry);
-  background: linear-gradient(transparent 62%, var(--marigold-light) 62%, var(--marigold-light) 92%, transparent 92%);
-  padding-inline: 0.06em;
-  box-decoration-break: clone;
-  -webkit-box-decoration-break: clone;
+  white-space: nowrap;
+}
+
+/* A highlighter stroke, drawn left to right on load (landing.js sets --mark from 0 to 1). */
+.hero-mark::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: -0.06em;
+  right: -0.06em;
+  bottom: 0.04em;
+  height: 0.36em;
+  border-radius: 0.12em;
+  background: var(--marigold-light);
+  transform: scaleX(var(--mark, 1));
+  transform-origin: left center;
+}
+
+.hero-facts {
+  max-width: 34rem;
+  margin: 1.5rem 0 0;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* Before the entrance runs, its parts wait out of sight (removed after 2.5 s whatever happens). */
+.hero-pending [data-hero-part],
+.hero-pending [data-hero-stage] {
+  visibility: hidden;
+}
+
+::selection {
+  background: var(--marigold-light);
+  color: var(--ink);
+}
+
+input,
+textarea {
+  caret-color: var(--berry);
 }
 
 .landing-stage {
@@ -1909,30 +1958,6 @@ input[type="radio"] {
   animation: card-float 6s ease-in-out infinite;
 }
 
-.landing-stats {
-  background: var(--ink);
-  color: #E8D9DE;
-  padding-block: 1.75rem;
-}
-
-.stats-list {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1rem;
-  margin-block: 0;
-  padding: 0;
-  list-style: none;
-  font-weight: 700;
-}
-
-.stats-list strong {
-  display: block;
-  font-family: var(--font-display);
-  font-size: clamp(2rem, 1.4rem + 2vw, 3rem);
-  font-weight: 700;
-  line-height: 1.1;
-  color: var(--marigold);
-}
 
 .landing-goals {
   background: var(--paper);
@@ -1975,10 +2000,6 @@ input[type="radio"] {
 @media (max-width: 56rem) {
   .landing-stage .stage-critter {
     width: 20%;
-  }
-
-  .stats-list {
-    grid-template-columns: repeat(2, 1fr);
   }
 }
 

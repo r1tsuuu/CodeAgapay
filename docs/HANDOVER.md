@@ -35,11 +35,11 @@ No secret is written here. Hand each one over in person or through a password ma
 - **Programming Foundations isn't live.** It's in the files with `is_active: false`, waiting for a review.
 - **Render free sleeps** after 15 idle minutes; the first visit then takes 30 to 60 seconds.
 - **No cron.** Reminders and link checks run by hand or from a laptop.
-- **Third-party scripts without integrity hashes.** The coding panel loads CodeMirror and sql.js from cdnjs and Pyodide from jsDelivr, pinned to versions but without Subresource Integrity.
+- **Third-party scripts without integrity hashes.** GSAP on the landing page is pinned with integrity hashes, but the coding panel loads CodeMirror and sql.js from cdnjs and Pyodide from jsDelivr, pinned to versions but without Subresource Integrity.
 - **No HSTS or Content Security Policy** yet (`check --deploy` warns about HSTS).
 - **No burst rate limit** on `/help/ask/`; the daily cap is enforced, so the worst case is a learner using their own 20 messages quickly.
 - From the README's known issues: 70% pass mark means 2- or 3-item quizzes need every answer right; the quick check covers only a path's first track; reviews use a fixed 7-day rule; onboarding answers live in the session until confirmed; opening a lesson isn't recorded as activity for reminders.
-- **Lighthouse** (landing page, mobile, throttled, local server): Performance 83 to 89 (varies run to run), Accessibility 100, Best Practices 100, SEO 100. The main cost is the Google Fonts stylesheet and the 110 KB stylesheet, both render-blocking.
+- **Lighthouse** (landing page, mobile, throttled, local server): Performance 83 to 89 (86 after the GSAP hero; varies run to run), Accessibility 100, Best Practices 100, SEO 100. The main cost is the Google Fonts stylesheet and the 110 KB stylesheet, both render-blocking.
 
 ## Not done from the handover brief, and why
 
