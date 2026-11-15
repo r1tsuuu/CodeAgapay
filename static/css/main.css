@@ -21,6 +21,9 @@
   --success-soft: #DBF2DC;
   --error: #E23B3B;
   --error-soft: #FCDCD5;
+  /* Darker shades for feedback text, so it passes WCAG AA (4.5:1) on cream and soft fills. */
+  --success-text: #1E7A47;
+  --error-text: #B42828;
   /* Backgrounds */
   --cream: #FBEFE1;
   --paper: #FFF8EF;
@@ -72,7 +75,7 @@ h2 { font-size: clamp(1.35rem, 1.1rem + 0.8vw, 1.75rem); margin: 1.5rem 0 0.5rem
 h3 { font-size: 1.2rem; margin: 1rem 0 0.25rem; }
 
 a {
-  color: var(--teal);
+  color: var(--teal-deep);
   text-underline-offset: 0.15em;
 }
 
@@ -474,14 +477,14 @@ img {
 .button-lagoon {
   border-color: var(--lagoon);
   background: var(--lagoon);
-  color: var(--white);
+  color: var(--ink); /* White on lagoon is 2.1:1; ink is 7.9:1. */
   box-shadow: 0 4px 0 #2a9d90;
 }
 
 .button-lagoon:hover {
   background: #2fb3a4;
   border-color: #2fb3a4;
-  color: var(--white);
+  color: var(--ink);
 }
 
 .button-small {
@@ -609,7 +612,7 @@ input[type="radio"] {
 
 .field-error {
   margin: 0.4rem 0 0;
-  color: var(--error);
+  color: var(--error-text);
   font-weight: 600;
 }
 
@@ -1190,6 +1193,7 @@ input[type="radio"] {
 }
 
 .how-step {
+  position: relative; /* Holds its "Step n" pill. */
   padding: 1.75rem;
 }
 
@@ -1469,6 +1473,376 @@ input[type="radio"] {
 
   .crowd-critter:nth-child(n + 5) {
     display: none;
+  }
+}
+
+
+/* ---------- Landing: plan previews, weekly sample, trust ---------- */
+
+.landing-stage {
+  display: grid;
+  place-items: center;
+  aspect-ratio: auto;
+  min-height: min(36rem, 70svh);
+  padding: clamp(1.5rem, 4vw, 3rem) clamp(1rem, 4vw, 2.5rem);
+}
+
+.preview-card {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 26rem);
+  padding: 1.25rem 1.4rem 1rem;
+  border: 3px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--white);
+  box-shadow: 0 8px 0 var(--line);
+}
+
+.preview-card-label,
+.preview-week-label,
+.week-card-label {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--berry-deep);
+}
+
+.preview-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+
+.preview-tab {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0.35rem 0.85rem;
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.preview-tab:hover {
+  border-color: var(--teal);
+  color: var(--ink);
+}
+
+.preview-tab[aria-current="true"] {
+  border-color: var(--teal-deep);
+  background: var(--teal-deep);
+  color: var(--white);
+}
+
+.preview-facts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin: 0 0 0.75rem;
+}
+
+.preview-facts dt,
+.preview-project span {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.preview-facts dd {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.35rem;
+}
+
+.preview-project {
+  margin: 0 0 0.9rem;
+  font-weight: 700;
+}
+
+.preview-project span {
+  display: block;
+}
+
+.preview-week {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0 0 0.75rem;
+  padding: 0;
+  list-style: none;
+}
+
+.preview-week li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: var(--radius-sm);
+  background: var(--teal-soft);
+  font-weight: 600;
+}
+
+.preview-minutes,
+.week-meta {
+  color: var(--ink-soft);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.preview-note {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+}
+
+@keyframes preview-swap {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+.is-swapping {
+  animation: preview-swap 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.goal-picker {
+  display: grid;
+  grid-template-columns: minmax(14rem, 20rem) 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.goal-tabs {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.goal-tab {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.8rem 1rem;
+  border: 3px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper);
+  color: var(--ink);
+  text-decoration: none;
+  transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.15s ease;
+}
+
+.goal-tab strong {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.15rem;
+}
+
+.goal-tab span {
+  font-size: 0.95rem;
+  color: var(--ink-soft);
+}
+
+.goal-tab:hover {
+  border-color: var(--teal);
+  color: var(--ink);
+}
+
+.goal-tab[aria-current="true"] {
+  border-color: var(--berry);
+  background: var(--berry-soft);
+}
+
+.goal-panel {
+  padding: clamp(1.25rem, 3vw, 2rem);
+}
+
+.goal-panel h3 {
+  margin-top: 0;
+  font-size: 1.5rem;
+}
+
+.goal-reason {
+  margin: 0 0 1.25rem;
+  font-size: 1.05rem;
+}
+
+.goal-facts {
+  display: grid;
+  gap: 0.9rem;
+  margin: 0 0 1.5rem;
+}
+
+.goal-facts dt {
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: var(--berry-deep);
+}
+
+.goal-facts dd {
+  margin: 0.1rem 0 0;
+}
+
+/* How it works, scroll-linked: a line fills as the steps are reached. Without JavaScript, or
+   with reduced motion, every step simply shows as it is. */
+.how-track {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.how-track.is-tracking {
+  position: relative;
+}
+
+.how-track.is-tracking::before {
+  content: "";
+  position: absolute;
+  inset: -1rem 0 auto;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(var(--berry), var(--berry)) left / calc(var(--how-progress, 0) * 100%) 100% no-repeat, var(--line);
+  transition: background-size 0.3s ease;
+}
+
+.how-track.is-tracking .how-step {
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.how-track.is-tracking .how-step.is-reached {
+  border-color: var(--berry);
+  box-shadow: 0 6px 0 var(--berry-soft);
+}
+
+.js-reveal [data-reveal] {
+  transition: opacity 0.3s ease var(--reveal-delay, 0ms), transform 0.3s ease var(--reveal-delay, 0ms);
+}
+
+.js-reveal [data-reveal]:not(.is-in) {
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+.week-layout {
+  display: grid;
+  grid-template-columns: 1fr 1.1fr;
+  gap: clamp(2rem, 5vw, 5rem);
+  align-items: center;
+}
+
+.week-card {
+  padding: clamp(1.25rem, 3vw, 2rem);
+  background: var(--white);
+}
+
+.week-card h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.5rem;
+}
+
+.week-outcome {
+  margin: 0 0 1rem;
+  font-weight: 600;
+}
+
+.week-parts {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.week-parts li {
+  padding: 0.75rem 0.9rem;
+  border-radius: var(--radius-sm);
+  background: var(--paper);
+}
+
+.week-part {
+  display: inline-block;
+  min-width: 4.5rem;
+  margin-right: 0.25rem;
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--teal-deep);
+}
+
+.week-parts .week-meta {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.9rem;
+  white-space: normal;
+}
+
+.trust-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin: 2rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.trust-list h3 {
+  margin-top: 0;
+}
+
+.trust-list p {
+  margin: 0;
+}
+
+@media (max-width: 56rem) {
+  .goal-picker,
+  .week-layout,
+  .trust-list,
+  .how-track {
+    grid-template-columns: 1fr;
+  }
+
+  .goal-tabs {
+    grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  }
+
+  .how-track.is-tracking::before {
+    inset: 0 auto 0 -0.9rem;
+    width: 6px;
+    height: auto;
+    background: linear-gradient(var(--berry), var(--berry)) top / 100% calc(var(--how-progress, 0) * 100%) no-repeat, var(--line);
+  }
+
+  .how-track.is-tracking {
+    margin-left: 0.9rem;
+  }
+}
+
+@media (max-width: 40rem) {
+  .goal-tabs {
+    grid-template-columns: 1fr;
+  }
+
+  .goal-tab span {
+    display: none;
+  }
+
+  .preview-facts dd {
+    font-size: 1.15rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .is-swapping,
+  .landing-rise {
+    animation: none;
+  }
+
+  .preview-tab,
+  .goal-tab,
+  .how-track.is-tracking::before {
+    transition: none;
   }
 }
 
@@ -1794,14 +2168,14 @@ input[type="radio"] {
   height: 2rem;
   border-radius: 50%;
   background: var(--success-soft);
-  color: var(--success);
+  color: var(--success-text);
   font-weight: 800;
 }
 
 .result-to-learn .topic-result::before {
   content: "✕";
   background: var(--error-soft);
-  color: var(--error);
+  color: var(--error-text);
 }
 
 .topic-result-title {
@@ -2764,13 +3138,13 @@ input[type="radio"] {
 .quiz-correct::before {
   content: "✓";
   background: var(--success-soft);
-  color: var(--success);
+  color: var(--success-text);
 }
 
 .quiz-wrong::before {
   content: "✕";
   background: var(--error-soft);
-  color: var(--error);
+  color: var(--error-text);
 }
 
 .quiz-hint {

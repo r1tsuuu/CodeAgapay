@@ -92,6 +92,11 @@
     {% endfor %}
   </dl>
 
+  {% with first=path.first_track %}{% if first %}
+  <h3>Why you'll start with {{ first.name }}</h3>
+  <p>{% firstof path.language_reason "It's the first language on this path." %}</p>
+  {% endif %}{% endwith %}
+
   {% if check %}
   <h3>Where you're starting</h3>
   <ul class="review-evidence">

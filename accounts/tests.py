@@ -320,3 +320,45 @@ class UnsubscribeTests(TestCase):
         self.client.post(self.url)
         other.refresh_from_db()
         self.assertTrue(other.email_reminders)
+
+
+class LandingPreviewTests(TestCase):
+    """The plan preview before sign-in comes from the real curriculum and the real planner rules."""
+
+    def setUp(self):
+        from io import StringIO
+
+        from django.core.management import call_command
+
+        call_command("import_curriculum", stdout=StringIO())
+
+    def test_preview_shows_language_project_and_week_one(self):
+        response = self.client.get(reverse("home"))
+        website = next(p for p in response.context["previews"] if p.slug == "website")
+        self.assertEqual(website.language, "HTML")
+        self.assertTrue(website.week_one)
+        self.assertTrue(website.project_title)
+        self.assertGreater(website.weeks_high, 0)
+        self.assertIn("MDN Web Docs", website.sources)
+        self.assertContains(response, "Build my free plan")
+
+    def test_week_one_follows_the_planner(self):
+        from content.models import Path
+        from learning import preview
+        from learning.planner import assign_weeks
+
+        path = Path.objects.get(slug="automation")
+        result = preview.build(path)
+        topics = list(path.active_tracks()[0].topics.order_by("order"))
+        weeks = assign_weeks(topics, preview.PREVIEW_HOURS)
+        self.assertEqual([t["title"] for t in result.week_one], [t.title for t, w in zip(topics, weeks) if w == 1])
+
+    def test_goal_link_works_without_javascript(self):
+        response = self.client.get(reverse("home"), {"goal": "data"})
+        self.assertEqual(response.context["selected"], "data")
+        import re
+
+        panel = re.search(r'<article class="goal-panel[^>]*data-preview-panel="data"[^>]*>', response.content.decode())
+        self.assertNotIn("hidden", panel.group(0))
+        bogus = self.client.get(reverse("home"), {"goal": "<script>"})
+        self.assertEqual(bogus.context["selected"], response.context["previews"][0].slug)
