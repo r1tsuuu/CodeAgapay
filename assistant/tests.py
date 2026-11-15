@@ -150,12 +150,6 @@ class AskViewTests(AssistantTestMixin, TestCase):
         self.client.logout()
         self.assertEqual(self.post({"topic": "loops"}).status_code, 302)
 
-    def test_test_page_is_staff_only(self):
-        self.assertEqual(self.client.get(reverse("help_test")).status_code, 302)
-        self.user.is_staff = True
-        self.user.save()
-        self.assertContains(self.client.get(reverse("help_test")), "AI helper test")
-
 
 class ReplyTextTests(TestCase):
     def test_markdown_is_stripped(self):

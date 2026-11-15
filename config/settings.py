@@ -110,7 +110,7 @@ USE_TZ = True
 
 
 STATIC_URL = "static/"
-STATIC_ROOT = BASE_DIR / "staticfiles"
+STATIC_ROOT = env("STATIC_ROOT_OVERRIDE", default=str(BASE_DIR / "staticfiles"))  # override: scripts/check.sh
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
@@ -187,6 +187,18 @@ EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
 EMAIL_USE_TLS = True
 EMAIL_TIMEOUT = 20
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default=EMAIL_HOST_USER or "webmaster@localhost")
+
+
+# Logs: one JSON object per line on stdout (Render keeps them). LOG_LEVEL=DEBUG for more detail.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "filters": {"redact": {"()": "config.logging.RedactSecrets"}},
+    "formatters": {"json": {"()": "config.logging.JsonFormatter"}},
+    "handlers": {"stdout": {"class": "logging.StreamHandler", "formatter": "json", "filters": ["redact"]}},
+    "root": {"handlers": ["stdout"], "level": env("LOG_LEVEL", default="INFO")},
+    "loggers": {"django.server": {"level": "WARNING"}},
+}
 
 
 # Render terminates HTTPS at its proxy; without this Google rejects the OAuth callback.

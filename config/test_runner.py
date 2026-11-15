@@ -14,6 +14,8 @@ SAFE_DEFAULTS = {
     "GROQ_API_KEY": "",
     "CF_ACCOUNT_ID": "",
     "CF_API_TOKEN": "",
+    # A .env with DEBUG=False must not turn every test request into an HTTPS redirect.
+    "SECURE_SSL_REDIRECT": False,
 }
 
 
@@ -22,3 +24,8 @@ class Runner(DiscoverRunner):
         super().setup_test_environment(**kwargs)
         for name, value in SAFE_DEFAULTS.items():
             setattr(settings, name, value)
+        # Plain static files, so pages render without running collectstatic first.
+        settings.STORAGES = {
+            **settings.STORAGES,
+            "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+        }

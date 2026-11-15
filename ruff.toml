@@ -1,0 +1,9 @@
+# Lint for real mistakes only (unused names, undefined names, syntax), not style.
+# Run: ruff check .   (installed from requirements-dev.txt)
+line-length = 120
+extend-exclude = [".claude", ".agents", "*/migrations/*"]
+
+[lint]
+select = ["E4", "E7", "E9", "F", "B"]
+# Not bugs here: zip() without strict=, raise-from in commands, one-line test setup.
+ignore = ["B905", "B904", "E702"]

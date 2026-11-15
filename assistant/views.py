@@ -1,8 +1,6 @@
 import json
 
-from django.contrib.admin.views.decorators import staff_member_required
 from django.http import JsonResponse
-from django.shortcuts import render
 from django.views.decorators.http import require_POST
 
 from accounts.models import get_profile
@@ -74,10 +72,3 @@ def ask(request):
         hint_style=learner.hint_style,
     )
     return JsonResponse(ask_service(learner, help_request).as_dict())
-
-
-@staff_member_required
-def test_page(request):
-    """A bare page for trying the AI service before the help panel (M8) exists."""
-    topics = Topic.objects.filter(track__is_active=True).select_related("track")
-    return render(request, "assistant/test_page.html", {"topics": topics})

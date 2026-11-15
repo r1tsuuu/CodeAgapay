@@ -1,9 +1,11 @@
 from django.contrib import admin
 from django.urls import include, path
 
+from config.health import health
 from content import review
 
 urlpatterns = [
+    path("health/", health, name="health"),
     # Before admin.site.urls, so admin's catch-all doesn't take these.
     path("admin/review/", review.queue, name="review_queue"),
     path("admin/review/<str:kind>/<int:pk>/approve/", review.approve, name="review_approve"),
