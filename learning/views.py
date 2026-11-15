@@ -3,12 +3,13 @@ from itertools import groupby
 from django.contrib import messages
 from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from accounts.models import get_profile
 from assistant.service import daily_limit, practice_feedback, remaining_today
-from content.models import Resource, Topic, Track
+from content.models import PracticeTask, Resource, Topic, Track
 
 from . import ai_views, journey, rewards
 from .ai_plan import active_outline
@@ -16,7 +17,8 @@ from .forms import QuizForm
 from .grading import PASS_PERCENT, latest_result, submit_quiz
 from .models import PlanFeedback, PlanItem, PracticeSubmission, QuizAttempt
 from .planner import (
-    active_plan, move_on_shaky, plan_item_for_topic, plan_tracks, repace_plan, set_item_status, start_item,
+    active_plan, defer_item, move_on_shaky, plan_item_for_topic, plan_tracks, repace_plan, set_item_status,
+    start_item,
 )
 from .tailoring import build_plan_with_template
 
@@ -49,6 +51,7 @@ def plan(request):
             Prefetch("topic__resources", queryset=Resource.objects.filter(is_active=True)),
             "topic__tips",
             "topic__quiz_items",
+            Prefetch("topic__practice_tasks", queryset=PracticeTask.objects.filter(approved=True)),
         )
         .order_by("order")
     )
@@ -376,6 +379,36 @@ def quiz_result(request, topic):
             "move_on_item": item if struggling and item and item.status != PlanItem.Status.DONE and not item.shaky else None,
         },
     )
+
+
+@require_POST
+def plan_item_defer(request, item_id):
+    """"Later": move a topic to the end of the plan, unless a later topic needs it first."""
+    item = get_object_or_404(
+        PlanItem.objects.select_related("plan__learner", "topic"),
+        pk=item_id, plan__learner__user=request.user, plan__is_active=True,
+        status__in=[PlanItem.Status.TODO, PlanItem.Status.IN_PROGRESS],
+    )
+    blocking = defer_item(item)
+    if blocking:
+        messages.error(request, f"{item.topic.title} can't wait: {', '.join(blocking)} need{'s' if len(blocking) == 1 else ''} it first.")
+    else:
+        messages.success(request, f"{item.topic.title} moved to the end of your plan.")
+    return redirect("plan")
+
+
+@require_POST
+def plan_pause(request):
+    """Pause or resume the plan. Pausing keeps everything; it only stops reminders and the streak clock."""
+    profile = get_profile(request.user)
+    if request.POST.get("action") == "resume":
+        profile.paused_at = None
+        messages.success(request, "Welcome back! Your plan is where you left it.")
+    else:
+        profile.paused_at = profile.paused_at or timezone.now()
+        messages.success(request, "Your plan is paused. Nothing is lost, and no reminders go out until you resume.")
+    profile.save(update_fields=["paused_at"])
+    return redirect("plan")
 
 
 @require_POST

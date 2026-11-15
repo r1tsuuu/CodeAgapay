@@ -71,6 +71,10 @@ class LearnerProfile(models.Model):
         "content.Track", blank=True, related_name="+", help_text="Tracks whose setup the learner finished."
     )
     onboarded = models.BooleanField(default=False)
+    paused_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text="The learner paused their plan: no reminders, and the weekly streak waits. Blank: not paused.",
+    )
     avatar = models.CharField(max_length=20, choices=Avatar.choices, blank=True, help_text="Blank: the first letter of their name.")
     school = models.CharField("school or organisation", max_length=120, blank=True)
     role = models.CharField(max_length=60, blank=True, help_text='What they do, e.g. "student". Optional.')

@@ -181,6 +181,9 @@
     }
   });
 
+  // "Stuck? Ask Agapay" links from the plan land here with #agapay: open the panel straight away.
+  if (location.hash === "#agapay") open();
+
   // "Why is this wrong?" / "Need help?" links on quiz screens ask about one blank.
   document.querySelectorAll("[data-help-ask]").forEach(function (link) {
     link.addEventListener("click", function (e) {

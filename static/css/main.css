@@ -2013,8 +2013,68 @@ input[type="radio"] {
 }
 
 .plan-controls {
-  margin: 0 0 1rem;
+  display: grid;
+  gap: 0.5rem;
+  margin: 0 0 1.5rem;
   font-weight: 600;
+}
+
+.plan-controls p,
+.plan-controls form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.75rem;
+  margin: 0;
+}
+
+.plan-controls-note {
+  font-weight: 400;
+  font-size: 0.95rem;
+  color: var(--ink-soft);
+}
+
+/* A button that looks like a link, for low-stakes actions next to links. */
+.text-button {
+  min-height: 2.75rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--teal-deep);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  cursor: pointer;
+}
+
+.text-button:hover {
+  color: var(--ink);
+}
+
+.plan-paused {
+  margin-bottom: 1.5rem;
+  border-color: var(--marigold);
+  background: var(--marigold-soft);
+}
+
+.plan-paused h2 {
+  margin-top: 0;
+}
+
+.plan-item-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  margin: 0.5rem 0;
+  padding: 0;
+  list-style: none;
+  font-weight: 600;
+}
+
+.plan-item-steps a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
 }
 
 .plan-week {

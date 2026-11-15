@@ -19,6 +19,16 @@
 </section>
 
 <div class="plan-sheet">
+{% if profile.paused_at %}
+<section class="tile plan-paused" aria-labelledby="paused-title">
+  <h2 id="paused-title">Your plan is paused</h2>
+  <p>Paused since {{ profile.paused_at|date:"j F" }}. Your progress is kept, your streak waits, and no reminders go out. Come back whenever you're ready.</p>
+  <form method="post" action="{% url 'plan_pause' %}">
+    {% csrf_token %}
+    <button type="submit" name="action" value="resume" class="button button-primary">Resume my plan</button>
+  </form>
+</section>
+{% endif %}
 {% if finished and next_action.kind != "review" %}
 <section class="next-action" aria-labelledby="next-action-title">
   <p class="next-action-label">Plan finished</p>
@@ -85,10 +95,17 @@
   </div>
 </section>
 
-<p class="plan-controls">
-  <a href="{% url 'intake' %}?edit=1">Change my answers</a>
-  {% if finished and next_action.kind == "review" %}<a href="{% url 'plan_finish' %}">See what you finished</a>{% endif %}
-</p>
+<div class="plan-controls">
+  <p><a href="{% url 'intake' %}?edit=1">Change my goal or answers</a> <span class="plan-controls-note">Topics you've finished or shown stay done in the new plan.</span></p>
+  {% if not profile.paused_at %}
+  <form method="post" action="{% url 'plan_pause' %}">
+    {% csrf_token %}
+    <button type="submit" name="action" value="pause" class="text-button">Pause my plan</button>
+    <span class="plan-controls-note">Busy week? Nothing is lost.</span>
+  </form>
+  {% endif %}
+  {% if finished and next_action.kind == "review" %}<p><a href="{% url 'plan_finish' %}">See what you finished</a></p>{% endif %}
+</div>
 
 {% if setup.items %}
 <details class="plan-week plan-week-setup"{% if not setup.all_done %} open{% endif %}>
@@ -157,6 +174,12 @@
       </details>
       {% endif %}
 
+      <ul class="plan-item-steps" aria-label="{{ item.topic.title }}: what to do">
+        {% if item.topic.practice_tasks.all %}<li><a href="{% url 'practice' item.topic.slug %}">Practice task</a></li>{% endif %}
+        {% if item.topic.quiz_items.all %}<li><a href="{% url 'quiz' item.topic.slug %}">Checkpoint quiz</a></li>{% endif %}
+        <li><a href="{% url 'lesson' item.topic.slug %}#agapay">Stuck? Ask Agapay</a></li>
+      </ul>
+
       <a class="button button-lagoon button-small plan-item-open" href="{% url 'lesson' item.topic.slug %}">Open topic</a>
       <form class="plan-item-actions" method="post" action="{% url 'plan_item_status' item.pk %}">
         {% csrf_token %}
@@ -165,6 +188,7 @@
         {% else %}
         <button type="submit" name="status" value="done" class="button">Mark done</button>
         <button type="submit" name="status" value="skipped" class="button">Skip</button>
+        <button type="submit" formaction="{% url 'plan_item_defer' item.pk %}" class="button" title="Move it to the end of your plan">Later</button>
         {% endif %}
       </form>
     </li>

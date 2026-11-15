@@ -207,6 +207,28 @@ def set_item_status(item, status):
         record_mastery(learner, item.topic, TopicMastery.Status.UNKNOWN, "", TopicMastery.Source.MANUAL, force=True)
 
 
+def defer_item(item):
+    """Move an unfinished topic to the end of the plan, and re-spread the weeks.
+
+    Returns the titles of later unfinished topics that need this one first; when there are
+    any, nothing moves, because the plan must keep every prerequisite before what needs it.
+    """
+    plan = item.plan
+    unfinished = (PlanItem.Status.TODO, PlanItem.Status.IN_PROGRESS)
+    blocking = list(
+        plan.items.filter(status__in=unfinished, topic__prerequisites=item.topic)
+        .exclude(pk=item.pk).values_list("topic__title", flat=True)
+    )
+    if blocking:
+        return blocking
+    last = plan.items.order_by("-order").values_list("order", flat=True).first() or 0
+    if item.order != last:
+        item.order = last + 1
+        item.save(update_fields=["order"])
+        repace_plan(plan, plan.learner.hours_per_week)
+    return []
+
+
 def move_on_shaky(item):
     """After missing the quiz twice: continue the plan and bring the topic back as a review later."""
     item.status = PlanItem.Status.SKIPPED
