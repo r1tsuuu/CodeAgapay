@@ -6,7 +6,7 @@
   if (!panel || !openButton) return;
 
   var form = panel.querySelector("[data-help-form]");
-  var input = form.querySelector("textarea");
+  var input = form.querySelector("#help-question"); // Not the first textarea: the debug boxes come before it.
   var send = form.querySelector("button");
   var log = panel.querySelector("[data-help-log]");
   var left = panel.querySelector("[data-help-left]");
@@ -160,7 +160,17 @@
     var card = el("div", "help-reply");
     var kind = data.action || "hint";
     if (data.mode === "ai") {
-      card.appendChild(el("span", "help-level", kind === "hint" ? "Hint " + data.hint_level + " of 3" : LABELS[kind] || "Agapay"));
+      var level = el("span", "help-level", kind === "hint" ? "Hint " + data.hint_level + " of 3" : LABELS[kind] || "Agapay");
+      if (kind === "hint") {
+        // The hint ladder: one step per level, the newest one filling in.
+        var ladder = el("span", "help-ladder");
+        ladder.setAttribute("aria-hidden", "true");
+        for (var i = 1; i <= 3; i++) {
+          ladder.appendChild(el("span", i <= data.hint_level ? (i === data.hint_level ? "is-on is-new" : "is-on") : ""));
+        }
+        level.appendChild(ladder);
+      }
+      card.appendChild(level);
     }
     card.appendChild(el("p", "help-reply-text", data.reply));
     if (data.mode === "ai" && kind === "hint" && data.hint_level < 3) {
@@ -212,11 +222,12 @@
     }
     if (languageSelect && languageChanged) extra.language = languageSelect.value;
     if (showQuestion) log.appendChild(el("p", "help-question", question));
-    var waiting = el("p", "help-waiting", "Agapay is thinking…");
+    var waiting = el("p", "help-waiting", "Agapay is thinking");
     waiting.setAttribute("role", "status");
     log.appendChild(waiting);
     scrollDown();
     send.disabled = true;
+    panel.classList.add("is-thinking");
 
     fetch(panel.dataset.url, {
       method: "POST",
@@ -242,6 +253,7 @@
       })
       .then(function (data) {
         waiting.remove();
+        panel.classList.remove("is-thinking");
         if (isNaN(data.remaining_today)) data.remaining_today = Number(left.textContent.split(" ")[0]);
         showReply(data);
         busy = false;
