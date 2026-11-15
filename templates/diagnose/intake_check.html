@@ -1,12 +1,17 @@
 {% extends "base.html" %}
+{% load static mascots %}
 
 {% block title %}Quick check · CodeAgapay{% endblock %}
 
+{% block head %}<script src="{% static 'js/mascots.js' %}" defer></script>{% endblock %}
+
 {% block content %}
-<h1>Let's plan your learning</h1>
+<div class="onboarding aura">
+<h1 class="onboarding-title">Let's plan your <span class="mark">learning</span></h1>
 {% include "partials/phase_steps.html" %}
 
-<section class="chat-message chat-assistant chat-current">
+<section class="chat-message chat-assistant chat-current has-avatar">
+  <span class="chat-avatar">{% mascot "flower-yellow" %}</span>
   <span class="chat-author">Agapay</span>
   <p class="chat-text chat-question">Quick check: {{ track.name }}</p>
   {% if not has_questions %}
@@ -31,4 +36,5 @@
   <input type="hidden" name="step" value="known">
   <button type="submit" name="action" value="change" class="button-link">Change the topics I ticked</button>
 </form>
+</div>
 {% endblock %}

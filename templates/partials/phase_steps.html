@@ -1,7 +1,9 @@
+{# Onboarding progress as a trail: a dot per phase, joined by a line that fills in marigold as phases are done. #}
 <ol class="phase-steps" aria-label="Planning progress">
   {% for phase in phases %}
   <li class="phase-step phase-step-{{ phase.state }}"{% if phase.state == "current" %} aria-current="step"{% endif %}>
-    <span class="visually-hidden">{% if phase.state == "done" %}Done: {% elif phase.state == "current" %}Now: {% endif %}</span>{{ phase.name }}
+    <span class="phase-dot" aria-hidden="true">{% if phase.state == "done" %}<svg viewBox="0 0 16 16"><path d="M3.5 8.5 6.5 11.5 12.5 4.5"/></svg>{% endif %}</span>
+    <span class="phase-name"><span class="visually-hidden">{% if phase.state == "done" %}Done: {% elif phase.state == "current" %}Now: {% endif %}</span>{{ phase.name }}</span>
   </li>
   {% endfor %}
 </ol>

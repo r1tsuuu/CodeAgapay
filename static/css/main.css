@@ -2286,6 +2286,235 @@ textarea {
   }
 }
 
+
+/* ---------- First run: welcome and onboarding ---------- */
+
+/* Mascots and glows may reach past their boxes; the page never scrolls sideways for them. */
+body {
+  overflow-x: clip;
+}
+
+/* A soft glow of the brand colours behind a page's opening, as on the landing hero. */
+.aura {
+  position: relative;
+  isolation: isolate;
+}
+
+.aura::before {
+  content: "";
+  position: absolute;
+  inset: -3rem -12vw auto;
+  height: 32rem;
+  z-index: -1;
+  background:
+    radial-gradient(26rem 18rem at 12% 20%, rgba(255, 182, 39, 0.26), transparent 70%),
+    radial-gradient(24rem 20rem at 90% 10%, rgba(60, 198, 182, 0.22), transparent 70%),
+    radial-gradient(22rem 16rem at 50% 90%, rgba(199, 54, 111, 0.12), transparent 70%);
+  /* Feather every edge, so the glow never shows as a box. */
+  -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 45%, #000 45%, transparent 100%);
+  mask-image: radial-gradient(ellipse 50% 50% at 50% 45%, #000 45%, transparent 100%);
+  pointer-events: none;
+}
+
+.welcome-critter {
+  display: block;
+  width: 6.5rem;
+  margin: 0 auto 1.25rem;
+}
+
+.welcome-step-critter {
+  display: block;
+  width: 4rem;
+  height: 3.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.welcome-step-critter svg {
+  width: auto;
+  height: 100%;
+}
+
+/* The three steps arrive one after another, once. */
+.welcome-step {
+  animation: rise-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+.welcome-step:nth-child(2) { animation-delay: 0.08s; }
+.welcome-step:nth-child(3) { animation-delay: 0.16s; }
+
+.welcome-cta {
+  padding: 0.9rem 1.9rem;
+  font-size: 1.2rem;
+}
+
+/* Onboarding progress as a trail: dots joined by a line that fills as phases are done. */
+.phase-steps {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  margin: 0 0 1.75rem;
+  padding: 0;
+  list-style: none;
+  view-transition-name: phase-steps;
+}
+
+.phase-step {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 0.4rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+  text-align: center;
+  color: var(--ink-soft);
+}
+
+/* The line to the previous phase. */
+.phase-step + .phase-step::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  top: 0.65rem;
+  right: 50%;
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--line);
+}
+
+.phase-step-done + .phase-step::before,
+.phase-step-done + .phase-step-done::before {
+  background: var(--marigold);
+}
+
+.phase-dot {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 3px solid var(--line);
+  border-radius: 50%;
+  background: var(--cream);
+}
+
+.phase-dot svg {
+  width: 0.9rem;
+  height: 0.9rem;
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.phase-step-done .phase-dot {
+  border-color: var(--marigold);
+  background: var(--marigold);
+}
+
+.phase-step-done {
+  color: var(--ink);
+}
+
+.phase-step-current {
+  color: var(--berry-deep);
+}
+
+.phase-step-current .phase-dot {
+  border-color: var(--berry);
+  background: var(--white);
+  box-shadow: 0 0 0 4px var(--berry-soft);
+}
+
+.onboarding-title {
+  view-transition-name: onboarding-title;
+}
+
+/* Agapay asks each question with a live mascot that stays put between steps. */
+.chat-message.has-avatar::before {
+  content: none;
+}
+
+.chat-avatar {
+  position: absolute;
+  left: 1.1rem;
+  top: 1rem;
+  width: 3.5rem;
+  view-transition-name: agapay-avatar;
+}
+
+.chat-current .chat-question,
+.chat-current .chat-help {
+  animation: rise-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.05s backwards;
+}
+
+.chat-current .chat-help {
+  animation-delay: 0.12s;
+}
+
+.choice-grid .choice-card {
+  animation: rise-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+.choice-grid .choice-card:nth-child(1) { animation-delay: 0.16s; }
+.choice-grid .choice-card:nth-child(2) { animation-delay: 0.21s; }
+.choice-grid .choice-card:nth-child(3) { animation-delay: 0.26s; }
+.choice-grid .choice-card:nth-child(4) { animation-delay: 0.31s; }
+.choice-grid .choice-card:nth-child(n + 5) { animation-delay: 0.36s; }
+
+@media (hover: hover) and (pointer: fine) {
+  .choice-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(42, 26, 32, 0.08);
+  }
+}
+
+/* The tapped choice stays marked, with a check, while the next question loads. */
+@keyframes picked-pop {
+  50% { transform: scale(1.03); }
+}
+
+.choice-grid .choice-card.is-picked {
+  position: relative;
+  border-color: var(--marigold);
+  background: var(--marigold-soft);
+  opacity: 1;
+  animation: picked-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.choice-grid .choice-card.is-picked::after {
+  content: "";
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 50%;
+  background: var(--marigold) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5 6.5 11.5 12.5 4.5' fill='none' stroke='%232A1A20' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 0.9rem no-repeat;
+}
+
+@media (max-width: 40rem) {
+  .phase-step {
+    font-size: 0.8rem;
+  }
+
+  .chat-avatar {
+    width: 2.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .welcome-step,
+  .chat-current .chat-question,
+  .chat-current .chat-help,
+  .choice-grid .choice-card,
+  .choice-card.is-picked {
+    animation: none;
+  }
+}
+
 /* ---------- Welcome ---------- */
 
 .welcome {
@@ -4398,41 +4627,6 @@ textarea {
 }
 
 /* ---------- Onboarding chat (intake) ---------- */
-
-.phase-steps {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  list-style: none;
-  padding: 0;
-  margin: 0 0 1.5rem;
-}
-
-.phase-step {
-  padding: 0.3rem 0.9rem;
-  border-radius: 999px;
-  background: var(--paper);
-  border: 2px solid var(--line);
-  font-weight: 700;
-  font-size: 0.9rem;
-  color: var(--ink-soft);
-}
-
-.phase-step-done {
-  background: var(--success-soft);
-  border-color: var(--success-soft);
-  color: #1E7A48;
-}
-
-.phase-step-done::before {
-  content: "✓ ";
-}
-
-.phase-step-current {
-  background: var(--berry);
-  border-color: var(--berry);
-  color: var(--white);
-}
 
 .chat {
   list-style: none;
