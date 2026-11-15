@@ -16,6 +16,8 @@ SAFE_DEFAULTS = {
     "GROQ_API_KEY": "",
     "CF_ACCOUNT_ID": "",
     "CF_API_TOKEN": "",
+    "LOCAL_AI_URL": "",
+    "LOCAL_AI_MODEL": "",
     # A .env with DEBUG=False must not turn every test request into an HTTPS redirect.
     "SECURE_SSL_REDIRECT": False,
 }

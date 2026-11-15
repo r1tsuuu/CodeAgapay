@@ -196,6 +196,7 @@ Open http://localhost:8000 for the app and http://localhost:8000/admin for curat
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google login |
 | `GROQ_API_KEY`, `GROQ_MODEL`, `CF_ACCOUNT_ID`, `CF_API_TOKEN`, `CF_MODEL` | AI helper. Leave blank to turn the AI off |
 | `AI_DAILY_LIMIT` | AI hint messages per learner per day (default 20) |
+| `LOCAL_AI_URL`, `LOCAL_AI_MODEL`, `LOCAL_AI_TIMEOUT` | Optional, local development only: a model on your computer (Ollama, LM Studio), tried after Groq and Cloudflare. See [docs/AI.md](docs/AI.md) |
 | `GROQ_PLAN_MODEL`, `AI_INTAKE_DAILY_LIMIT` | Model for tailored plans, and AI-tailored plans per learner per day (default 2). Past the cap, the plan is built without AI |
 | `AI_OUTLINES` | `True` saves an AI-written outline with each AI-tailored plan, for review in admin. Default `False` |
 | `AI_PLAN_CALL_TIMEOUT`, `AI_REQUEST_BUDGET` | Seconds one plan or lesson AI call may take (default 30), and all of a page's AI calls together (default 50, under the server's 60 in `gunicorn.conf.py`) |

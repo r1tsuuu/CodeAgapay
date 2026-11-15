@@ -139,6 +139,7 @@ class Provider:
     api_key: str
     base_url: str
     model: str
+    timeout: float = TIMEOUT_SECONDS  # One hint call. Local models on a laptop are slower.
 
 
 def providers(purpose="hint"):
@@ -160,6 +161,13 @@ def providers(purpose="hint"):
             "cloudflare", settings.CF_API_TOKEN,
             f"https://api.cloudflare.com/client/v4/accounts/{settings.CF_ACCOUNT_ID}/ai/v1",
             settings.CF_MODEL,
+        ))
+    if settings.LOCAL_AI_URL and settings.LOCAL_AI_MODEL:
+        # A model on this machine (Ollama, LM Studio): tried last, for development and offline demos.
+        # Not for Render: the free service has no GPU and 512 MB of memory. See docs/AI.md.
+        result.append(Provider(
+            "local", settings.LOCAL_AI_API_KEY or "local", settings.LOCAL_AI_URL.rstrip("/"),
+            settings.LOCAL_AI_MODEL, timeout=settings.LOCAL_AI_TIMEOUT,
         ))
     return result
 
@@ -303,7 +311,7 @@ def call_provider(provider, messages, max_tokens=MAX_TOKENS, json_mode=False, re
     # gpt-oss models think before answering; keep that short so it fits in max_tokens.
     if provider.model.startswith("openai/gpt-oss"):
         extra["reasoning_effort"] = reasoning
-    if json_mode and provider.name == "groq":
+    if json_mode and provider.name in ("groq", "local"):
         extra["response_format"] = {"type": "json_object"}
     response = client.chat.completions.create(
         model=provider.model, messages=messages, max_tokens=max_tokens, temperature=0.4, **extra,
@@ -357,7 +365,7 @@ def ask_model(messages):
     """Try each provider in order. Returns the cleaned reply text, or None if all fail."""
     for provider in providers():
         try:
-            return clean_reply(call_with_retry(provider, messages))
+            return clean_reply(call_with_retry(provider, messages, timeout=provider.timeout))
         except Exception:  # Any provider error means "try the next one".
             logger.warning("AI provider %s failed", provider.name, exc_info=True)
     return None

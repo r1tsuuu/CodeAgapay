@@ -120,3 +120,42 @@ class ActionTests(TestCase):
         for label in ("Explain this concept", "Give me a hint", "Help me debug", "Check my understanding",
                       "Break this task down"):
             self.assertContains(response, label)
+
+
+class LocalProviderTests(TestCase):
+    """An optional model on this machine (Ollama, LM Studio), tried after Groq and Cloudflare."""
+
+    def test_off_unless_configured(self):
+        self.assertNotIn("local", [p.name for p in service.providers()])
+
+    @override_settings(GROQ_API_KEY="g", LOCAL_AI_URL="http://localhost:11434/v1/", LOCAL_AI_MODEL="qwen2.5:7b",
+                       LOCAL_AI_TIMEOUT=45)
+    def test_tried_last_with_its_own_timeout(self):
+        order = service.providers()
+        self.assertEqual(order[-1].name, "local")
+        self.assertEqual(order[-1].base_url, "http://localhost:11434/v1")
+        self.assertEqual(order[-1].timeout, 45)
+        self.assertEqual(order[-1].api_key, "local")
+
+    @override_settings(GROQ_API_KEY="g", LOCAL_AI_URL="http://localhost:11434/v1", LOCAL_AI_MODEL="qwen2.5:7b")
+    def test_answers_when_groq_fails(self):
+        def call(provider, messages, **kwargs):
+            if provider.name == "groq":
+                raise RuntimeError("quota")
+            self.assertEqual(kwargs["timeout"], provider.timeout)
+            return "A local hint."
+
+        with mock.patch("assistant.service.call_provider", side_effect=call), \
+                self.assertLogs("assistant.service", "WARNING"):
+            self.assertEqual(service.ask_model([{"role": "user", "content": "hi"}]), "A local hint.")
+
+    @override_settings(LOCAL_AI_URL="http://localhost:11434/v1", LOCAL_AI_MODEL="qwen2.5:7b")
+    def test_local_only_still_counts_against_the_daily_cap(self):
+        profile = get_profile(get_user_model().objects.create_user("ben"))
+        with override_settings(AI_DAILY_LIMIT=1), \
+                mock.patch("assistant.service.call_provider", return_value="hint"):
+            track = Track.objects.create(name="Python", slug="py")
+            topic = Topic.objects.create(track=track, title="Loops", slug="py-loops")
+            first = service.ask(profile, service.HelpRequest(topic=topic, question="?"))
+            second = service.ask(profile, service.HelpRequest(topic=topic, question="?"))
+        self.assertEqual((first.mode, second.mode), ("ai", "fallback"))

@@ -4,7 +4,27 @@ The AI is optional. With no keys set, every feature still works from curated con
 
 ## Providers
 
-Groq first, then Cloudflare Workers AI, both through the `openai` Python package with a custom base URL (`assistant/service.py`, `providers()`). Hints use `GROQ_MODEL` (small and fast); planning uses `GROQ_PLAN_MODEL`, falling back to `GROQ_MODEL` when the large one is busy. A rate-limited call is retried once if the provider asks for a wait of 3 seconds or less. Every call has a timeout, and a page's calls share a budget (`AI_REQUEST_BUDGET`, 50 s) that stays under gunicorn's 60 s limit.
+Groq first, then Cloudflare Workers AI, then (only if configured) a local model, all through the `openai` Python package with a custom base URL (`assistant/service.py`, `providers()`). Hints use `GROQ_MODEL` (small and fast); planning uses `GROQ_PLAN_MODEL`, falling back to `GROQ_MODEL` when the large one is busy. A rate-limited call is retried once if the provider asks for a wait of 3 seconds or less. Every call has a timeout, and a page's calls share a budget (`AI_REQUEST_BUDGET`, 50 s) that stays under gunicorn's 60 s limit.
+
+### A local model (development only)
+
+A model on your own computer can be the last provider, after Groq and Cloudflare. Use it for development and offline demos; the daily caps still apply. It can't run on Render: the free service has 512 MB of memory and no GPU.
+
+```bash
+brew install ollama            # or download it from ollama.com; LM Studio works too
+ollama serve &                 # starts the local server on port 11434
+ollama pull qwen2.5:7b         # about 4.7 GB; good at JSON and handles Filipino reasonably
+```
+
+Then in `.env`:
+
+```bash
+LOCAL_AI_URL=http://localhost:11434/v1
+LOCAL_AI_MODEL=qwen2.5:7b
+LOCAL_AI_TIMEOUT=45            # seconds for one hint
+```
+
+To use only the local model, also leave `GROQ_API_KEY` and the Cloudflare keys blank. Expect slower and weaker answers than Groq's larger models: small models follow the "hint, don't solve" rules less reliably, and writing a whole AI lesson can take a minute or more. `runserver` has no time limit, so for AI plans on a local model raise `AI_PLAN_CALL_TIMEOUT` and `AI_REQUEST_BUDGET` (for example to 170 and 180) in your local `.env` only; gunicorn on Render stops requests after 60 seconds.
 
 ## Where the AI is used
 
