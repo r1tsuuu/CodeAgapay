@@ -5,6 +5,8 @@ what the tests check or make them call a real AI. Tests that need the AI or AI p
 themselves with override_settings, and mock every call.
 """
 
+import logging
+
 from django.conf import settings
 from django.test.runner import DiscoverRunner
 
@@ -29,3 +31,6 @@ class Runner(DiscoverRunner):
             **settings.STORAGES,
             "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
         }
+        # Many tests make the AI fail on purpose; keep their expected warnings out of the output.
+        for handler in logging.getLogger().handlers:
+            handler.setLevel(logging.CRITICAL)
