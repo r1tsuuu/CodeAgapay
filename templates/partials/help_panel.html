@@ -8,7 +8,7 @@ and `help_title` instead of `topic`. Replies are added by static/js/help.js.
 </button>
 
 <aside id="help-panel" class="help-panel" hidden aria-labelledby="help-title"
-       data-url="{% url 'help_ask' %}" data-topic="{{ topic.slug }}" data-lesson="{{ help_lesson }}" data-screen="{{ help_screen }}" data-limit="{{ help_limit }}">
+       data-url="{% url 'help_ask' %}" data-feedback-url="{% url 'help_feedback' %}" data-topic="{{ topic.slug }}" data-lesson="{{ help_lesson }}" data-screen="{{ help_screen }}" data-limit="{{ help_limit }}">
   {% csrf_token %}
   <header class="help-head">
     <img class="mascot" src="{% static 'img/mascots/flower-yellow.svg' %}" alt="" width="48" height="43">
@@ -24,7 +24,7 @@ and `help_title` instead of `topic`. Replies are added by static/js/help.js.
   </div>
 
   <div class="help-body" data-help-log aria-live="polite">
-    <p class="help-intro">Stuck? Ask about {% firstof help_title topic.title %}. I'll give you a hint, not the answer, so you still get to figure it out.</p>
+    <p class="help-intro">Stuck on {% firstof help_title topic.title %}? Pick what you need. I'll guide your thinking, not hand over the answer.</p>
     {% if not help_remaining %}
     <div class="help-out">
       <p><strong>You've used today's AI help.</strong> It resets tomorrow. Until then, these tips and links can help.</p>
@@ -36,12 +36,58 @@ and `help_title` instead of `topic`. Replies are added by static/js/help.js.
     {% endif %}
   </div>
 
+  <div class="help-actions" role="group" aria-label="What do you need?">
+    <button type="button" class="help-action" data-action="hint" aria-pressed="true">Give me a hint</button>
+    <button type="button" class="help-action" data-action="explain" aria-pressed="false">Explain this concept</button>
+    <button type="button" class="help-action" data-action="debug" aria-pressed="false">Help me debug</button>
+    <button type="button" class="help-action" data-action="check" aria-pressed="false">Check my understanding</button>
+    <button type="button" class="help-action" data-action="breakdown" aria-pressed="false">Break this task down</button>
+    {% if help_item %}<button type="button" class="help-action" data-action="adjust" aria-pressed="false">Adjust my plan</button>{% endif %}
+    {% if help_ideas %}<button type="button" class="help-action" data-action="project" aria-pressed="false">Suggest a next project</button>{% endif %}
+  </div>
+
+  {# Plan changes never happen from an AI reply: the learner confirms each one here. #}
+  {% if help_item %}
+  <div class="help-sheet" data-help-sheet="adjust" hidden>
+    <p><strong>Change your plan?</strong> Each button asks once; nothing changes until you press it.</p>
+    {% if help_item.status == "todo" or help_item.status == "in_progress" %}
+    <form method="post" action="{% url 'plan_item_defer' help_item.pk %}">{% csrf_token %}
+      <button type="submit" class="button button-small">Yes, move {{ help_item.topic.title }} to later</button>
+    </form>
+    {% endif %}
+    <p><a href="{% url 'plan' %}#plan-hours">Change my hours a week</a> · <a href="{% url 'plan' %}">Pause my plan</a></p>
+  </div>
+  {% endif %}
+  {% if help_ideas %}
+  <div class="help-sheet" data-help-sheet="project" hidden>
+    <p><strong>Projects curators picked for {{ topic.track.name }}:</strong></p>
+    <ul class="help-ideas">
+      {% for idea in help_ideas %}<li><strong>{{ idea.title }}.</strong> {{ idea.brief }}</li>{% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
   <form class="help-form" data-help-form>
-    <label for="help-question" class="visually-hidden">Your question</label>
-    <textarea id="help-question" rows="2" maxlength="500" placeholder="Ask in English or Taglish"{% if not help_remaining %} disabled{% endif %}></textarea>
-    <button type="submit" class="help-send" aria-label="Send"{% if not help_remaining %} disabled{% endif %}>
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 21 3l-6.5 18-3-7.5L3 11.5Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
-    </button>
+    <div class="help-debug" data-help-debug hidden>
+      <label for="help-code">Your code</label>
+      <textarea id="help-code" rows="4" maxlength="2000" spellcheck="false"></textarea>
+      <label for="help-error">The error, or what goes wrong</label>
+      <textarea id="help-error" rows="2" maxlength="500" spellcheck="false"></textarea>
+    </div>
+    <div class="help-ask-row">
+      <label for="help-question" class="visually-hidden">Your question</label>
+      <textarea id="help-question" rows="2" maxlength="500" placeholder="Ask in English, Filipino or Taglish"{% if not help_remaining %} disabled{% endif %}></textarea>
+      <button type="submit" class="help-send" aria-label="Send"{% if not help_remaining %} disabled{% endif %}>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 21 3l-6.5 18-3-7.5L3 11.5Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+    <div class="help-language">
+      <label for="help-language">Explain in</label>
+      <select id="help-language" data-help-language>
+        <option value="">The language I write in</option>
+        {% for value, label in help_languages %}<option value="{{ value }}"{% if value == help_language %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+    </div>
   </form>
   <p class="help-note">AI can make mistakes. Check the linked resources.</p>
 </aside>

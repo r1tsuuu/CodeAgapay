@@ -700,7 +700,7 @@ class HelpPanelTests(PlanTestMixin, TestCase):
         page = self.client.get(reverse("lesson", args=["topic-1"]))
         self.assertContains(page, "used today's AI help")
         self.assertContains(page, "Print the counter to see what the loop does.")
-        self.assertContains(page, 'placeholder="Ask in English or Taglish" disabled')
+        self.assertContains(page, 'placeholder="Ask in English, Filipino or Taglish" disabled')
 
     def test_wrong_quiz_answers_offer_why(self):
         item = QuizItem.objects.create(topic=self.topics[0], prompt="x = ___", accepted_answers=["1"])

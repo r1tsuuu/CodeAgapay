@@ -7,7 +7,7 @@ from django.utils import timezone
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
-from accounts.models import get_profile
+from accounts.models import LearnerProfile, get_profile
 from assistant.service import daily_limit, practice_feedback, remaining_today
 from content.models import PracticeTask, Resource, Topic, Track
 
@@ -256,13 +256,18 @@ def lesson(request, topic):
 
 
 def _help(profile, topic, screen):
-    """What the Agapay panel needs on a topic screen: messages left, and tips and links for when there are none."""
+    """What the Agapay panel needs on a topic screen: messages left, tips and links for when there are
+    none, and, with no AI, the plan item it can adjust and the track's curated project ideas."""
     return {
         "help_screen": screen,
         "help_remaining": remaining_today(profile),
         "help_limit": daily_limit(),
         "help_tips": topic.tips.all()[:2],
         "help_resources": topic.resources.filter(is_active=True),
+        "help_item": plan_item_for_topic(profile, topic),
+        "help_ideas": topic.track.project_ideas.filter(is_active=True)[:3],
+        "help_language": profile.explain_language,
+        "help_languages": LearnerProfile.ExplainLanguage.choices,
     }
 
 

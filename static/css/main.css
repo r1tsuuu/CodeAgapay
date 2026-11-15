@@ -3625,17 +3625,165 @@ input[type="radio"] {
 }
 
 .help-form {
-  display: flex;
-  gap: 0.6rem;
-  align-items: flex-end;
+  display: grid;
+  gap: 0.5rem;
   padding: 0.9rem 1.25rem 0.4rem;
   border-top: 3px solid var(--line);
 }
 
+.help-ask-row {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-end;
+}
+
 .help-form textarea {
   flex: 1;
+  width: 100%;
   resize: none;
   font-size: 0.95rem;
+}
+
+.help-debug {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.help-debug label,
+.help-language label,
+.help-report label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.help-debug textarea {
+  font-family: var(--font-code);
+  font-size: 0.85rem;
+}
+
+.help-language {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.help-language label {
+  white-space: nowrap;
+}
+
+.help-language select {
+  flex: 1;
+  min-width: 0;
+  min-height: 2.75rem;
+  font-size: 0.9rem;
+}
+
+/* The focused actions: what the learner needs right now. */
+.help-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.75rem 1.25rem 0;
+}
+
+.help-action {
+  min-height: 2.75rem;
+  padding: 0.35rem 0.8rem;
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.help-action:hover {
+  border-color: var(--teal);
+}
+
+.help-action[aria-pressed="true"] {
+  border-color: var(--teal-deep);
+  background: var(--teal-deep);
+  color: var(--white);
+}
+
+.help-sheet {
+  margin: 0.75rem 1.25rem 0;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius-sm);
+  background: var(--marigold-soft);
+  font-size: 0.95rem;
+}
+
+.help-sheet p {
+  margin: 0 0 0.6rem;
+}
+
+.help-sheet form {
+  margin-bottom: 0.6rem;
+}
+
+.help-ideas {
+  margin: 0;
+  padding-left: 1.1rem;
+}
+
+.help-feedback {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.75rem;
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.help-rate {
+  min-height: 2.75rem;
+  padding: 0 0.25rem;
+  border: 0;
+  background: none;
+  color: var(--teal-deep);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  cursor: pointer;
+}
+
+.help-rate:disabled {
+  color: var(--ink-soft);
+  cursor: default;
+}
+
+.help-feedback-thanks {
+  color: var(--ink-soft);
+}
+
+.help-report {
+  display: grid;
+  gap: 0.3rem;
+  margin-top: 0.4rem;
+}
+
+.help-confirm {
+  margin-top: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--radius-sm);
+  background: var(--paper);
+}
+
+.help-confirm p {
+  margin: 0 0 0.4rem;
+}
+
+.help-form[hidden],
+.help-sheet[hidden],
+.help-debug[hidden] {
+  display: none;
 }
 
 .help-send {

@@ -129,7 +129,7 @@ class AskViewTests(AssistantTestMixin, TestCase):
         response = self.post({"topic": "loops", "question": "help", "hint_level": 9, "screen": "plan"})
         self.assertEqual(response.status_code, 200)
         data = response.json()
-        self.assertEqual(set(data), {"mode", "reply", "hint_level", "remaining_today", "tips", "resources"})
+        self.assertEqual(set(data), {"action", "mode", "reply", "hint_level", "remaining_today", "tips", "resources"})
         self.assertEqual(data["mode"], "ai")
         self.assertEqual(data["hint_level"], 3)
 

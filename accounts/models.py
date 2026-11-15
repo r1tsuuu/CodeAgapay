@@ -24,6 +24,13 @@ class LearnerProfile(models.Model):
         EXPLAIN = "explain", "A clear explanation"
         EXAMPLE = "example", "An example I can learn from"
 
+    class ExplainLanguage(models.TextChoices):
+        """How Agapay explains. Blank: in the language of the learner's message."""
+
+        ENGLISH = "en", "English"
+        FILIPINO = "fil", "Filipino"
+        TAGLISH = "taglish", "Taglish"
+
     class Avatar(models.TextChoices):
         """Profile icons from the Figma "Custom Profile Page", in static/img/avatars/. Blank shows the first letter."""
 
@@ -56,6 +63,10 @@ class LearnerProfile(models.Model):
     )
     hint_style = models.CharField(
         max_length=20, choices=HintStyle.choices, blank=True, help_text="What helps them most when stuck."
+    )
+    explain_language = models.CharField(
+        max_length=10, choices=ExplainLanguage.choices, blank=True,
+        help_text="The language Agapay explains in. Blank: whatever the learner writes in.",
     )
     email_reminders = models.BooleanField(default=False, help_text="Off until the learner says yes.")
     reminders_asked = models.BooleanField(
