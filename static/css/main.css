@@ -2573,6 +2573,11 @@ input[type="radio"] {
   color: var(--white);
 }
 
+/* Buttons keep their own text colour inside the berry card (lagoon needs ink to be readable). */
+.plan-item a.button-lagoon {
+  color: var(--ink);
+}
+
 .plan-item-current {
   outline: 4px solid var(--marigold);
   outline-offset: 3px;
@@ -4230,6 +4235,12 @@ textarea:focus-visible,
 summary:focus-visible {
   outline: 3px solid var(--teal);
   outline-offset: 2px;
+}
+
+/* On the berry and teal plan cards a teal ring disappears; marigold stays visible. */
+.plan-item :focus-visible,
+.next-action :focus-visible {
+  outline-color: var(--marigold);
 }
 
 @media (prefers-reduced-motion: reduce) {
