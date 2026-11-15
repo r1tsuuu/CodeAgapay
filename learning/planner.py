@@ -14,7 +14,7 @@ import math
 from django.db import transaction
 from django.utils import timezone
 
-from content.models import Topic
+from content.models import CurriculumRelease, Topic
 from diagnose.models import TopicMastery
 from diagnose.scoring import record_mastery
 
@@ -146,7 +146,9 @@ def build_plan(profile, selected_topic_ids=None, reasons=None):
             reasons[topic.pk] = EVIDENCE_REASONS.get(mastery.status, "")
 
     LearningPlan.objects.filter(learner=profile, is_active=True).update(is_active=False)
-    plan = LearningPlan.objects.create(learner=profile, track=tracks[0])
+    plan = LearningPlan.objects.create(
+        learner=profile, track=tracks[0], curriculum_version=CurriculumRelease.current_version()
+    )
     PlanItem.objects.bulk_create(
         PlanItem(plan=plan, topic=topic, order=i, week=week, reason=reasons.get(topic.pk, "")[:300])
         for i, (topic, week) in enumerate(zip(ordered, weeks), 1)

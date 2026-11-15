@@ -2,6 +2,7 @@ from django.contrib import admin
 
 from .forms import PracticeTaskForm, ProjectIdeaForm, QuizItemForm, SkillQuestionForm, TopicForm
 from .models import (
+    CurriculumRelease,
     Path, PathTrack, PracticeTask, ProjectIdea, QuizItem, Resource, SetupStep, SkillQuestion, Tip, Topic, Track,
 )
 
@@ -169,3 +170,17 @@ def _index(request, extra_context=None):
 
 
 admin.site.index = _index
+
+
+@admin.register(CurriculumRelease)
+class CurriculumReleaseAdmin(admin.ModelAdmin):
+    """Read-only history of `import_curriculum` runs (docs/CURRICULUM.md)."""
+
+    list_display = ["version", "imported_at", "checksum"]
+    readonly_fields = ["version", "checksum", "imported_at", "summary"]
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False

@@ -1,0 +1,731 @@
+{
+  "slug": "python",
+  "name": "Python",
+  "order": 1,
+  "description": "A beginner-friendly language for scripts, data and automation.",
+  "is_active": true,
+  "setup_check": "Run a file containing print(\"Hello!\") and see Hello! printed.",
+  "setup_steps": [
+    {
+      "title": "Install Python",
+      "body": "Download Python 3 from python.org and run the installer. On Windows, tick \"Add python.exe to PATH\" before clicking Install.",
+      "link": "https://www.python.org/downloads/"
+    },
+    {
+      "title": "Check that it works",
+      "body": "Open a terminal (Command Prompt on Windows, Terminal on Mac) and type python --version (or python3 --version on Mac). You should see a version number.",
+      "link": "https://docs.python.org/3/using/index.html"
+    },
+    {
+      "title": "Install a code editor",
+      "body": "Install Visual Studio Code and add the Python extension from the Extensions panel.",
+      "link": "https://code.visualstudio.com/docs/python/python-tutorial"
+    },
+    {
+      "title": "Run your first program",
+      "body": "Make a file called hello.py containing print(\"Hello!\") and run it with python hello.py."
+    }
+  ],
+  "project_ideas": [
+    {
+      "title": "Sari-sari store stock counter",
+      "brief": "Write a program that keeps track of a small store's stock. It asks what was sold, takes it off the count, and warns when an item is running low. By the end it saves the counts to a file so they're still there tomorrow.",
+      "done_when": [
+        "It runs without errors.",
+        "Selling an item lowers its count, and selling more than you have shows a friendly message.",
+        "It warns when an item drops below a number you choose.",
+        "The counts are saved to a file and loaded the next time it runs.",
+        "You can explain each part to a friend."
+      ]
+    },
+    {
+      "title": "Class survey tally",
+      "brief": "Write a program that collects answers to one survey question from your class, such as a favourite snack, and counts them. It prints the results from most to least popular.",
+      "done_when": [
+        "It runs without errors.",
+        "It keeps asking for answers until you type done.",
+        "It counts answers the same way even with different capitals or extra spaces.",
+        "It prints each answer with its count, most popular first.",
+        "You can explain each part to a friend."
+      ]
+    }
+  ],
+  "topics": [
+    {
+      "slug": "python-variables-and-data-types",
+      "title": "Variables and Data Types",
+      "summary": "Store values in variables and learn the basic types: int, float, str and bool.",
+      "estimated_minutes": 60,
+      "resources": [
+        {
+          "title": "An Informal Introduction to Python",
+          "url": "https://docs.python.org/3/tutorial/introduction.html",
+          "kind": "docs",
+          "estimated_minutes": 30
+        },
+        {
+          "title": "Python Variables",
+          "url": "https://www.w3schools.com/python/python_variables.asp",
+          "kind": "interactive",
+          "estimated_minutes": 20
+        }
+      ],
+      "tips": [
+        "A variable is a name pointing to a value. Use type(x) to see what kind of value x holds.",
+        "Text in quotes is a string, even if it looks like a number: \"5\" + \"5\" is \"55\", not 10."
+      ],
+      "skill_questions": [
+        {
+          "prompt": "What does this code print?",
+          "code_snippet": "print(len(\"hello\"))",
+          "choices": [
+            "4",
+            "5",
+            "6",
+            "Error"
+          ],
+          "correct_index": 1
+        },
+        {
+          "prompt": "What is the type of x after this line?",
+          "code_snippet": "x = 3.0",
+          "choices": [
+            "int",
+            "float",
+            "str",
+            "bool"
+          ],
+          "correct_index": 1
+        }
+      ],
+      "quiz_items": [
+        {
+          "prompt": "Write the function that shows the type of a value: ___(42)",
+          "accepted_answers": [
+            "type"
+          ],
+          "hint": "It's a built-in that tells you what kind of value you have."
+        },
+        {
+          "prompt": "Turn the text \"7\" into a whole number: ___(\"7\")",
+          "accepted_answers": [
+            "int"
+          ],
+          "hint": "The name of the whole-number type works as a function."
+        },
+        {
+          "prompt": "True and False are values of type ___",
+          "accepted_answers": [
+            "bool",
+            "boolean"
+          ],
+          "hint": "Short for Boolean."
+        }
+      ],
+      "practice_tasks": [
+        {
+          "prompt": "Make variables for a student: their name (text), age (a whole number), height in meters (a number with a decimal) and whether they're enrolled (True or False). Then print one sentence that uses all four.",
+          "starter_code": "# Make your four variables here\n\n\n# Print one sentence that uses all four\n",
+          "sample_answer": "name = \"Ana\"\nage = 19\nheight = 1.6\nenrolled = True\n\nprint(name, \"is\", age, \"years old,\", height, \"m tall. Enrolled:\", enrolled)",
+          "checklist": [
+            "Has a str, an int, a float and a bool",
+            "Each variable has a clear name",
+            "Prints one sentence with all four values",
+            "Runs without errors"
+          ],
+          "approved": true
+        }
+      ]
+    },
+    {
+      "slug": "python-input-and-output",
+      "title": "Input and Output",
+      "summary": "Read what the user types and show results with print and f-strings.",
+      "estimated_minutes": 45,
+      "prerequisites": [
+        "python-variables-and-data-types"
+      ],
+      "resources": [
+        {
+          "title": "Input and Output",
+          "url": "https://docs.python.org/3/tutorial/inputoutput.html",
+          "kind": "docs",
+          "estimated_minutes": 25
+        },
+        {
+          "title": "Python User Input",
+          "url": "https://www.w3schools.com/python/python_user_input.asp",
+          "kind": "interactive"
+        }
+      ],
+      "tips": [
+        "input() always gives you a string. Wrap it in int() or float() if you need a number.",
+        "f-strings make output easy: f\"Hi {name}!\" puts the value of name inside the text."
+      ],
+      "skill_questions": [
+        {
+          "prompt": "What type does input() return?",
+          "code_snippet": "age = input(\"Age? \")",
+          "choices": [
+            "int",
+            "str",
+            "float",
+            "It depends on what the user types"
+          ],
+          "correct_index": 1
+        }
+      ],
+      "quiz_items": [
+        {
+          "prompt": "Ask the user for their name: name = ___(\"Name? \")",
+          "accepted_answers": [
+            "input"
+          ],
+          "hint": "It's the opposite of print."
+        },
+        {
+          "prompt": "Show a value on the screen: ___(\"Hello\")",
+          "accepted_answers": [
+            "print"
+          ],
+          "hint": "You have used this since your first program."
+        },
+        {
+          "prompt": "Put a variable inside text with an f-string: f\"Hi ___name}\"",
+          "accepted_answers": [
+            "{"
+          ],
+          "hint": "Variables in f-strings go inside curly braces."
+        }
+      ],
+      "practice_tasks": [
+        {
+          "prompt": "Ask for the user's name and the year they were born. Print a greeting with their name and how old they turn in 2026. Type your test answers in \"Input for your program\" before pressing Run.",
+          "starter_code": "name = input(\"What's your name? \")\n# Ask for the birth year, then turn it into a number\n\n# Print the greeting\n",
+          "sample_answer": "name = input(\"What's your name? \")\nborn = int(input(\"What year were you born? \"))\nage = 2026 - born\nprint(\"Hi \" + name + \"! You turn \" + str(age) + \" in 2026.\")",
+          "checklist": [
+            "Uses input() twice",
+            "Turns the year into a number with int()",
+            "Works out the age with a calculation",
+            "Prints a greeting with the name and age"
+          ],
+          "approved": true
+        }
+      ]
+    },
+    {
+      "slug": "python-conditionals",
+      "title": "Conditionals",
+      "summary": "Make decisions with if, elif and else.",
+      "estimated_minutes": 75,
+      "prerequisites": [
+        "python-input-and-output"
+      ],
+      "resources": [
+        {
+          "title": "if Statements",
+          "url": "https://docs.python.org/3/tutorial/controlflow.html#if-statements",
+          "kind": "docs"
+        },
+        {
+          "title": "Python If...Else",
+          "url": "https://www.w3schools.com/python/python_conditions.asp",
+          "kind": "interactive",
+          "estimated_minutes": 25
+        }
+      ],
+      "tips": [
+        "Use == to compare and = to assign. if x = 5: is an error; if x == 5: is a check.",
+        "Indentation is part of the syntax. Everything indented under if runs only when the condition is true."
+      ],
+      "skill_questions": [
+        {
+          "prompt": "What does this code print?",
+          "code_snippet": "x = 10\nif x > 5:\n    print(\"big\")\nelse:\n    print(\"small\")",
+          "choices": [
+            "big",
+            "small",
+            "Nothing",
+            "Error"
+          ],
+          "correct_index": 0
+        },
+        {
+          "prompt": "Which keyword checks another condition after if?",
+          "choices": [
+            "else if",
+            "elif",
+            "elseif",
+            "then"
+          ],
+          "correct_index": 1
+        }
+      ],
+      "quiz_items": [
+        {
+          "prompt": "Check another condition: ___ x == 0:",
+          "accepted_answers": [
+            "elif"
+          ],
+          "hint": "Python shortens \"else if\" into one word."
+        },
+        {
+          "prompt": "Compare two values for equality: if a ___ b:",
+          "accepted_answers": [
+            "=="
+          ],
+          "hint": "One equals sign assigns; you need two."
+        },
+        {
+          "prompt": "Run code when no condition matched: ___:",
+          "accepted_answers": [
+            "else"
+          ],
+          "hint": "The catch-all branch."
+        }
+      ],
+      "practice_tasks": [
+        {
+          "prompt": "Store a score from 0 to 100 in a variable. Print \"Excellent\" for 90 and up, \"Passed\" for 75 to 89, and \"Try again\" for anything lower. Change the score and run it a few times to check each branch.",
+          "starter_code": "score = 82\n\n# Print Excellent, Passed or Try again\n",
+          "sample_answer": "score = 82\n\nif score >= 90:\n    print(\"Excellent\")\nelif score >= 75:\n    print(\"Passed\")\nelse:\n    print(\"Try again\")",
+          "checklist": [
+            "Uses if, elif and else",
+            "The checks go from highest to lowest",
+            "Each branch prints the right word",
+            "Works for 95, 80 and 50"
+          ],
+          "approved": true
+        }
+      ]
+    },
+    {
+      "slug": "python-loops",
+      "title": "Loops",
+      "summary": "Repeat code with for and while loops.",
+      "estimated_minutes": 90,
+      "prerequisites": [
+        "python-conditionals"
+      ],
+      "resources": [
+        {
+          "title": "for Statements and range()",
+          "url": "https://docs.python.org/3/tutorial/controlflow.html#for-statements",
+          "kind": "docs",
+          "estimated_minutes": 20
+        },
+        {
+          "title": "Python For Loops",
+          "url": "https://www.w3schools.com/python/python_for_loops.asp",
+          "kind": "interactive",
+          "estimated_minutes": 25
+        }
+      ],
+      "tips": [
+        "range(5) gives 0, 1, 2, 3, 4. It stops before the number you give it.",
+        "A while loop needs something inside it that eventually makes the condition false, or it runs forever."
+      ],
+      "skill_questions": [
+        {
+          "prompt": "How many times does this print?",
+          "code_snippet": "for i in range(3):\n    print(i)",
+          "choices": [
+            "2",
+            "3",
+            "4",
+            "Forever"
+          ],
+          "correct_index": 1
+        },
+        {
+          "prompt": "What is the last number printed?",
+          "code_snippet": "for i in range(1, 4):\n    print(i)",
+          "choices": [
+            "3",
+            "4",
+            "1",
+            "Error"
+          ],
+          "correct_index": 0
+        }
+      ],
+      "quiz_items": [
+        {
+          "prompt": "Loop five times: for i in ___(5):",
+          "accepted_answers": [
+            "range"
+          ],
+          "hint": "A built-in that makes a sequence of numbers."
+        },
+        {
+          "prompt": "Stop a loop early: ___",
+          "accepted_answers": [
+            "break"
+          ],
+          "hint": "It breaks out of the loop."
+        },
+        {
+          "prompt": "Loop while a condition is true: ___ count < 10:",
+          "accepted_answers": [
+            "while"
+          ],
+          "hint": "The other kind of loop besides for."
+        }
+      ],
+      "practice_tasks": [
+        {
+          "prompt": "Print the multiplication table of 7, from 7 x 1 to 7 x 10, one line each, like \"7 x 3 = 21\".",
+          "starter_code": "number = 7\n\n# Use a loop to print 7 x 1 up to 7 x 10\n",
+          "sample_answer": "number = 7\n\nfor i in range(1, 11):\n    print(number, \"x\", i, \"=\", number * i)",
+          "checklist": [
+            "Uses a for loop with range()",
+            "Prints exactly 10 lines",
+            "Starts at 1 and ends at 10",
+            "Each line shows the right product"
+          ],
+          "approved": true
+        }
+      ]
+    },
+    {
+      "slug": "python-lists",
+      "title": "Lists",
+      "summary": "Keep many values in order, add to them and loop over them.",
+      "estimated_minutes": 90,
+      "prerequisites": [
+        "python-loops"
+      ],
+      "resources": [
+        {
+          "title": "More on Lists",
+          "url": "https://docs.python.org/3/tutorial/datastructures.html#more-on-lists",
+          "kind": "docs",
+          "estimated_minutes": 25
+        },
+        {
+          "title": "Python Lists",
+          "url": "https://www.w3schools.com/python/python_lists.asp",
+          "kind": "interactive",
+          "estimated_minutes": 25
+        }
+      ],
+      "tips": [
+        "List positions start at 0, so the first item is items[0] and the last is items[-1].",
+        "append() changes the list in place and returns None, so don't write items = items.append(x)."
+      ],
+      "skill_questions": [
+        {
+          "prompt": "What does this code print?",
+          "code_snippet": "nums = [10, 20, 30]\nprint(nums[1])",
+          "choices": [
+            "10",
+            "20",
+            "30",
+            "Error"
+          ],
+          "correct_index": 1
+        },
+        {
+          "prompt": "What does len([1, 2, 3, 4]) return?",
+          "choices": [
+            "3",
+            "4",
+            "5",
+            "Error"
+          ],
+          "correct_index": 1
+        }
+      ],
+      "quiz_items": [
+        {
+          "prompt": "Add an item to the end of a list: items.___(5)",
+          "accepted_answers": [
+            "append"
+          ],
+          "hint": "A method that attaches to the end."
+        },
+        {
+          "prompt": "Get the last item: items[___]",
+          "accepted_answers": [
+            "-1"
+          ],
+          "hint": "Negative positions count from the end."
+        },
+        {
+          "prompt": "Count the items in a list: ___(items)",
+          "accepted_answers": [
+            "len"
+          ],
+          "hint": "Short for length."
+        }
+      ],
+      "practice_tasks": [
+        {
+          "prompt": "Make a list of five prices. Add one more with append(). Then print the cheapest price, the most expensive, and the total.",
+          "starter_code": "prices = [120, 45, 300, 80, 55]\n\n# Add one more price\n\n# Print the cheapest, the most expensive and the total\n",
+          "sample_answer": "prices = [120, 45, 300, 80, 55]\nprices.append(99)\n\nprint(\"Cheapest:\", min(prices))\nprint(\"Most expensive:\", max(prices))\nprint(\"Total:\", sum(prices))",
+          "checklist": [
+            "Adds a price with append()",
+            "Finds the cheapest and most expensive",
+            "Prints the total",
+            "Prints labels so the numbers make sense"
+          ],
+          "approved": true
+        }
+      ]
+    },
+    {
+      "slug": "python-functions",
+      "title": "Functions",
+      "summary": "Package code into reusable functions with parameters and return values.",
+      "estimated_minutes": 120,
+      "prerequisites": [
+        "python-lists"
+      ],
+      "resources": [
+        {
+          "title": "Defining Functions",
+          "url": "https://docs.python.org/3/tutorial/controlflow.html#defining-functions",
+          "kind": "docs",
+          "estimated_minutes": 30
+        },
+        {
+          "title": "Python Functions",
+          "url": "https://www.w3schools.com/python/python_functions.asp",
+          "kind": "interactive",
+          "estimated_minutes": 30
+        }
+      ],
+      "tips": [
+        "print shows a value; return hands it back to whoever called the function. They are not the same.",
+        "A function without a return statement returns None."
+      ],
+      "skill_questions": [
+        {
+          "prompt": "What does this code print?",
+          "code_snippet": "def add(a, b):\n    return a + b\n\nprint(add(2, 3))",
+          "choices": [
+            "23",
+            "5",
+            "None",
+            "Error"
+          ],
+          "correct_index": 1
+        },
+        {
+          "prompt": "What does this function return?",
+          "code_snippet": "def greet():\n    print(\"hi\")",
+          "choices": [
+            "\"hi\"",
+            "None",
+            "True",
+            "Error"
+          ],
+          "correct_index": 1
+        }
+      ],
+      "quiz_items": [
+        {
+          "prompt": "Start a function definition: ___ greet(name):",
+          "accepted_answers": [
+            "def"
+          ],
+          "hint": "Short for define."
+        },
+        {
+          "prompt": "Send a value back from a function: ___ total",
+          "accepted_answers": [
+            "return"
+          ],
+          "hint": "It ends the function and gives back a value."
+        },
+        {
+          "prompt": "A function with no return gives back ___",
+          "accepted_answers": [
+            "None"
+          ],
+          "hint": "Python's value for \"nothing\". Capital N."
+        }
+      ],
+      "practice_tasks": [
+        {
+          "prompt": "Write a function average(numbers) that returns the average of a list of numbers. Call it on two different lists and print both results.",
+          "starter_code": "def average(numbers):\n    # Return the average\n    pass\n\n\nprint(average([80, 90, 70]))\n",
+          "sample_answer": "def average(numbers):\n    return sum(numbers) / len(numbers)\n\n\nprint(average([80, 90, 70]))\nprint(average([3, 4]))",
+          "checklist": [
+            "Defines average with one parameter",
+            "Uses return, not print, inside the function",
+            "Is called on two different lists",
+            "Prints 80.0 for [80, 90, 70]"
+          ],
+          "approved": true
+        }
+      ]
+    },
+    {
+      "slug": "python-dictionaries",
+      "title": "Dictionaries",
+      "summary": "Store values by key, look them up and loop over them.",
+      "estimated_minutes": 90,
+      "prerequisites": [
+        "python-functions"
+      ],
+      "resources": [
+        {
+          "title": "Dictionaries",
+          "url": "https://docs.python.org/3/tutorial/datastructures.html#dictionaries",
+          "kind": "docs",
+          "estimated_minutes": 20
+        },
+        {
+          "title": "Python Dictionaries",
+          "url": "https://www.w3schools.com/python/python_dictionaries.asp",
+          "kind": "interactive",
+          "estimated_minutes": 30
+        }
+      ],
+      "tips": [
+        "Use d.get(key) when the key might be missing; d[key] raises KeyError instead.",
+        "Loop over d.items() to get each key and value together."
+      ],
+      "skill_questions": [
+        {
+          "prompt": "What does this code print?",
+          "code_snippet": "ages = {\"ana\": 20, \"ben\": 22}\nprint(ages[\"ben\"])",
+          "choices": [
+            "20",
+            "22",
+            "ben",
+            "Error"
+          ],
+          "correct_index": 1
+        }
+      ],
+      "quiz_items": [
+        {
+          "prompt": "Get each key and value in a loop: for k, v in d.___():",
+          "accepted_answers": [
+            "items"
+          ],
+          "hint": "It gives pairs."
+        },
+        {
+          "prompt": "Look up a key without an error if it's missing: d.___(\"name\")",
+          "accepted_answers": [
+            "get"
+          ],
+          "hint": "A safe way to read a value."
+        },
+        {
+          "prompt": "Check if a key exists: if \"name\" ___ d:",
+          "accepted_answers": [
+            "in"
+          ],
+          "hint": "The same word you use in for loops."
+        }
+      ],
+      "practice_tasks": [
+        {
+          "prompt": "Make a dictionary of three friends and their favorite food. Add a fourth friend, then loop through the dictionary and print \"Name likes food\" for each one.",
+          "starter_code": "favorites = {\"Ana\": \"adobo\", \"Ben\": \"sinigang\", \"Carla\": \"halo-halo\"}\n\n# Add a fourth friend\n\n# Print each friend and their food\n",
+          "sample_answer": "favorites = {\"Ana\": \"adobo\", \"Ben\": \"sinigang\", \"Carla\": \"halo-halo\"}\nfavorites[\"Dan\"] = \"lumpia\"\n\nfor name, food in favorites.items():\n    print(name, \"likes\", food)",
+          "checklist": [
+            "Adds a new key and value",
+            "Loops with .items()",
+            "Prints one line per friend",
+            "Prints four lines"
+          ],
+          "approved": true
+        }
+      ]
+    },
+    {
+      "slug": "python-files-and-exceptions",
+      "title": "Working with Files and Handling Exceptions",
+      "summary": "Read and write files, and handle errors with try and except.",
+      "estimated_minutes": 120,
+      "prerequisites": [
+        "python-dictionaries"
+      ],
+      "resources": [
+        {
+          "title": "Errors and Exceptions",
+          "url": "https://docs.python.org/3/tutorial/errors.html",
+          "kind": "docs",
+          "estimated_minutes": 30
+        },
+        {
+          "title": "Python File Handling",
+          "url": "https://www.w3schools.com/python/python_file_handling.asp",
+          "kind": "interactive",
+          "estimated_minutes": 30
+        }
+      ],
+      "tips": [
+        "Open files with with open(...) as f: so Python closes them for you, even if an error happens.",
+        "Catch specific errors like ValueError instead of a bare except:, so real bugs aren't hidden."
+      ],
+      "skill_questions": [
+        {
+          "prompt": "What happens when this runs?",
+          "code_snippet": "int(\"abc\")",
+          "choices": [
+            "Returns 0",
+            "Raises ValueError",
+            "Returns \"abc\"",
+            "Returns None"
+          ],
+          "correct_index": 1
+        },
+        {
+          "prompt": "Which mode opens a file for reading?",
+          "code_snippet": "open(\"notes.txt\", ?)",
+          "choices": [
+            "\"w\"",
+            "\"r\"",
+            "\"a\"",
+            "\"x\""
+          ],
+          "correct_index": 1
+        }
+      ],
+      "quiz_items": [
+        {
+          "prompt": "Start a block that might fail: ___:",
+          "accepted_answers": [
+            "try"
+          ],
+          "hint": "You try something, then catch errors."
+        },
+        {
+          "prompt": "Handle the error: ___ ValueError:",
+          "accepted_answers": [
+            "except"
+          ],
+          "hint": "Python's word for catch."
+        },
+        {
+          "prompt": "Open a file so it closes itself: ___ open(\"a.txt\") as f:",
+          "accepted_answers": [
+            "with"
+          ],
+          "hint": "A context manager keyword."
+        }
+      ],
+      "practice_tasks": [
+        {
+          "prompt": "Ask for a number and print its double. If the user types something that isn't a number, print \"That's not a number\" instead of crashing. Test it with \"5\" and with \"hello\" in the input box.",
+          "starter_code": "text = input(\"Type a number: \")\n\n# Use try and except to handle text that isn't a number\n",
+          "sample_answer": "text = input(\"Type a number: \")\n\ntry:\n    number = float(text)\n    print(\"Double:\", number * 2)\nexcept ValueError:\n    print(\"That's not a number\")",
+          "checklist": [
+            "Uses try and except",
+            "Catches ValueError",
+            "Prints the double for a number",
+            "Prints a friendly message for text"
+          ],
+          "approved": true
+        }
+      ]
+    }
+  ]
+}

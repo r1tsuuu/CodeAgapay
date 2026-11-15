@@ -177,7 +177,7 @@ source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 cp .env.example .env               # fill in the values (see below)
 python manage.py migrate
-python manage.py loaddata fixtures/content.json
+python manage.py import_curriculum
 python manage.py createsuperuser
 python manage.py runserver
 ```

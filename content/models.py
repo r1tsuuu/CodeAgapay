@@ -1,4 +1,8 @@
-"""Learning content. Edited by the content team in Django admin only."""
+"""Curriculum: paths, tracks, topics and what hangs off them.
+
+The source of truth is the versioned files in content/curriculum/ (docs/CURRICULUM.md), loaded
+with `import_curriculum`. Admin edits are for quick fixes; `export_curriculum` writes them back.
+"""
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -36,6 +40,10 @@ class Path(models.Model):
     slug = models.SlugField(unique=True)
     tagline = models.CharField(
         max_length=200, help_text='Real examples, e.g. "A page for your org, a portfolio, an event site."'
+    )
+    language_reason = models.CharField(
+        max_length=300, blank=True,
+        help_text='Why this path starts with its first language, in plain words, e.g. "Every web page is HTML."',
     )
     order = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)
@@ -295,3 +303,23 @@ class QuizItem(models.Model):
             raise ValidationError({"accepted_answers": "Give at least one accepted answer."})
         if "___" not in self.prompt:
             raise ValidationError({"prompt": "Mark the blank with ___ (three underscores)."})
+
+
+class CurriculumRelease(models.Model):
+    """One import of the curriculum files. Plans record the version they were built from."""
+
+    version = models.CharField(max_length=40)
+    checksum = models.CharField(max_length=64, help_text="SHA-256 of the files, to spot a re-import of the same content.")
+    imported_at = models.DateTimeField(auto_now_add=True)
+    summary = models.JSONField(default=dict, blank=True, help_text="What the import added, changed and kept.")
+
+    class Meta:
+        ordering = ["-imported_at", "-pk"]
+
+    def __str__(self):
+        return f"Curriculum {self.version} ({self.imported_at:%Y-%m-%d})"
+
+    @classmethod
+    def current_version(cls):
+        latest = cls.objects.first()
+        return latest.version if latest else ""
