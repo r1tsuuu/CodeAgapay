@@ -78,7 +78,7 @@ class FinishPageTests(FinishMixin, TestCase):
     def test_shows_what_was_done(self):
         self.finish_all()
         response = self.client.get(reverse("plan_finish"))
-        self.assertContains(response, "Congratulations, ")
+        self.assertContains(response, "Congratulations</span>, ")
         self.assertContains(response, "<strong class=\"finish-stat-berry\" data-count-up=\"2\">2</strong> topics finished", html=False)
         self.assertContains(response, "Topic 1")
 

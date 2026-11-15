@@ -68,7 +68,7 @@ EXPERIENCE_CHOICES = [
     (NOT_SURE, "I'm not sure how to describe it"),
 ]
 HOURS_CHOICES = [
-    ("2", "1–2 hours"), ("4", "3–5 hours"), ("8", "6–10 hours"), ("12", "More than 10 hours"),
+    ("2", "1–2 hours"), ("4", "3–5 hours"), ("8", "6 hours or more"),
     (NOT_SURE, "Not sure yet"),
 ]
 DEADLINE_CHOICES = [
@@ -210,12 +210,20 @@ def next_step(answers):
     return "review"
 
 
+def _path_detail(path, available):
+    """The tagline, plus which language comes first, so the choice says what it means."""
+    if not available:
+        return f"{path.tagline} (coming soon)"
+    first = path.first_track()
+    return f"{path.tagline} Starts with {first.name}." if first else path.tagline
+
+
 def question_for(step, answers):
     path = get_path(answers.get("path", ""))
     if step == "path":
         # Paths learners can start come first; "coming soon" ones shouldn't be the first thing seen.
         choices = [
-            Choice(p.slug, p.title, p.tagline if available else f"{p.tagline} (coming soon)", not available)
+            Choice(p.slug, p.title, _path_detail(p, available), not available)
             for p, available in sorted(offered_paths(), key=lambda pair: not pair[1])
         ]
         choices.append(Choice(NOT_SURE, "I'm not sure yet", "We'll start you with a great first skill."))

@@ -5,6 +5,8 @@ what the tests check or make them call a real AI. Tests that need the AI or AI p
 themselves with override_settings, and mock every call.
 """
 
+import logging
+
 from django.conf import settings
 from django.test.runner import DiscoverRunner
 
@@ -14,6 +16,10 @@ SAFE_DEFAULTS = {
     "GROQ_API_KEY": "",
     "CF_ACCOUNT_ID": "",
     "CF_API_TOKEN": "",
+    "LOCAL_AI_URL": "",
+    "LOCAL_AI_MODEL": "",
+    # A .env with DEBUG=False must not turn every test request into an HTTPS redirect.
+    "SECURE_SSL_REDIRECT": False,
 }
 
 
@@ -22,3 +28,11 @@ class Runner(DiscoverRunner):
         super().setup_test_environment(**kwargs)
         for name, value in SAFE_DEFAULTS.items():
             setattr(settings, name, value)
+        # Plain static files, so pages render without running collectstatic first.
+        settings.STORAGES = {
+            **settings.STORAGES,
+            "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+        }
+        # Many tests make the AI fail on purpose; keep their expected warnings out of the output.
+        for handler in logging.getLogger().handlers:
+            handler.setLevel(logging.CRITICAL)

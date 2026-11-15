@@ -1,0 +1,74 @@
+{
+  "version": "2026.11.15.1",
+  "paths": [
+    {
+      "slug": "website",
+      "title": "Make a website",
+      "tagline": "A page for your org, a portfolio, an event site.",
+      "language_reason": "Every web page starts as HTML, so you'll see your page in a browser from day one. CSS and JavaScript come next to style it and make it react.",
+      "tracks": [
+        "html",
+        "css",
+        "javascript"
+      ]
+    },
+    {
+      "slug": "automation",
+      "title": "Automate boring tasks",
+      "tagline": "Rename files, tidy spreadsheets, make small helper tools.",
+      "language_reason": "Python reads almost like English and can rename files, read spreadsheets and fill in forms with a few lines, so you can automate a real chore early.",
+      "tracks": [
+        "python"
+      ]
+    },
+    {
+      "slug": "data",
+      "title": "Work with data",
+      "tagline": "Sort, count and answer questions about real data, like survey results.",
+      "language_reason": "Python is the most common beginner language for working with data, and SQL is how you ask a database questions. Python comes first because it teaches the basics both use.",
+      "tracks": [
+        "python",
+        "sql"
+      ]
+    },
+    {
+      "slug": "databases",
+      "title": "Learn databases",
+      "tagline": "Store and look up records, like an org's members or a sari-sari store's stock.",
+      "language_reason": "SQL is the language almost every database understands. It's short and readable, and you don't need another language first.",
+      "tracks": [
+        "sql"
+      ]
+    },
+    {
+      "slug": "games",
+      "title": "Make games and fun projects",
+      "tagline": "Text adventures, quizzes, small simulations.",
+      "language_reason": "Python lets you make a working text game in your first week without installing a game engine. JavaScript comes after, to put games in a browser.",
+      "tracks": [
+        "python",
+        "javascript"
+      ]
+    },
+    {
+      "slug": "cs-class",
+      "title": "Get ahead in CS class",
+      "tagline": "Feel ready for programming classes and exams.",
+      "language_reason": "Most first-year programming classes start with Python or Java. Python builds the habits; Java then shows the stricter style many classes grade on.",
+      "tracks": [
+        "python",
+        "java"
+      ]
+    },
+    {
+      "slug": "foundations",
+      "title": "Start from zero",
+      "tagline": "The ideas every language shares, before you pick one.",
+      "is_active": false,
+      "language_reason": "These ideas work in any language. The examples use Python because it reads almost like English.",
+      "tracks": [
+        "foundations"
+      ]
+    }
+  ]
+}

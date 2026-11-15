@@ -43,20 +43,30 @@ class Streak:
     weeks: int  # Weeks in a row, up to this week (or last week, if nothing yet this week).
     this_week: bool  # Already learned something this week.
     best: int  # Longest run ever.
+    paused: bool = False  # The plan is paused: the streak waits instead of ending.
 
     @property
     def at_risk(self):
         """A streak that ends unless they learn something before Sunday."""
-        return self.weeks > 0 and not self.this_week
+        return self.weeks > 0 and not self.this_week and not self.paused
 
 
 def weekly_streak(profile, today=None):
     weeks = {_week_start(day) for day in active_days(profile)}
     this = _week_start(today or timezone.localdate())
+    # Pausing is free: weeks since the pause bridge the streak without adding to it.
+    paused = set()
+    if profile.paused_at is not None:
+        week = _week_start(timezone.localdate(profile.paused_at))
+        while week <= this:
+            paused.add(week)
+            week += timedelta(weeks=1)
     start = this if this in weeks else this - timedelta(weeks=1)
+    while start in paused and start not in weeks:
+        start -= timedelta(weeks=1)
     count = 0
-    while start in weeks:
-        count += 1
+    while start in weeks or start in paused:
+        count += start in weeks
         start -= timedelta(weeks=1)
     best = run = 0
     previous = None
@@ -64,7 +74,7 @@ def weekly_streak(profile, today=None):
         run = run + 1 if previous is not None and week - previous == timedelta(weeks=1) else 1
         best = max(best, run)
         previous = week
-    return Streak(weeks=count, this_week=this in weeks, best=best)
+    return Streak(weeks=count, this_week=this in weeks, best=best, paused=profile.paused_at is not None)
 
 
 def _module_done(profile):

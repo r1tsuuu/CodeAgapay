@@ -68,10 +68,69 @@ def language_note(text):
 
 
 HINT_LEVELS = {
-    1: "Ask one guiding question that points the learner toward the idea they are missing.",
-    2: "Explain the concept the learner needs, in plain words, without solving their problem.",
-    3: "Show a short, similar but different example, then let the learner apply it themselves.",
+    1: "Give a direction: one guiding question that points the learner toward the idea they are missing.",
+    2: "Give a strategy: the approach or concept they need, in plain words, without solving their problem.",
+    3: "Give a worked pattern: a short, similar but different example, then let them apply it themselves.",
 }
+
+# What the learner asked Agapay to do (the panel's buttons). "hint" steps through HINT_LEVELS.
+# "Adjust my plan" and "Suggest a next project" are not here: the panel answers them from the
+# plan and the curated project ideas, with no AI, and plan changes need the learner to confirm.
+ACTIONS = {
+    "hint": None,
+    "explain": "Explain the concept they ask about in plain words, with one tiny example. Don't solve their task.",
+    "debug": (
+        "Help them debug. Read their code and error, say in words where to look and why, and ask what they "
+        "expect that line to do. Don't write the fixed code."
+    ),
+    "check": (
+        "Check their understanding: ask one short question about this topic, wait for their answer, and "
+        "don't give the answer in the same message."
+    ),
+    "breakdown": "Break their task into 3 to 5 small steps they can do in order. Describe each step; don't write the code.",
+    "solution": (
+        "They explicitly asked for the full solution after trying the hints. Explain a complete solution step "
+        "by step, saying why each part works, so they understand it rather than copy it."
+    ),
+}
+ACTION_LABELS = {
+    "hint": "Hint", "explain": "Explanation", "debug": "Debugging help", "check": "Check your understanding",
+    "breakdown": "Steps", "solution": "Worked solution",
+}
+
+# Fallbacks when the AI is off, busy or out of messages: curated troubleshooting prompts per action.
+FALLBACK_PROMPTS = {
+    "hint": "Reread the task and say out loud what it asks for. Which part do you already know how to do?",
+    "explain": "Open the first resource below and find the topic's key words. Try writing each one in your own words.",
+    "debug": (
+        "Read the last line of the error first: it names the problem. Then find the line number it points to, "
+        "and check that line and the one above it for a missing bracket, colon, quote or typo."
+    ),
+    "check": "Close the resources and try to write a tiny example of this topic from memory. Then compare.",
+    "breakdown": (
+        "Write the task as a list: what goes in, what should come out, and the steps in between. "
+        "Do the smallest step first and run it before adding the next."
+    ),
+    "solution": "Look at the worked examples in the resources below; they show the full pattern step by step.",
+}
+
+# How Agapay explains (LearnerProfile.explain_language). Blank: match the learner's message.
+LANGUAGE_RULES = {
+    "en": "- Reply in plain English.",
+    "fil": "- Reply in Filipino (Tagalog). Keep code and technical words like loop or variable in English.",
+    "taglish": "- Reply in Taglish: everyday Tagalog mixed with English, the way Filipino students talk.",
+}
+LOCAL_EXAMPLES = (
+    "- When you give an example, use everyday Filipino contexts when they fit: a student org's members, "
+    "a barangay event sign-up, a sari-sari store's stock, a class survey."
+)
+EXPERIENCE_NOTES = {
+    "none": "They have never coded before.",
+    "a_little": "They have followed tutorials or a class.",
+    "comfortable": "They have built something small on their own.",
+}
+MAX_CODE_LENGTH = 2000
+MAX_ERROR_LENGTH = 500
 
 
 @dataclass
@@ -80,6 +139,7 @@ class Provider:
     api_key: str
     base_url: str
     model: str
+    timeout: float = TIMEOUT_SECONDS  # One hint call. Local models on a laptop are slower.
 
 
 def providers(purpose="hint"):
@@ -101,6 +161,13 @@ def providers(purpose="hint"):
             "cloudflare", settings.CF_API_TOKEN,
             f"https://api.cloudflare.com/client/v4/accounts/{settings.CF_ACCOUNT_ID}/ai/v1",
             settings.CF_MODEL,
+        ))
+    if settings.LOCAL_AI_URL and settings.LOCAL_AI_MODEL:
+        # A model on this machine (Ollama, LM Studio): tried last, for development and offline demos.
+        # Not for Render: the free service has no GPU and 512 MB of memory. See docs/AI.md.
+        result.append(Provider(
+            "local", settings.LOCAL_AI_API_KEY or "local", settings.LOCAL_AI_URL.rstrip("/"),
+            settings.LOCAL_AI_MODEL, timeout=settings.LOCAL_AI_TIMEOUT,
         ))
     return result
 
@@ -134,6 +201,11 @@ class HelpRequest:
     quiz_item: object = None
     learner_answer: str = ""
     hint_style: str = ""  # LearnerProfile.HintStyle value: what helps this learner when stuck.
+    action: str = "hint"  # A key of ACTIONS.
+    code: str = ""  # Their code, for debugging (at most MAX_CODE_LENGTH).
+    error: str = ""  # The error message they got (at most MAX_ERROR_LENGTH).
+    language: str = ""  # LearnerProfile.ExplainLanguage value, or blank to match their message.
+    experience: str = ""  # LearnerProfile.Experience value.
 
 
 @dataclass
@@ -144,9 +216,11 @@ class HelpReply:
     remaining_today: int
     tips: list = field(default_factory=list)
     resources: list = field(default_factory=list)
+    action: str = "hint"
 
     def as_dict(self):
         return {
+            "action": self.action,
             "mode": self.mode,
             "reply": self.reply,
             "hint_level": self.hint_level,
@@ -169,7 +243,11 @@ def topic_resources(topic):
 
 
 def build_messages(request):
-    """The chat messages sent to the model. Only topic content and the learner's own words."""
+    """The chat messages sent to the model.
+
+    Bounded on purpose: the topic or lesson, the learner's level and language, their question, and
+    optionally their code, error or quiz answer. No name, email, account history or quiz answers.
+    """
     topic = request.topic
     tips = "\n".join(f"- {t}" for t in topic_tips(topic)) or "- (none)"
     resources = "\n".join(f"- {r['title']}" for r in topic_resources(topic)) or "- (none)"
@@ -185,14 +263,19 @@ def build_messages(request):
         f"Resources the learner has:\n{resources}\n\n"
         "Rules:\n"
         "- Stay on this topic. Use only the ideas above and basic programming knowledge.\n"
-        "- Never give the full solution or the exact answer to a quiz blank.\n"
-        f"- This is hint level {request.hint_level} of 3. {HINT_LEVELS[request.hint_level]}\n"
+        f"{_task_rule(request)}"
         f"{style}"
-        "- Keep the reply under 120 words.\n"
+        f"- {EXPERIENCE_NOTES.get(request.experience, 'Assume they are a beginner.')}\n"
+        f"- Keep the reply under {200 if request.action == 'solution' else 120} words.\n"
         "- If the question is not about programming, gently steer back to the topic.\n"
-        f"{HELP_LANGUAGE_RULES}"
+        f"{LOCAL_EXAMPLES}\n"
+        f"{_language_rules(request.language)}"
     )
-    user = f"My question: {request.question}{language_note(request.question)}"
+    note = "" if request.language in LANGUAGE_RULES else language_note(request.question)
+    user = f"My question: {request.question}{note}"
+    if request.action == "debug" and (request.code or request.error):
+        user = (f"My code:\n{request.code or '(none)'}\n"
+                f"The error I get:\n{request.error or '(no error, but wrong output)'}\n{user}")
     if request.screen == "quiz" and request.quiz_item is not None:
         # The prompt only. accepted_answers never leave the server.
         user = (
@@ -200,6 +283,23 @@ def build_messages(request):
             f"My answer so far: {request.learner_answer or '(blank)'}\n{user}"
         )
     return [{"role": "system", "content": system}, {"role": "user", "content": user}]
+
+
+def _task_rule(request):
+    """The rule for what the learner asked for. Quiz answers are never given, whatever the action."""
+    never = "- Never give the exact answer to a quiz blank.\n"
+    if request.action == "hint" or request.action not in ACTIONS:
+        return (f"{never}- Never give the full solution.\n"
+                f"- This is hint level {request.hint_level} of 3. {HINT_LEVELS[request.hint_level]}\n")
+    if request.action == "solution":
+        return f"{never}- {ACTIONS['solution']}\n"
+    return f"{never}- Never give the full solution.\n- {ACTIONS[request.action]}\n"
+
+
+def _language_rules(language):
+    if language in LANGUAGE_RULES:
+        return f"{LANGUAGE_RULES[language]}\n- Plain text only: no markdown, no backticks, no asterisks, no headings."
+    return HELP_LANGUAGE_RULES
 
 
 def call_provider(provider, messages, max_tokens=MAX_TOKENS, json_mode=False, reasoning="low", usage=None,
@@ -211,7 +311,7 @@ def call_provider(provider, messages, max_tokens=MAX_TOKENS, json_mode=False, re
     # gpt-oss models think before answering; keep that short so it fits in max_tokens.
     if provider.model.startswith("openai/gpt-oss"):
         extra["reasoning_effort"] = reasoning
-    if json_mode and provider.name == "groq":
+    if json_mode and provider.name in ("groq", "local"):
         extra["response_format"] = {"type": "json_object"}
     response = client.chat.completions.create(
         model=provider.model, messages=messages, max_tokens=max_tokens, temperature=0.4, **extra,
@@ -265,7 +365,7 @@ def ask_model(messages):
     """Try each provider in order. Returns the cleaned reply text, or None if all fail."""
     for provider in providers():
         try:
-            return clean_reply(call_with_retry(provider, messages))
+            return clean_reply(call_with_retry(provider, messages, timeout=provider.timeout))
         except Exception:  # Any provider error means "try the next one".
             logger.warning("AI provider %s failed", provider.name, exc_info=True)
     return None
@@ -401,10 +501,11 @@ def intakes_left_today(learner):
 
 
 def fallback(request, learner, reason):
-    reply = reason
+    reply = f"{reason} {FALLBACK_PROMPTS.get(request.action, FALLBACK_PROMPTS['hint'])}"
     if request.screen == "quiz" and request.quiz_item is not None and request.quiz_item.hint:
-        reply = f"{reason} Hint for this blank: {request.quiz_item.hint}"
+        reply = f"{reply} Hint for this blank: {request.quiz_item.hint}"
     return HelpReply(
+        action=request.action,
         mode="fallback",
         reply=reply,
         hint_level=request.hint_level,
@@ -462,6 +563,11 @@ def practice_feedback(learner, task, answer):
 
 def ask(learner, request):
     """Answer a help request with an AI hint, or fall back to the topic's tips and links."""
+    if request.action not in ACTIONS:
+        request.action = "hint"
+    if request.action == "solution" and request.screen == "quiz":
+        # A full solution on a quiz would hand over the answer: the strongest hint instead.
+        request.action, request.hint_level = "hint", 3
     if not providers():
         return fallback(request, learner, "The AI helper is off right now. These tips and links should help.")
     if not reserve_message(learner):
@@ -473,6 +579,7 @@ def ask(learner, request):
         return fallback(request, learner, "The AI helper is busy right now. These tips and links should help.")
 
     return HelpReply(
+        action=request.action,
         mode="ai",
         reply=text,
         hint_level=request.hint_level,

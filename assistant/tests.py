@@ -129,7 +129,7 @@ class AskViewTests(AssistantTestMixin, TestCase):
         response = self.post({"topic": "loops", "question": "help", "hint_level": 9, "screen": "plan"})
         self.assertEqual(response.status_code, 200)
         data = response.json()
-        self.assertEqual(set(data), {"mode", "reply", "hint_level", "remaining_today", "tips", "resources"})
+        self.assertEqual(set(data), {"action", "mode", "reply", "hint_level", "remaining_today", "tips", "resources"})
         self.assertEqual(data["mode"], "ai")
         self.assertEqual(data["hint_level"], 3)
 
@@ -149,12 +149,6 @@ class AskViewTests(AssistantTestMixin, TestCase):
     def test_requires_login(self):
         self.client.logout()
         self.assertEqual(self.post({"topic": "loops"}).status_code, 302)
-
-    def test_test_page_is_staff_only(self):
-        self.assertEqual(self.client.get(reverse("help_test")).status_code, 302)
-        self.user.is_staff = True
-        self.user.save()
-        self.assertContains(self.client.get(reverse("help_test")), "AI helper test")
 
 
 class ReplyTextTests(TestCase):

@@ -14,7 +14,7 @@ import math
 from django.db import transaction
 from django.utils import timezone
 
-from content.models import Topic
+from content.models import CurriculumRelease, Topic
 from diagnose.models import TopicMastery
 from diagnose.scoring import record_mastery
 
@@ -146,7 +146,9 @@ def build_plan(profile, selected_topic_ids=None, reasons=None):
             reasons[topic.pk] = EVIDENCE_REASONS.get(mastery.status, "")
 
     LearningPlan.objects.filter(learner=profile, is_active=True).update(is_active=False)
-    plan = LearningPlan.objects.create(learner=profile, track=tracks[0])
+    plan = LearningPlan.objects.create(
+        learner=profile, track=tracks[0], curriculum_version=CurriculumRelease.current_version()
+    )
     PlanItem.objects.bulk_create(
         PlanItem(plan=plan, topic=topic, order=i, week=week, reason=reasons.get(topic.pk, "")[:300])
         for i, (topic, week) in enumerate(zip(ordered, weeks), 1)
@@ -203,6 +205,28 @@ def set_item_status(item, status):
     elif mastery and mastery.known and mastery.source == TopicMastery.Source.MANUAL:
         # Undoing a manual "done" takes back the only evidence there was.
         record_mastery(learner, item.topic, TopicMastery.Status.UNKNOWN, "", TopicMastery.Source.MANUAL, force=True)
+
+
+def defer_item(item):
+    """Move an unfinished topic to the end of the plan, and re-spread the weeks.
+
+    Returns the titles of later unfinished topics that need this one first; when there are
+    any, nothing moves, because the plan must keep every prerequisite before what needs it.
+    """
+    plan = item.plan
+    unfinished = (PlanItem.Status.TODO, PlanItem.Status.IN_PROGRESS)
+    blocking = list(
+        plan.items.filter(status__in=unfinished, topic__prerequisites=item.topic)
+        .exclude(pk=item.pk).values_list("topic__title", flat=True)
+    )
+    if blocking:
+        return blocking
+    last = plan.items.order_by("-order").values_list("order", flat=True).first() or 0
+    if item.order != last:
+        item.order = last + 1
+        item.save(update_fields=["order"])
+        repace_plan(plan, plan.learner.hours_per_week)
+    return []
 
 
 def move_on_shaky(item):

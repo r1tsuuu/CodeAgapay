@@ -18,7 +18,7 @@ from assistant.service import StudyTopic
 from .journey import NextAction
 from .grading import ALMOST_PERCENT, PASS_PERCENT, normalize
 from .lessons import current_lesson
-from .outline import SETUP_KEY, all_lessons, learner_setup, setup_lesson
+from .outline import SETUP_KEY, all_lessons, learner_setup
 from .models import LessonProgress, PlanOutline
 
 # After this many misses on the same version, offer to move on (framework section 7).

@@ -42,6 +42,12 @@ class LearningSetupForm(SettingsForm):
         label="What you learn on", help_text="New lessons and setup steps use its shortcuts and app names.",
     )
 
+    explain_language = forms.ChoiceField(
+        choices=[("", "The language I write in"), *LearnerProfile.ExplainLanguage.choices],
+        widget=forms.RadioSelect, required=False, label="Agapay explains in",
+        help_text="Lessons and the rest of the site stay in English.",
+    )
+
     target_date = forms.DateField(
         required=False, label="Date you're aiming to finish by",
         widget=forms.DateInput(attrs={"type": "date"}),
@@ -50,7 +56,7 @@ class LearningSetupForm(SettingsForm):
 
     class Meta(SettingsForm.Meta):
         fields = ["goal_text", "hours_per_week", "target_date", "experience", "device", "hint_style",
-                  "email_reminders"]
+                  "explain_language", "email_reminders"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -11,7 +11,7 @@
   {% mascot "flower-teal" "mascot plan-mascot-3" %}
   {% mascot "flower-yellow" "mascot plan-mascot-4" %}
   {% mascot "oval-berry" "mascot plan-mascot-5" %}
-  <h1>Your {% if profile.path %}{{ profile.path.title }}{% elif profile.track %}{{ profile.track.name }}{% endif %} learning plan</h1>
+  <h1>Your <span class="mark">{% if profile.path %}{{ profile.path.title }}{% elif profile.track %}{{ profile.track.name }}{% endif %}</span> learning plan</h1>
   <p class="plan-percent" aria-hidden="true" data-count-up="{{ progress }}" data-count-suffix="%">{{ progress }}%</p>
   {% include "partials/progress_bar.html" %}
   <p class="plan-progress-note">{{ done_count }} of {{ counted }} topic{{ counted|pluralize }} done{% if starting.shown %} · plus {{ starting.shown|length }} you already showed on the check{% endif %}</p>
@@ -19,6 +19,17 @@
 </section>
 
 <div class="plan-sheet">
+{% if profile.paused_at %}
+<section class="tile plan-paused" aria-labelledby="paused-title">
+  <div class="paused-critter" aria-hidden="true">{% mascot "cloud-teal" "is-asleep" %}<span class="paused-z">z</span><span class="paused-z">z</span></div>
+  <h2 id="paused-title">Your plan is paused</h2>
+  <p>Paused since {{ profile.paused_at|date:"j F" }}. Your progress is kept, your streak waits, and no reminders go out. Come back whenever you're ready.</p>
+  <form method="post" action="{% url 'plan_pause' %}">
+    {% csrf_token %}
+    <button type="submit" name="action" value="resume" class="button button-primary">Resume my plan</button>
+  </form>
+</section>
+{% endif %}
 {% if finished and next_action.kind != "review" %}
 <section class="next-action" aria-labelledby="next-action-title">
   <p class="next-action-label">Plan finished</p>
@@ -85,10 +96,17 @@
   </div>
 </section>
 
-<p class="plan-controls">
-  <a href="{% url 'intake' %}?edit=1">Change my answers</a>
-  {% if finished and next_action.kind == "review" %}<a href="{% url 'plan_finish' %}">See what you finished</a>{% endif %}
-</p>
+<div class="plan-controls">
+  <p><a href="{% url 'intake' %}?edit=1">Change my goal or answers</a> <span class="plan-controls-note">Topics you've finished or shown stay done in the new plan.</span></p>
+  {% if not profile.paused_at %}
+  <form method="post" action="{% url 'plan_pause' %}">
+    {% csrf_token %}
+    <button type="submit" name="action" value="pause" class="text-button">Pause my plan</button>
+    <span class="plan-controls-note">Busy week? Nothing is lost.</span>
+  </form>
+  {% endif %}
+  {% if finished and next_action.kind == "review" %}<p><a href="{% url 'plan_finish' %}">See what you finished</a></p>{% endif %}
+</div>
 
 {% if setup.items %}
 <details class="plan-week plan-week-setup"{% if not setup.all_done %} open{% endif %}>
@@ -117,7 +135,7 @@
 {% endif %}
 
 {% for week in weeks %}
-<details class="plan-week"{% if week.number == current_week or not current_week %} open{% endif %}>
+<details class="plan-week"{% if week.number == current_week or not current_week or week.trail_from is not None %} open{% endif %}>
   <summary class="plan-week-summary">
     <h2>Week {{ week.number }}</h2>
     <span class="plan-week-count">{{ week.done }} of {{ week.items|length }} done{% if week.number == current_week %} · you're here{% endif %}</span>
@@ -128,10 +146,12 @@
     <ul>{% for text in week.milestones %}<li>{{ text }}</li>{% endfor %}</ul>
   </div>
   {% endif %}
-  <ol class="plan-items">
+  {# The trail: a line through the week that fills as topics are done, and grows when one was just finished. #}
+  <ol class="plan-items plan-trail{% if week.trail_from is not None %} is-growing{% endif %}" style="--trail: {{ week.trail }}%;{% if week.trail_from is not None %} --trail-from: {{ week.trail_from }}%;{% endif %}">
     {% for item in week.items %}
-    <li class="plan-item plan-item-{{ item.status }}{% if next_action and item.topic_id == next_action.topic_id %} plan-item-current{% endif %}">
-      <h3 class="plan-item-title"><a href="{% url 'lesson' item.topic.slug %}">{{ item.topic.title }}</a> <span class="plan-item-minutes">· {{ item.topic.estimated_minutes }} min</span></h3>
+    <li class="plan-item plan-item-{{ item.status }}{% if next_action and item.topic_id == next_action.topic_id %} plan-item-current{% endif %}{% if item.pk == just_done %} is-just-done{% endif %}">
+      <span class="trail-stop" aria-hidden="true">{% if item.status == "done" %}<svg viewBox="0 0 16 16"><path d="M3.5 8.5 6.5 11.5 12.5 4.5"/></svg>{% endif %}</span>
+      <h3 class="plan-item-title" style="view-transition-name: topic-{{ item.topic.slug }}"><a href="{% url 'lesson' item.topic.slug %}">{{ item.topic.title }}</a> <span class="plan-item-minutes">· {{ item.topic.estimated_minutes }} min</span></h3>
       {% if item.topic.summary %}<p class="plan-item-summary">{{ item.topic.summary }}</p>{% endif %}
       <p class="plan-item-meta">{% if item.shaky %}<span class="status status-shaky">Shaky · review later</span>{% else %}<span class="status status-{{ item.status }}">{{ item.get_status_display }}</span>{% endif %}{% if tracks|length > 1 %} {{ item.topic.track.name }}{% endif %}</p>
       {% if item.reason %}<p class="plan-item-reason">Why: {{ item.reason|capfirst }}</p>{% endif %}
@@ -157,6 +177,12 @@
       </details>
       {% endif %}
 
+      <ul class="plan-item-steps" aria-label="{{ item.topic.title }}: what to do">
+        {% if item.topic.practice_tasks.all %}<li><a href="{% url 'practice' item.topic.slug %}">Practice task</a></li>{% endif %}
+        {% if item.topic.quiz_items.all %}<li><a href="{% url 'quiz' item.topic.slug %}">Checkpoint quiz</a></li>{% endif %}
+        <li><a href="{% url 'lesson' item.topic.slug %}#agapay">Stuck? Ask Agapay</a></li>
+      </ul>
+
       <a class="button button-lagoon button-small plan-item-open" href="{% url 'lesson' item.topic.slug %}">Open topic</a>
       <form class="plan-item-actions" method="post" action="{% url 'plan_item_status' item.pk %}">
         {% csrf_token %}
@@ -165,6 +191,7 @@
         {% else %}
         <button type="submit" name="status" value="done" class="button">Mark done</button>
         <button type="submit" name="status" value="skipped" class="button">Skip</button>
+        <button type="submit" formaction="{% url 'plan_item_defer' item.pk %}" class="button" title="Move it to the end of your plan">Later</button>
         {% endif %}
       </form>
     </li>
@@ -172,13 +199,16 @@
   </ol>
   {% if week.outcomes %}
   <div class="plan-week-milestone{% if week.done == week.items|length %} plan-week-milestone-done{% endif %}">
-    <p class="plan-week-milestone-label">{% if week.done == week.items|length %}Week {{ week.number }} done! You can now:{% else %}By the end of Week {{ week.number }}, you'll be able to:{% endif %}</p>
+    <p class="plan-week-milestone-label">{% if week.done == week.items|length %}<span class="mark{% if week.just_finished %} mark-draw{% endif %}">Week {{ week.number }} done!</span> You can now:{% else %}By the end of Week {{ week.number }}, you'll be able to:{% endif %}</p>
     <ul>{% for text in week.outcomes %}<li>{{ text }}</li>{% endfor %}</ul>
   </div>
   {% endif %}
 </details>
 {% empty %}
-<p>You've already shown every topic we have for this path. Focus on your project!</p>
+<div class="plan-empty">
+  {% mascot "star-yellow" "plan-empty-critter" %}
+  <p>You've already shown every topic we have for this path. Focus on your project!</p>
+</div>
 {% endfor %}
 
 {% if project %}

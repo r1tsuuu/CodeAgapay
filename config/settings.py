@@ -110,7 +110,7 @@ USE_TZ = True
 
 
 STATIC_URL = "static/"
-STATIC_ROOT = BASE_DIR / "staticfiles"
+STATIC_ROOT = env("STATIC_ROOT_OVERRIDE", default=str(BASE_DIR / "staticfiles"))  # override: scripts/check.sh
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
@@ -158,6 +158,13 @@ GROQ_PLAN_MODEL = env("GROQ_PLAN_MODEL", default="openai/gpt-oss-120b")  # intak
 CF_ACCOUNT_ID = env("CF_ACCOUNT_ID", default="")
 CF_API_TOKEN = env("CF_API_TOKEN", default="")
 CF_MODEL = env("CF_MODEL", default="@cf/meta/llama-3.1-8b-instruct")
+# A model running on this machine, tried after Groq and Cloudflare (docs/AI.md). Local development
+# and offline demos only: Render's free service can't run a model. Blank URL or model means off.
+# Ollama: LOCAL_AI_URL=http://localhost:11434/v1  LOCAL_AI_MODEL=qwen2.5:7b
+LOCAL_AI_URL = env("LOCAL_AI_URL", default="")
+LOCAL_AI_MODEL = env("LOCAL_AI_MODEL", default="")
+LOCAL_AI_API_KEY = env("LOCAL_AI_API_KEY", default="")  # Ollama ignores it; LM Studio may need one.
+LOCAL_AI_TIMEOUT = env.int("LOCAL_AI_TIMEOUT", default=45)  # Seconds for one hint; laptops are slow.
 AI_DAILY_LIMIT = env.int("AI_DAILY_LIMIT", default=20)
 # Plan conversations (AI intake) per learner per day. Each one costs about 6-10k tokens.
 AI_INTAKE_DAILY_LIMIT = env.int("AI_INTAKE_DAILY_LIMIT", default=2)
@@ -187,6 +194,18 @@ EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="")
 EMAIL_USE_TLS = True
 EMAIL_TIMEOUT = 20
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default=EMAIL_HOST_USER or "webmaster@localhost")
+
+
+# Logs: one JSON object per line on stdout (Render keeps them). LOG_LEVEL=DEBUG for more detail.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "filters": {"redact": {"()": "config.logging.RedactSecrets"}},
+    "formatters": {"json": {"()": "config.logging.JsonFormatter"}},
+    "handlers": {"stdout": {"class": "logging.StreamHandler", "formatter": "json", "filters": ["redact"]}},
+    "root": {"handlers": ["stdout"], "level": env("LOG_LEVEL", default="INFO")},
+    "loggers": {"django.server": {"level": "WARNING"}},
+}
 
 
 # Render terminates HTTPS at its proxy; without this Google rejects the OAuth callback.

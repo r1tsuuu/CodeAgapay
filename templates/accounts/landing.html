@@ -4,10 +4,14 @@
 {% block title %}CodeAgapay · Free coding plans for beginner programmers{% endblock %}
 
 {% block head %}
-<meta name="description" content="Tell CodeAgapay what you want to make and get a free week-by-week coding plan from trusted free lessons, with hints when you get stuck.">
+<meta name="description" content="Pick what you want to make and get a free week-by-week coding plan from MDN, freeCodeCamp and the official docs, with hints when you get stuck.">
 <meta property="og:title" content="CodeAgapay · Free coding plans for beginner programmers">
 <meta property="og:description" content="A week-by-week plan from free lessons, built around what you want to make, with hints when you get stuck.">
 <meta name="theme-color" content="#FBEFE1">
+{# The hero waits for its entrance only when motion is allowed, and never more than 2.5 s (landing.js). #}
+<script>if (!matchMedia("(prefers-reduced-motion: reduce)").matches) { document.documentElement.classList.add("hero-pending"); setTimeout(() => document.documentElement.classList.remove("hero-pending"), 2500); }</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js" integrity="sha384-HOvlOYPIs/zjoIkWUGXkVmXsjr8GuZLV+Q+rcPwmJOVZVpvTSXQChiN4t9Euv9Vc" crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js" integrity="sha384-P8VzCVnT9NBUkMrpcIZrJbA7EBjJvh/fJS6PmP+4nLIM284DtsImIv8D0fFjIkeh" crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
 <script src="{% static 'js/mascots.js' %}" defer></script>
 <script src="{% static 'js/landing.js' %}" defer></script>
 {% endblock %}
@@ -20,9 +24,9 @@
     <span>Code<span class="brand-accent">Agapay</span></span>
   </a>
   <nav class="landing-links" aria-label="Sections">
+    {% if previews %}<a href="#goals">Goals</a>{% endif %}
     <a href="#how">How it works</a>
-    <a href="#hints">Hints</a>
-    {% if paths %}<a href="#paths">Paths</a>{% endif %}
+    <a href="#hints">Agapay</a>
   </nav>
   <a class="button button-small landing-login" href="{% url 'account_login' %}">Log in</a>
 </header>
@@ -31,68 +35,162 @@
 {% block main %}
 <main id="main" class="landing">
 
+  {# 1. Hero: the promise, two actions, and a live preview of a real plan. #}
   <section class="landing-hero" aria-labelledby="hero-title">
     <div class="landing-hero-text">
-      <h1 id="hero-title" class="landing-rise">Free coding plans for beginner programmers</h1>
-      <p class="landing-lead landing-rise">Tell us what you want to make. A short check finds what you already know, then you get a week-by-week plan from free lessons on MDN, freeCodeCamp and the official docs.</p>
-      <div class="landing-actions landing-rise">
-        <a class="button button-primary landing-cta" href="{% url 'account_login' %}" data-mascot-cheer>Start your free plan</a>
+      <h1 id="hero-title" class="hero-title"><span class="hero-line" data-hero-part>Learn to code</span> <span class="hero-line" data-hero-part>by making</span> <span class="hero-line" data-hero-part><span class="hero-mark">something real</span></span></h1>
+      <p class="landing-lead" data-hero-part>A free week-by-week plan for beginners, built from MDN, freeCodeCamp and the official docs. A short check skips what you know, and Agapay gives hints when you're stuck, never the answer.</p>
+      <div class="landing-actions" data-hero-part>
+        <a class="button button-primary landing-cta" href="{% url 'account_login' %}" data-mascot-cheer>Build my free plan</a>
         <a class="button landing-secondary" href="#how">See how it works</a>
       </div>
+      {% if stats %}
+      <p class="hero-facts" data-hero-part>{{ stats.topics }} curated topics in {{ stats.languages }} languages, {{ stats.links }} free lessons linked, and it's ₱0, always.</p>
+      {% endif %}
       {% if tracks %}
-      <ul class="landing-tracks landing-rise" aria-label="Languages you can learn">
+      <ul class="landing-tracks" aria-label="Languages you can learn" data-hero-part>
         {% for track in tracks %}<li>{{ track.name }}</li>{% endfor %}
       </ul>
       {% endif %}
     </div>
 
-    <div class="landing-stage">
+    <div class="landing-stage" data-hero-stage>
       {% mascot "cloud-teal" "stage-critter stage-1" %}
       {% mascot "star-yellow-tilt" "stage-critter stage-2" %}
-      {% mascot "oval-berry" "stage-critter stage-3" %}
       {% mascot "flower-pink" "stage-critter stage-4" %}
-      {% mascot "hex-orange" "stage-critter stage-5" %}
-      {% mascot "star-lime" "stage-critter stage-6" %}
-      {% mascot "flower-yellow" "stage-critter stage-7" %}
+      {% mascot "star-lime" "stage-critter stage-7" %}
+      {% mascot "oval-berry" "stage-critter stage-3" %}
+      {% if hero_previews %}
+      <div class="preview-card" data-preview-group="hero">
+        <p class="preview-card-label" id="hero-preview-label">Preview a plan</p>
+        <div class="preview-tabs" role="group" aria-labelledby="hero-preview-label">
+          {% for p in hero_previews %}
+          <a class="preview-tab" href="?goal={{ p.slug }}#main" data-preview-tab="{{ p.slug }}"{% if p.slug == hero_selected %} aria-current="true"{% endif %}>{{ p.title }}</a>
+          {% endfor %}
+        </div>
+        {% for p in hero_previews %}
+        <div class="preview-panel" data-preview-panel="{{ p.slug }}"{% if p.slug != hero_selected %} hidden{% endif %} aria-live="polite">
+          <dl class="preview-facts">
+            <div><dt>Starts with</dt><dd>{{ p.language }}</dd></div>
+            {% if p.weeks_high %}<div><dt>About</dt><dd>{{ p.weeks_low }}{% if p.weeks_high != p.weeks_low %}–{{ p.weeks_high }}{% endif %} weeks</dd></div>{% endif %}
+          </dl>
+          {% if p.project_title %}<p class="preview-project"><span>First project</span> {{ p.project_title }}</p>{% endif %}
+          {% if p.week_one %}
+          <p class="preview-week-label">Week 1</p>
+          <ul class="preview-week">
+            {% for t in p.week_one %}<li><span>{{ t.title }}</span> <span class="preview-minutes">{{ t.minutes }} min</span></li>{% endfor %}
+          </ul>
+          {% endif %}
+        </div>
+        {% endfor %}
+        <p class="preview-note">At 3–5 hours a week, for a complete beginner.</p>
+      </div>
+      {% endif %}
     </div>
   </section>
 
+  {# 2. Goal selector: every real goal, each with its starting language, first project and milestone. #}
+  {% if previews %}
+  <section id="goals" class="landing-section landing-goals" aria-labelledby="goals-title">
+    <div class="landing-wrap">
+      <h2 id="goals-title" data-reveal>Pick a goal and see your plan</h2>
+      <p class="landing-sub" data-reveal>You choose what to make. The path picks the language, and the plan picks the order.</p>
+      <div class="goal-picker" data-preview-group="goals">
+        <div class="goal-tabs" role="group" aria-label="Goals">
+          {% for p in previews %}
+          <a class="goal-tab" href="?goal={{ p.slug }}#goals" data-preview-tab="{{ p.slug }}"{% if p.slug == selected %} aria-current="true"{% endif %}>
+            <strong>{{ p.title }}</strong>
+            <span>{{ p.tagline }}</span>
+          </a>
+          {% endfor %}
+        </div>
+        {% for p in previews %}
+        <article class="goal-panel tile" data-preview-panel="{{ p.slug }}"{% if p.slug != selected %} hidden{% endif %} aria-labelledby="goal-{{ p.slug }}-title" aria-live="polite">
+          <h3 id="goal-{{ p.slug }}-title">{{ p.title }}: starts with {{ p.language }}</h3>
+          {% if p.language_reason %}<p class="goal-reason">{{ p.language_reason }}</p>{% endif %}
+          <dl class="goal-facts">
+            {% if p.weeks_high %}<div><dt>How long</dt><dd>About {{ p.weeks_low }}{% if p.weeks_high != p.weeks_low %}–{{ p.weeks_high }}{% endif %} weeks at 3–5 hours a week, {{ p.topic_count }} topics</dd></div>{% endif %}
+            {% if p.project_title %}<div><dt>First project</dt><dd><strong>{{ p.project_title }}.</strong> {{ p.project_brief }}</dd></div>{% endif %}
+            {% if p.first_milestone %}<div><dt>By the end of week 1</dt><dd>{{ p.first_milestone|capfirst }}</dd></div>{% endif %}
+            {% if p.week_one %}<div><dt>Week 1 topics</dt><dd>{% for t in p.week_one %}{{ t.title }} ({{ t.minutes }} min){% if not forloop.last %}, {% endif %}{% endfor %}</dd></div>{% endif %}
+            {% if p.sources %}<div><dt>Lessons from</dt><dd>{{ p.sources|join:", " }}</dd></div>{% endif %}
+            {% if p.checkable %}<div><dt>The quick check can skip</dt><dd>{{ p.checkable|join:", " }}, and more, if you already know them</dd></div>{% endif %}
+          </dl>
+          <a class="button button-primary" href="{% url 'account_login' %}">Build this plan</a>
+        </article>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+  {% endif %}
+
+  {# 3. How it works: four steps, reached one by one as the page scrolls. #}
   <section id="how" class="landing-section" aria-labelledby="how-title">
     <div class="landing-wrap">
-      <h2 id="how-title">Your plan in three steps</h2>
-      <p class="landing-sub">Nothing is graded, and "not sure" is always an answer.</p>
-      <ol class="how-steps">
-        <li class="tile how-step">
+      <h2 id="how-title" data-reveal>From a goal to something you built</h2>
+      <p class="landing-sub" data-reveal>Nothing is graded, and "not sure" is always an answer.</p>
+      <ol class="how-steps how-track" data-how-track>
+        <li class="tile how-step" data-how-step>
           {% mascot "star-pink" "how-critter" %}
           <span class="step-pill">Step 1</span>
-          <h3>Choose what to make</h3>
-          <p>A website, a game, a script for boring tasks. Your goal decides which languages come first.</p>
+          <h3>Choose a goal</h3>
+          <p>A website, a game, a script for a boring task. Your goal decides which language comes first.</p>
         </li>
-        <li class="tile how-step">
+        <li class="tile how-step" data-how-step>
           {% mascot "oval-teal" "how-critter" %}
           <span class="step-pill">Step 2</span>
-          <h3>Show what you know</h3>
-          <p>A short check on only the topics you've used, so your plan skips what you already know.</p>
+          <h3>Take a quick check</h3>
+          <p>A few questions on only the topics you've used, so your plan skips what you know.</p>
         </li>
-        <li class="tile how-step">
+        <li class="tile how-step" data-how-step>
           {% mascot "flower-orange" "how-critter" %}
           <span class="step-pill">Step 3</span>
-          <h3>Follow one step a week</h3>
-          <p>Each topic links to trusted free lessons, then a short quiz checks that it stuck.</p>
+          <h3>Follow a weekly plan</h3>
+          <p>Each week fits your hours: free lessons to read, a small task, and a checkpoint quiz.</p>
+        </li>
+        <li class="tile how-step" data-how-step>
+          {% mascot "hex-orange" "how-critter" %}
+          <span class="step-pill">Step 4</span>
+          <h3>Build your project</h3>
+          <p>Every week adds a piece to one project of your own, so you finish with something to show.</p>
         </li>
       </ol>
     </div>
   </section>
 
+  {# 4. A realistic week, from the real curriculum. #}
+  {% if sample %}
+  <section id="week" class="landing-section landing-week" aria-labelledby="week-title">
+    <div class="landing-wrap week-layout">
+      <div>
+        <h2 id="week-title" data-reveal>What a week looks like</h2>
+        <p class="landing-sub" data-reveal>This is week 1 of {{ sample_path }}, taken from the real plan. Mark each part done, push it to later, or pause the plan when life gets busy.</p>
+      </div>
+      <article class="week-card tile" aria-labelledby="week-topic">
+        <p class="week-card-label">Week 1 · {{ sample.minutes }} min</p>
+        <h3 id="week-topic">{{ sample.topic }}</h3>
+        {% if sample.summary %}<p class="week-outcome">You'll be able to: {{ sample.summary|lower|cut:"." }}.</p>{% endif %}
+        <ol class="week-parts">
+          {% if sample.resource %}<li><span class="week-part">Read</span> {{ sample.resource }} <span class="week-meta">{{ sample.resource_source }} · {{ sample.resource_minutes }} min</span></li>{% endif %}
+          {% if sample.task %}<li><span class="week-part">Try</span> {{ sample.task|truncatewords:28 }}</li>{% endif %}
+          <li><span class="week-part">Check</span> A short fill-in-the-blank quiz. Pass at 70%, retry as often as you like.</li>
+          <li><span class="week-part">Stuck?</span> Agapay starts with a question, not the answer.{% if sample.tip %} <span class="week-meta">Tip from the curators: {{ sample.tip }}</span>{% endif %}</li>
+        </ol>
+      </article>
+    </div>
+  </section>
+  {% endif %}
+
+  {# 5. Agapay: a debugging scenario with the three hint levels. #}
   <section id="hints" class="landing-section landing-hints" aria-labelledby="hints-title">
     <div class="landing-wrap hints-layout">
       <div class="hints-text">
-        <h2 id="hints-title">Hints that keep you thinking</h2>
-        <p class="landing-sub">Agapay, the AI helper, only reads the topic you're on. It gives three levels of hints, in English or Taglish, and never hands over the answer.</p>
-        <p class="hints-limit">AI help has a daily limit of {{ ai_daily_limit }} messages, and resets every day.</p>
+        <h2 id="hints-title" data-reveal>Agapay helps you think, not copy</h2>
+        <p class="landing-sub" data-reveal>Agapay, the AI helper, only reads the topic you're on. Ask it to explain an idea, give a hint, help debug, check your understanding or break a task down, in English, Filipino or Taglish.</p>
+        <p class="hints-limit">It guides your thinking and won't do your assignment for you. AI help has a daily limit of {{ ai_daily_limit }} messages, and resets every day.</p>
       </div>
 
-      {# A working copy of the real "Need help?" panel, with a sample question. #}
+      {# A working copy of the real "Need help?" panel, with a sample bug. #}
       <div class="hint-demo" data-hint-demo>
         <div class="help-head">
           {% mascot "flower-yellow" "hint-critter" %}
@@ -103,41 +201,46 @@
         </div>
         <div class="hint-log" aria-live="polite">
           <div class="hint-ask">
-            <p>My loop prints 0 to 4, but I want 1 to 5.</p>
+            <p>Help me debug: my loop prints 0 to 4, but I want 1 to 5.</p>
             <pre><code>for i in range(5):
     print(i)</code></pre>
           </div>
-          <p class="hint-reply" data-hint><span class="hint-level">Hint 1</span> Look at where <code>range()</code> starts counting. What's the first number it gives you?</p>
-          <p class="hint-reply" data-hint hidden><span class="hint-level">Hint 2</span> <code>range()</code> can take two numbers: where to start and where to stop. The stop number is never included.</p>
-          <p class="hint-reply" data-hint hidden><span class="hint-level">Hint 3</span> Try <code>range(1, ...)</code>. Which stop number makes the last value 5?</p>
+          <p class="hint-reply" data-hint><span class="hint-level">Hint 1 · a direction</span> Look at where <code>range()</code> starts counting. What's the first number it gives you?</p>
+          <p class="hint-reply" data-hint hidden><span class="hint-level">Hint 2 · a strategy</span> <code>range()</code> can take two numbers: where to start and where to stop. The stop number is never included.</p>
+          <p class="hint-reply" data-hint hidden><span class="hint-level">Hint 3 · a similar example</span> <code>range(3, 6)</code> gives 3, 4 and 5. Which two numbers give 1 to 5?</p>
         </div>
         <button type="button" class="button button-lagoon hint-next" data-hint-next>Show the next hint</button>
       </div>
     </div>
   </section>
 
-  {% if paths %}
-  <section id="paths" class="landing-section" aria-labelledby="paths-title">
+  {# 6. Trust: where lessons come from, your pace, and what your account is used for. #}
+  <section id="trust" class="landing-section landing-trust" aria-labelledby="trust-title">
     <div class="landing-wrap">
-      <h2 id="paths-title">Paths you can start today</h2>
-      <p class="landing-sub">Pick a goal, and the path picks the order you learn things in.</p>
-      <ul class="path-list">
-        {% for path in paths %}
-        <li class="tile path-card">
-          <h3>{{ path.title }}</h3>
-          <p>{{ path.tagline }}</p>
+      <h2 id="trust-title" data-reveal>Free, at your pace, and clear about your data</h2>
+      <ul class="trust-list">
+        <li class="tile">
+          <h3>Free lessons you can trust</h3>
+          <p>We don't write tutorials. Every topic links to established free sources{% if all_sources %}: {{ all_sources|join:", " }}{% endif %}. Links are checked for breaks.</p>
         </li>
-        {% endfor %}
+        <li class="tile">
+          <h3>Your own pace</h3>
+          <p>Change your hours any week, move a topic to later, or pause the plan. Your progress and your streak wait for you.</p>
+        </li>
+        <li class="tile">
+          <h3>What your account is used for</h3>
+          <p>Google gives us your name and email. Your answers build your plan. Agapay sees the topic and your question, never your name or email. Delete your account and data anytime from your profile.</p>
+        </li>
       </ul>
     </div>
   </section>
-  {% endif %}
 
+  {# 7. Final call to action. #}
   <section class="landing-close" aria-labelledby="close-title">
     <div class="landing-wrap close-text">
       <h2 id="close-title">Your free plan starts with one sign-in</h2>
-      <p>Sign in with Google. We only use your name and email.</p>
-      <a class="button button-primary landing-cta" href="{% url 'account_login' %}" data-mascot-cheer>Start your free plan</a>
+      <p>Sign in with Google, answer a few quick questions, and your plan is ready.</p>
+      <a class="button button-primary landing-cta" href="{% url 'account_login' %}" data-mascot-cheer>Build my free plan</a>
     </div>
     <div class="close-crowd">
       {% mascot "sun-yellow" "crowd-critter" %}

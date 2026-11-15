@@ -582,7 +582,8 @@ class FrameworkTests(PlanTestMixin, TestCase):
         self.assertContains(page, "By the end of Week 1, you'll be able to:")
         self.assertContains(page, "<li>Store values in variables.</li>")
         self.answer(4)
-        self.assertContains(self.client.get(reverse("plan")), "Week 1 done! You can now:")
+        page = self.client.get(reverse("plan"))
+        self.assertContains(page, "Week 1 done!</span> You can now:")
 
 
 AI_OFF = {"GROQ_API_KEY": "", "CF_ACCOUNT_ID": "", "CF_API_TOKEN": ""}
@@ -700,7 +701,7 @@ class HelpPanelTests(PlanTestMixin, TestCase):
         page = self.client.get(reverse("lesson", args=["topic-1"]))
         self.assertContains(page, "used today's AI help")
         self.assertContains(page, "Print the counter to see what the loop does.")
-        self.assertContains(page, 'placeholder="Ask in English or Taglish" disabled')
+        self.assertContains(page, 'placeholder="Ask in English, Filipino or Taglish" disabled')
 
     def test_wrong_quiz_answers_offer_why(self):
         item = QuizItem.objects.create(topic=self.topics[0], prompt="x = ___", accepted_answers=["1"])

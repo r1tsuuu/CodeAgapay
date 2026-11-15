@@ -7,18 +7,18 @@ from .forms import QuizItemForm, SkillQuestionForm, TopicForm
 from .models import QuizItem, SkillQuestion, Topic, Track
 
 
-class FixtureTests(TestCase):
-    def test_sample_content_loads(self):
-        call_command("loaddata", "fixtures/content.json", verbosity=0)
+class CurriculumContentTests(TestCase):
+    def test_curriculum_files_load_with_valid_content(self):
+        from io import StringIO
+        call_command("import_curriculum", stdout=StringIO())
         python = Track.objects.get(slug="python")
         self.assertTrue(python.is_active)
         self.assertEqual(python.topics.count(), 8)
-        self.assertFalse(Track.objects.exclude(slug="python").filter(is_active=True).exists())
         for topic in python.topics.all():
             self.assertEqual(topic.resources.count(), 2)
             self.assertEqual(topic.tips.count(), 2)
             self.assertIn(topic.skill_questions.count(), [1, 2])
-            self.assertIn(topic.quiz_items.count(), [2, 3])
+            self.assertGreaterEqual(topic.quiz_items.count(), 2)
             for question in topic.skill_questions.all():
                 question.full_clean()
             for item in topic.quiz_items.all():
@@ -74,10 +74,12 @@ class AdminPagesTests(TestCase):
     def test_topic_add_page_loads_for_staff(self):
         admin = get_user_model().objects.create_superuser("admin", "a@example.com", "pw")
         self.client.force_login(admin)
-        call_command("loaddata", "fixtures/content.json", verbosity=0)
+        from io import StringIO
+        call_command("import_curriculum", stdout=StringIO())
+        topic, track = Topic.objects.first(), Track.objects.first()
         self.assertEqual(self.client.get("/admin/content/topic/add/").status_code, 200)
-        self.assertEqual(self.client.get("/admin/content/topic/1/change/").status_code, 200)
-        self.assertEqual(self.client.get("/admin/content/track/1/change/").status_code, 200)
+        self.assertEqual(self.client.get(f"/admin/content/topic/{topic.pk}/change/").status_code, 200)
+        self.assertEqual(self.client.get(f"/admin/content/track/{track.pk}/change/").status_code, 200)
 
 
 class ProjectIdeaAdminTests(TestCase):

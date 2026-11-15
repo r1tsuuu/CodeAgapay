@@ -13,7 +13,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from accounts.models import get_profile
+from accounts.models import LearnerProfile, get_profile
 from assistant.service import (
     ai_available, daily_limit, lessons_left_today, release_lesson, remaining_today, reserve_intake, reserve_lesson,
 )
@@ -65,6 +65,7 @@ def _help(profile, outline, key):
         "help_screen": "lesson", "help_lesson": key, "help_title": topic.title if topic else "",
         "help_remaining": remaining_today(profile), "help_limit": daily_limit(),
         "help_tips": topic.help_tips if topic else [], "help_resources": topic.help_resources if topic else [],
+        "help_language": profile.explain_language, "help_languages": LearnerProfile.ExplainLanguage.choices,
     }
 
 

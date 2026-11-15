@@ -24,6 +24,13 @@ class LearnerProfile(models.Model):
         EXPLAIN = "explain", "A clear explanation"
         EXAMPLE = "example", "An example I can learn from"
 
+    class ExplainLanguage(models.TextChoices):
+        """How Agapay explains. Blank: in the language of the learner's message."""
+
+        ENGLISH = "en", "English"
+        FILIPINO = "fil", "Filipino"
+        TAGLISH = "taglish", "Taglish"
+
     class Avatar(models.TextChoices):
         """Profile icons from the Figma "Custom Profile Page", in static/img/avatars/. Blank shows the first letter."""
 
@@ -57,6 +64,10 @@ class LearnerProfile(models.Model):
     hint_style = models.CharField(
         max_length=20, choices=HintStyle.choices, blank=True, help_text="What helps them most when stuck."
     )
+    explain_language = models.CharField(
+        max_length=10, choices=ExplainLanguage.choices, blank=True,
+        help_text="The language Agapay explains in. Blank: whatever the learner writes in.",
+    )
     email_reminders = models.BooleanField(default=False, help_text="Off until the learner says yes.")
     reminders_asked = models.BooleanField(
         default=False, help_text="The learner has answered the reminders question."
@@ -71,6 +82,10 @@ class LearnerProfile(models.Model):
         "content.Track", blank=True, related_name="+", help_text="Tracks whose setup the learner finished."
     )
     onboarded = models.BooleanField(default=False)
+    paused_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text="The learner paused their plan: no reminders, and the weekly streak waits. Blank: not paused.",
+    )
     avatar = models.CharField(max_length=20, choices=Avatar.choices, blank=True, help_text="Blank: the first letter of their name.")
     school = models.CharField("school or organisation", max_length=120, blank=True)
     role = models.CharField(max_length=60, blank=True, help_text='What they do, e.g. "student". Optional.')

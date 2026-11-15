@@ -10,6 +10,10 @@ class LearningPlan(models.Model):
     track = models.ForeignKey("content.Track", on_delete=models.CASCADE, related_name="+")
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
+    curriculum_version = models.CharField(
+        max_length=40, blank=True,
+        help_text="The curriculum release this plan was built from. Blank: built before versions existed.",
+    )
 
     class Meta:
         ordering = ["-created_at"]
@@ -42,7 +46,9 @@ class PlanItem(models.Model):
         SKIPPED = "skipped", "Skipped"
 
     plan = models.ForeignKey(LearningPlan, on_delete=models.CASCADE, related_name="items")
-    topic = models.ForeignKey("content.Topic", on_delete=models.CASCADE, related_name="+")
+    # PROTECT: a topic in someone's plan can't be deleted, so old plans keep rendering.
+    # Take a topic out of the curriculum files instead; it stays for the plans that have it.
+    topic = models.ForeignKey("content.Topic", on_delete=models.PROTECT, related_name="+")
     order = models.PositiveIntegerField()
     week = models.PositiveIntegerField()
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.TODO)

@@ -1,0 +1,603 @@
+{
+  "slug": "foundations",
+  "name": "Programming Foundations",
+  "order": 7,
+  "description": "A short, optional start for complete beginners: thinking in steps, the core ideas every language shares, reading errors, debugging, Git and using AI well. Needs review before it goes live.",
+  "is_active": false,
+  "project_ideas": [
+    {
+      "title": "Plan, then build, a class survey tally",
+      "brief": "Before writing any code, write the steps for a program that counts answers to one class survey question. Then build it one step at a time, committing with Git after each step that works.",
+      "done_when": [
+        "Your written steps came before the code.",
+        "It runs without errors and counts each answer.",
+        "You made at least three Git commits with clear messages.",
+        "You can explain each part to a friend."
+      ]
+    }
+  ],
+  "topics": [
+    {
+      "slug": "foundations-problem-breakdown",
+      "title": "Breaking a problem down",
+      "summary": "Turn a big task into small steps you can do one at a time.",
+      "why_it_matters": "Code is a list of small, exact steps. Most beginners get stuck not on the language, but on not knowing the next step.",
+      "estimated_minutes": 45,
+      "resources": [
+        {
+          "title": "How to Think Like a Programmer",
+          "url": "https://www.freecodecamp.org/news/how-to-think-like-a-programmer-lessons-in-problem-solving-d1d8bf1de7d2/",
+          "kind": "article",
+          "estimated_minutes": 20
+        },
+        {
+          "title": "CS50x Week 0: Scratch",
+          "url": "https://cs50.harvard.edu/x/weeks/0/",
+          "kind": "video",
+          "estimated_minutes": 60
+        }
+      ],
+      "tips": [
+        "Write the steps in plain words first, then turn each one into code.",
+        "If a step feels hard, it's probably two steps. Split it again."
+      ],
+      "skill_questions": [
+        {
+          "prompt": "You want a program that tells a sari-sari store owner which items are low on stock. What's a good first step?",
+          "choices": [
+            "Write the whole program, then test it",
+            "List what goes in (items and counts) and what should come out",
+            "Pick the fastest language",
+            "Search for a finished program"
+          ],
+          "correct_index": 1
+        }
+      ],
+      "quiz_items": [
+        {
+          "prompt": "Before writing code, write down what goes ___ and what should come out.",
+          "accepted_answers": [
+            "in"
+          ],
+          "hint": "Think of a program as a machine with an input side and an output side."
+        },
+        {
+          "prompt": "Do the ___ step first, run it, then add the next one.",
+          "accepted_answers": [
+            "smallest",
+            "simplest",
+            "first"
+          ],
+          "hint": "Which step could you test on its own in a minute?"
+        },
+        {
+          "prompt": "A big task split into small steps is called problem ___.",
+          "accepted_answers": [
+            "breakdown",
+            "decomposition"
+          ],
+          "hint": "It starts with \"break\" or \"decompose\"."
+        }
+      ]
+    },
+    {
+      "slug": "foundations-variables",
+      "title": "Variables",
+      "summary": "Store a value under a name and use it later.",
+      "why_it_matters": "Programs need to remember things, like a score, a name or a count. A variable is how they remember.",
+      "estimated_minutes": 45,
+      "prerequisites": [
+        "foundations-problem-breakdown"
+      ],
+      "resources": [
+        {
+          "title": "Storing the information you need: Variables",
+          "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Scripting/Variables",
+          "kind": "docs",
+          "estimated_minutes": 30
+        },
+        {
+          "title": "Python Variables",
+          "url": "https://www.w3schools.com/python/python_variables.asp",
+          "kind": "interactive",
+          "estimated_minutes": 20
+        }
+      ],
+      "tips": [
+        "Give variables names that say what they hold, like members_count, not x.",
+        "A variable holds one value at a time; setting it again replaces the old value."
+      ],
+      "skill_questions": [
+        {
+          "prompt": "What does this print?",
+          "choices": [
+            "5",
+            "8",
+            "3",
+            "Error"
+          ],
+          "correct_index": 1,
+          "code_snippet": "stock = 5\nstock = stock + 3\nprint(stock)"
+        }
+      ],
+      "quiz_items": [
+        {
+          "prompt": "In Python, members ___ 12 stores 12 in the variable members.",
+          "accepted_answers": [
+            "="
+          ],
+          "hint": "It's one symbol, the same one maths uses for equals."
+        },
+        {
+          "prompt": "A variable is a ___ that points to a value.",
+          "accepted_answers": [
+            "name",
+            "label"
+          ],
+          "hint": "What do you call it in code?"
+        },
+        {
+          "prompt": "After price = 10 and then price = 15, price holds ___.",
+          "accepted_answers": [
+            "15"
+          ],
+          "hint": "Setting it again replaces the old value."
+        }
+      ]
+    },
+    {
+      "slug": "foundations-conditions",
+      "title": "Conditions",
+      "summary": "Make a program choose what to do with if and else.",
+      "why_it_matters": "Real programs react: warn when stock is low, greet members by name. Conditions are how code makes decisions.",
+      "estimated_minutes": 45,
+      "prerequisites": [
+        "foundations-variables"
+      ],
+      "resources": [
+        {
+          "title": "More Control Flow Tools (if statements)",
+          "url": "https://docs.python.org/3/tutorial/controlflow.html",
+          "kind": "docs",
+          "estimated_minutes": 20
+        },
+        {
+          "title": "Making decisions in your code: conditionals",
+          "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Scripting/Conditionals",
+          "kind": "docs",
+          "estimated_minutes": 30
+        }
+      ],
+      "tips": [
+        "== compares, = stores. Mixing them up is the most common bug here.",
+        "Read an if out loud: \"if stock is less than 5, then...\""
+      ],
+      "skill_questions": [
+        {
+          "prompt": "What does this print?",
+          "choices": [
+            "Restock",
+            "OK",
+            "Nothing",
+            "Error"
+          ],
+          "correct_index": 0,
+          "code_snippet": "stock = 3\nif stock < 5:\n    print(\"Restock\")\nelse:\n    print(\"OK\")"
+        }
+      ],
+      "quiz_items": [
+        {
+          "prompt": "___ stock < 5:",
+          "accepted_answers": [
+            "if"
+          ],
+          "hint": "The word that starts a decision."
+        },
+        {
+          "prompt": "To check if two values are equal, use ___.",
+          "accepted_answers": [
+            "=="
+          ],
+          "hint": "Two symbols, not one."
+        },
+        {
+          "prompt": "The part that runs when the condition is false starts with ___.",
+          "accepted_answers": [
+            "else",
+            "else:"
+          ],
+          "hint": "\"If ..., otherwise ...\""
+        }
+      ]
+    },
+    {
+      "slug": "foundations-loops",
+      "title": "Loops",
+      "summary": "Repeat steps without writing them again.",
+      "why_it_matters": "Counting survey answers or printing every member's name means doing the same thing many times. Loops do it for you.",
+      "estimated_minutes": 60,
+      "prerequisites": [
+        "foundations-conditions"
+      ],
+      "resources": [
+        {
+          "title": "Looping code",
+          "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Scripting/Loops",
+          "kind": "docs",
+          "estimated_minutes": 30
+        },
+        {
+          "title": "Python For Loops",
+          "url": "https://www.w3schools.com/python/python_for_loops.asp",
+          "kind": "interactive",
+          "estimated_minutes": 20
+        }
+      ],
+      "tips": [
+        "Before running a loop, say how many times it should repeat and when it stops.",
+        "A while loop that never changes its condition runs forever. Press Ctrl+C to stop it."
+      ],
+      "skill_questions": [
+        {
+          "prompt": "How many times does this print Hi?",
+          "choices": [
+            "2",
+            "3",
+            "4",
+            "Forever"
+          ],
+          "correct_index": 1,
+          "code_snippet": "for i in range(3):\n    print(\"Hi\")"
+        }
+      ],
+      "quiz_items": [
+        {
+          "prompt": "for name in members___",
+          "accepted_answers": [
+            ":"
+          ],
+          "hint": "Python lines that start a block end with this."
+        },
+        {
+          "prompt": "A loop that never stops is an ___ loop.",
+          "accepted_answers": [
+            "infinite",
+            "endless"
+          ],
+          "hint": "It goes on without end."
+        },
+        {
+          "prompt": "range(1, 4) gives 1, 2 and ___.",
+          "accepted_answers": [
+            "3"
+          ],
+          "hint": "The stop number is never included."
+        }
+      ]
+    },
+    {
+      "slug": "foundations-functions",
+      "title": "Functions",
+      "summary": "Name a set of steps so you can reuse it.",
+      "why_it_matters": "When the same steps appear in many places, a function lets you write them once and fix them in one place.",
+      "estimated_minutes": 60,
+      "prerequisites": [
+        "foundations-loops"
+      ],
+      "resources": [
+        {
+          "title": "Functions: reusable blocks of code",
+          "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Scripting/Functions",
+          "kind": "docs",
+          "estimated_minutes": 30
+        },
+        {
+          "title": "Python Functions",
+          "url": "https://www.w3schools.com/python/python_functions.asp",
+          "kind": "interactive",
+          "estimated_minutes": 20
+        }
+      ],
+      "tips": [
+        "A good function does one job, and its name says what that job is.",
+        "return hands a value back; print only shows it on screen."
+      ],
+      "skill_questions": [
+        {
+          "prompt": "What does this print?",
+          "choices": [
+            "6",
+            "total",
+            "None",
+            "Error"
+          ],
+          "correct_index": 0,
+          "code_snippet": "def total(a, b):\n    return a + b\n\nprint(total(2, 4))"
+        }
+      ],
+      "quiz_items": [
+        {
+          "prompt": "___ greet(name):",
+          "accepted_answers": [
+            "def"
+          ],
+          "hint": "Short for \"define\"."
+        },
+        {
+          "prompt": "To send a value back from a function, use ___.",
+          "accepted_answers": [
+            "return"
+          ],
+          "hint": "Not print."
+        },
+        {
+          "prompt": "The values you pass into a function are called ___.",
+          "accepted_answers": [
+            "arguments",
+            "parameters",
+            "args"
+          ],
+          "hint": "They go inside the brackets."
+        }
+      ]
+    },
+    {
+      "slug": "foundations-reading-errors",
+      "title": "Reading error messages",
+      "summary": "Find what an error message says is wrong, and where.",
+      "why_it_matters": "Error messages look scary, but they usually say exactly what went wrong and on which line.",
+      "estimated_minutes": 30,
+      "prerequisites": [
+        "foundations-functions"
+      ],
+      "resources": [
+        {
+          "title": "Errors and Exceptions",
+          "url": "https://docs.python.org/3/tutorial/errors.html",
+          "kind": "docs",
+          "estimated_minutes": 20
+        },
+        {
+          "title": "Understanding the Python Traceback",
+          "url": "https://realpython.com/python-traceback/",
+          "kind": "article",
+          "estimated_minutes": 30
+        }
+      ],
+      "tips": [
+        "Read the last line first: it names the error.",
+        "Then look at the line number it points to, and the line just above it."
+      ],
+      "skill_questions": [
+        {
+          "prompt": "A Python error ends with: NameError: name 'totl' is not defined. What's the most likely cause?",
+          "choices": [
+            "The computer is broken",
+            "A typo in a variable name",
+            "Python isn't installed",
+            "The file is too long"
+          ],
+          "correct_index": 1
+        }
+      ],
+      "quiz_items": [
+        {
+          "prompt": "In a Python traceback, read the ___ line first.",
+          "accepted_answers": [
+            "last",
+            "bottom"
+          ],
+          "hint": "The error's name is at the end."
+        },
+        {
+          "prompt": "SyntaxError usually means the code isn't written in valid ___.",
+          "accepted_answers": [
+            "python",
+            "syntax"
+          ],
+          "hint": "Think grammar."
+        },
+        {
+          "prompt": "The traceback tells you the line ___ where it went wrong.",
+          "accepted_answers": [
+            "number"
+          ],
+          "hint": "Which line?"
+        }
+      ]
+    },
+    {
+      "slug": "foundations-debugging",
+      "title": "Debugging",
+      "summary": "Find and fix a bug step by step instead of guessing.",
+      "why_it_matters": "Every programmer writes bugs. What matters is a calm way to find them.",
+      "estimated_minutes": 45,
+      "prerequisites": [
+        "foundations-reading-errors"
+      ],
+      "resources": [
+        {
+          "title": "What went wrong? Troubleshooting JavaScript",
+          "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Scripting/What_went_wrong",
+          "kind": "docs",
+          "estimated_minutes": 30
+        },
+        {
+          "title": "Errors and Exceptions",
+          "url": "https://docs.python.org/3/tutorial/errors.html",
+          "kind": "docs",
+          "estimated_minutes": 20
+        }
+      ],
+      "tips": [
+        "Print the values you're unsure about, right before the line that goes wrong.",
+        "Change one thing at a time, then run it again."
+      ],
+      "skill_questions": [
+        {
+          "prompt": "Your loop gives the wrong total. What's a good first move?",
+          "choices": [
+            "Delete it and start over",
+            "Print the total inside the loop to see how it changes",
+            "Ask a friend to rewrite it",
+            "Add more code"
+          ],
+          "correct_index": 1
+        }
+      ],
+      "quiz_items": [
+        {
+          "prompt": "A mistake in code that makes it do the wrong thing is called a ___.",
+          "accepted_answers": [
+            "bug"
+          ],
+          "hint": "An insect."
+        },
+        {
+          "prompt": "Adding print(x) to see what x holds is a simple way to ___.",
+          "accepted_answers": [
+            "debug"
+          ],
+          "hint": "Finding bugs."
+        },
+        {
+          "prompt": "Change ___ thing at a time, then run it again.",
+          "accepted_answers": [
+            "one",
+            "1"
+          ],
+          "hint": "How many?"
+        }
+      ]
+    },
+    {
+      "slug": "foundations-git-basics",
+      "title": "Git basics",
+      "summary": "Save versions of your project so you can go back if something breaks.",
+      "why_it_matters": "Without versions, one bad change can lose a day's work. Git keeps every saved version of your project.",
+      "estimated_minutes": 45,
+      "prerequisites": [
+        "foundations-debugging"
+      ],
+      "resources": [
+        {
+          "title": "About Version Control (Pro Git)",
+          "url": "https://git-scm.com/book/en/v2/Getting-Started-About-Version-Control",
+          "kind": "docs",
+          "estimated_minutes": 15
+        },
+        {
+          "title": "About Git",
+          "url": "https://docs.github.com/en/get-started/using-git/about-git",
+          "kind": "docs",
+          "estimated_minutes": 20
+        }
+      ],
+      "tips": [
+        "Commit when something works, with a message that says what changed.",
+        "Git keeps history on your computer; GitHub is a website that stores a copy online."
+      ],
+      "skill_questions": [
+        {
+          "prompt": "What does a Git commit do?",
+          "choices": [
+            "Uploads your code to the internet",
+            "Saves a version of your project you can go back to",
+            "Runs your code",
+            "Deletes old files"
+          ],
+          "correct_index": 1
+        }
+      ],
+      "quiz_items": [
+        {
+          "prompt": "git ___ -m \"Add the stock counter\"",
+          "accepted_answers": [
+            "commit"
+          ],
+          "hint": "Saves a version."
+        },
+        {
+          "prompt": "Before committing, you choose files with git ___.",
+          "accepted_answers": [
+            "add"
+          ],
+          "hint": "You add them to the next commit."
+        },
+        {
+          "prompt": "A website that keeps an online copy of Git projects is ___.",
+          "accepted_answers": [
+            "GitHub",
+            "github"
+          ],
+          "hint": "Git + Hub."
+        }
+      ]
+    },
+    {
+      "slug": "foundations-responsible-ai",
+      "title": "Using AI responsibly",
+      "summary": "Use AI tools to learn faster without letting them do your learning for you.",
+      "why_it_matters": "AI can explain and hint, but it can also be wrong, and copying its code means you don't learn it. Many classes have rules about it too.",
+      "estimated_minutes": 30,
+      "prerequisites": [
+        "foundations-git-basics"
+      ],
+      "resources": [
+        {
+          "title": "CS50's academic honesty policy",
+          "url": "https://cs50.harvard.edu/x/honesty/",
+          "kind": "article",
+          "estimated_minutes": 10
+        },
+        {
+          "title": "Responsible use of GitHub Copilot code completion",
+          "url": "https://docs.github.com/en/copilot/responsible-use/copilot-code-completion",
+          "kind": "docs",
+          "estimated_minutes": 15
+        }
+      ],
+      "tips": [
+        "Ask AI to explain or hint, then write the code yourself.",
+        "Check your class's rules before using AI on graded work, and say when you did."
+      ],
+      "skill_questions": [
+        {
+          "prompt": "An AI gives you code for your assignment. What should you do?",
+          "choices": [
+            "Submit it as your own",
+            "Understand it, follow your class's rules, and write your own version",
+            "Ignore every AI tool",
+            "Share it with the class"
+          ],
+          "correct_index": 1
+        }
+      ],
+      "quiz_items": [
+        {
+          "prompt": "AI answers can be ___, so check them against the docs.",
+          "accepted_answers": [
+            "wrong",
+            "incorrect"
+          ],
+          "hint": "Not always right."
+        },
+        {
+          "prompt": "Before using AI on graded work, check your class's ___.",
+          "accepted_answers": [
+            "rules",
+            "policy"
+          ],
+          "hint": "What your teacher allows."
+        },
+        {
+          "prompt": "Ask AI for a hint, then write the code ___.",
+          "accepted_answers": [
+            "yourself"
+          ],
+          "hint": "Who should write it?"
+        }
+      ]
+    }
+  ]
+}

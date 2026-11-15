@@ -23,13 +23,45 @@ def home(request):
     return redirect("plan")
 
 
+HERO_GOALS = ("website", "automation", "data")
+
+
 def landing(request):
-    """The front page for visitors who aren't signed in. Paths and tracks are the live ones, never a fixed list."""
+    """The front page for visitors who aren't signed in. Paths and tracks are the live ones, never a fixed list.
+
+    `?goal=<path>` picks the previewed goal, so the goal picker works without JavaScript.
+    """
     from content.models import Track
     from diagnose.onboarding import available_paths
+    from learning import preview
 
+    previews = preview.previews(available_paths())
+    slugs = [p.slug for p in previews]
+    goal = request.GET.get("goal", "")
+    selected = goal if goal in slugs else (slugs[0] if slugs else "")
+    hero = [p for p in previews if p.slug in HERO_GOALS] or previews[:3]
+    hero_slugs = [p.slug for p in hero]
+    sample = next((p for p in previews if p.sample), None)
+    all_sources = []
+    for p in previews:
+        all_sources += [s for s in p.sources if s not in all_sources]
+    from content.models import Resource, Topic
+
+    live = Track.objects.filter(is_active=True)
+    stats = {
+        "languages": live.count(),
+        "topics": Topic.objects.filter(track__in=live).count(),
+        "links": Resource.objects.filter(topic__track__in=live, is_active=True).count(),
+    }
     return render(request, "accounts/landing.html", {
-        "paths": available_paths(),
+        "stats": stats if stats["topics"] else None,
+        "previews": previews,
+        "selected": selected,
+        "hero_previews": hero,
+        "hero_selected": goal if goal in hero_slugs else (hero_slugs[0] if hero_slugs else ""),
+        "sample": sample.sample if sample else None,
+        "sample_path": sample.title if sample else "",
+        "all_sources": all_sources[:6],
         "tracks": Track.objects.filter(is_active=True),
         "ai_daily_limit": settings.AI_DAILY_LIMIT,
     })

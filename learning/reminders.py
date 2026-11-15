@@ -32,7 +32,7 @@ class Reminder:
 
 def candidates():
     return (
-        LearnerProfile.objects.filter(email_reminders=True, onboarded=True, user__is_active=True)
+        LearnerProfile.objects.filter(email_reminders=True, onboarded=True, user__is_active=True, paused_at__isnull=True)
         .exclude(user__email="").select_related("user")
     )
 

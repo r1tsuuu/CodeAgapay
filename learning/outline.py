@@ -428,7 +428,7 @@ def generate_outline(profile, project_idea="", plan=None, save=True):
     repairs, usage = [], {}
     earlier_problems = []
     deadline = time.monotonic() + settings.AI_REQUEST_BUDGET  # Both attempts together (assistant.service).
-    for attempt in range(2):
+    for _attempt in range(2):
         attempt_usage = {}
         data = ask_model_json(messages, max_tokens=MAX_TOKENS, deadline=deadline, usage=attempt_usage)
         for field in ("prompt_tokens", "completion_tokens"):

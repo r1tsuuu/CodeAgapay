@@ -129,6 +129,7 @@
           <div><dt>Coding experience:</dt><dd>{{ profile.get_experience_display|default:"Not set" }}</dd></div>
           <div><dt>What you learn on:</dt><dd>{{ profile.get_device_display|default:"Not sure" }}</dd></div>
           <div><dt>What helps when stuck:</dt><dd>{{ profile.get_hint_style_display|default:"Not set" }}</dd></div>
+          <div><dt>Agapay explains in:</dt><dd>{{ profile.get_explain_language_display|default:"The language you write in" }}</dd></div>
           {% if setup_method %}<div><dt>How you write code:</dt><dd>{{ setup_method }} · <a href="{% url 'plan' %}">change on your plan</a></dd></div>{% endif %}
           <div><dt>Email reminders:</dt><dd>{% if profile.email_reminders %}On{% else %}Off{% endif %}</dd></div>
         </dl>

@@ -16,7 +16,7 @@
     <div class="quiz-critter {% if result.passed %}quiz-critter-cheer{% else %}quiz-critter-nudge{% endif %}">
       {% if result.passed %}{% mascot "star-yellow" %}{% else %}{% mascot "flower-teal" %}{% endif %}
     </div>
-    <h1>{% if result.passed %}You passed!{% else %}Not yet{% endif %}</h1>
+    <h1>{% if result.passed %}<span class="mark mark-draw">You passed!</span>{% else %}Not yet{% endif %}</h1>
     <p class="quiz-score-big"><span data-count-up="{{ result.correct }}">{{ result.correct }}</span> out of {{ result.total }}</p>
     <p class="quiz-score">{{ result.correct }} of {{ result.total }} correct ({{ result.percent }}%). You need {{ pass_percent }}% to pass.</p>
 

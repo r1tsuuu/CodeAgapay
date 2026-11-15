@@ -3,12 +3,13 @@ from itertools import groupby
 from django.contrib import messages
 from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
-from accounts.models import get_profile
+from accounts.models import LearnerProfile, get_profile
 from assistant.service import daily_limit, practice_feedback, remaining_today
-from content.models import Resource, Topic, Track
+from content.models import PracticeTask, Resource, Topic, Track
 
 from . import ai_views, journey, rewards
 from .ai_plan import active_outline
@@ -16,7 +17,8 @@ from .forms import QuizForm
 from .grading import PASS_PERCENT, latest_result, submit_quiz
 from .models import PlanFeedback, PlanItem, PracticeSubmission, QuizAttempt
 from .planner import (
-    active_plan, move_on_shaky, plan_item_for_topic, plan_tracks, repace_plan, set_item_status, start_item,
+    active_plan, defer_item, move_on_shaky, plan_item_for_topic, plan_tracks, repace_plan, set_item_status,
+    start_item,
 )
 from .tailoring import build_plan_with_template
 
@@ -49,20 +51,29 @@ def plan(request):
             Prefetch("topic__resources", queryset=Resource.objects.filter(is_active=True)),
             "topic__tips",
             "topic__quiz_items",
+            Prefetch("topic__practice_tasks", queryset=PracticeTask.objects.filter(approved=True)),
         )
         .order_by("order")
     )
     milestones = journey.milestones_by_week(current)
+    # The topic finished just before this visit gets its moment on the trail (set by a status change or a quiz pass).
+    just_done = request.session.pop("just_done", None)
     weeks = []
     for week, group in groupby(items, key=lambda item: item.week):
         group = list(group)
+        finished = sum(1 for i in group if i.status in (PlanItem.Status.DONE, PlanItem.Status.SKIPPED))
+        fresh = any(i.pk == just_done and i.status == PlanItem.Status.DONE for i in group)
         weeks.append({
             "number": week,
             "items": group,
             "milestones": milestones.get(week, []),
             # The week's milestone line: what each topic lets them do, skipped ones left out.
             "outcomes": [i.topic.summary for i in group if i.topic.summary and i.status != PlanItem.Status.SKIPPED],
-            "done": sum(1 for i in group if i.status in (PlanItem.Status.DONE, PlanItem.Status.SKIPPED)),
+            "done": finished,
+            # How far the week's trail is filled, and where it grew from if a topic was just finished.
+            "trail": round(finished * 100 / len(group)),
+            "trail_from": round((finished - 1) * 100 / len(group)) if fresh else None,
+            "just_finished": fresh and finished == len(group),
         })
     tracks = plan_tracks(profile)
     reviews = journey.due_reviews(profile, current)
@@ -98,6 +109,7 @@ def plan(request):
             "finished": journey.is_finished(items),
             "hours_choices": [1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 20],
             "streak": rewards.weekly_streak(profile),
+            "just_done": just_done,
         },
     )
 
@@ -201,6 +213,8 @@ def plan_item_status(request, item_id):
         messages.error(request, "That status isn't allowed.")
         return redirect("plan")
     set_item_status(item, status)
+    if status == PlanItem.Status.DONE:
+        request.session["just_done"] = item.pk
     messages.success(request, f"{item.topic.title}: {item.get_status_display().lower()}.")
     return redirect("plan")
 
@@ -253,13 +267,18 @@ def lesson(request, topic):
 
 
 def _help(profile, topic, screen):
-    """What the Agapay panel needs on a topic screen: messages left, and tips and links for when there are none."""
+    """What the Agapay panel needs on a topic screen: messages left, tips and links for when there are
+    none, and, with no AI, the plan item it can adjust and the track's curated project ideas."""
     return {
         "help_screen": screen,
         "help_remaining": remaining_today(profile),
         "help_limit": daily_limit(),
         "help_tips": topic.tips.all()[:2],
         "help_resources": topic.resources.filter(is_active=True),
+        "help_item": plan_item_for_topic(profile, topic),
+        "help_ideas": topic.track.project_ideas.filter(is_active=True)[:3],
+        "help_language": profile.explain_language,
+        "help_languages": LearnerProfile.ExplainLanguage.choices,
     }
 
 
@@ -310,7 +329,10 @@ def quiz(request, topic):
     items = list(topic.quiz_items.all())
     form = QuizForm(request.POST or None, items=items)
     if request.method == "POST" and items and form.is_valid():
-        result = submit_quiz(get_profile(request.user), topic, items, form.answers())
+        profile = get_profile(request.user)
+        result = submit_quiz(profile, topic, items, form.answers())
+        if result.passed and (item := plan_item_for_topic(profile, topic)) is not None:
+            request.session["just_done"] = item.pk
         if result.passed:
             messages.success(request, f"You passed with {result.percent}%! {topic.title} is done.")
         else:
@@ -376,6 +398,36 @@ def quiz_result(request, topic):
             "move_on_item": item if struggling and item and item.status != PlanItem.Status.DONE and not item.shaky else None,
         },
     )
+
+
+@require_POST
+def plan_item_defer(request, item_id):
+    """"Later": move a topic to the end of the plan, unless a later topic needs it first."""
+    item = get_object_or_404(
+        PlanItem.objects.select_related("plan__learner", "topic"),
+        pk=item_id, plan__learner__user=request.user, plan__is_active=True,
+        status__in=[PlanItem.Status.TODO, PlanItem.Status.IN_PROGRESS],
+    )
+    blocking = defer_item(item)
+    if blocking:
+        messages.error(request, f"{item.topic.title} can't wait: {', '.join(blocking)} need{'s' if len(blocking) == 1 else ''} it first.")
+    else:
+        messages.success(request, f"{item.topic.title} moved to the end of your plan.")
+    return redirect("plan")
+
+
+@require_POST
+def plan_pause(request):
+    """Pause or resume the plan. Pausing keeps everything; it only stops reminders and the streak clock."""
+    profile = get_profile(request.user)
+    if request.POST.get("action") == "resume":
+        profile.paused_at = None
+        messages.success(request, "Welcome back! Your plan is where you left it.")
+    else:
+        profile.paused_at = profile.paused_at or timezone.now()
+        messages.success(request, "Your plan is paused. Nothing is lost, and no reminders go out until you resume.")
+    profile.save(update_fields=["paused_at"])
+    return redirect("plan")
 
 
 @require_POST
