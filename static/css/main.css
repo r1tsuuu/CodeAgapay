@@ -2009,6 +2009,283 @@ textarea {
   }
 }
 
+
+/* ---------- Motion and character across the app ---------- */
+
+/* Pages glide into each other instead of blinking (cross-document view transitions). Browsers
+   without support change pages as before. A topic's title on the plan grows into its page's
+   heading because both carry the same view-transition-name. */
+@view-transition {
+  navigation: auto;
+}
+
+.navbar {
+  view-transition-name: site-nav;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.22s;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+::view-transition-group(*) {
+  animation-duration: 0.32s;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* The brand's highlighter: a marigold stroke behind a few key words. .mark-draw draws it in once. */
+.mark {
+  position: relative;
+  z-index: 0;
+  white-space: nowrap;
+}
+
+.mark::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  left: -0.08em;
+  right: -0.08em;
+  bottom: 0.02em;
+  height: 0.38em;
+  border-radius: 0.12em;
+  background: var(--marigold-light);
+  transform-origin: left center;
+}
+
+@keyframes mark-draw {
+  from { transform: scaleX(0); }
+}
+
+.mark-draw::after {
+  animation: mark-draw 0.7s cubic-bezier(0.65, 0, 0.35, 1) 0.25s backwards;
+}
+
+/* The plan as a trail: a line down each week's topics that fills as they're done. */
+@property --trail {
+  syntax: "<percentage>";
+  inherits: true; /* Set on the list, read by its ::before line. */
+  initial-value: 0%;
+}
+
+.plan-trail {
+  position: relative;
+}
+
+.plan-trail::before {
+  content: "";
+  position: absolute;
+  top: 0.75rem;
+  bottom: 1.85rem;
+  left: 0.3rem;
+  width: 4px;
+  border-radius: 2px;
+  background:
+    linear-gradient(var(--marigold), var(--marigold)) top / 100% var(--trail) no-repeat,
+    var(--line);
+}
+
+@keyframes trail-grow {
+  from { --trail: var(--trail-from); }
+}
+
+.plan-trail.is-growing::before {
+  animation: trail-grow 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.2s backwards;
+}
+
+.plan-item > .trail-stop {
+  grid-column: auto; /* Out of the grid: positioned against the card, not its first column. */
+  position: absolute;
+  z-index: 1;
+  top: 1.4rem;
+  left: -1.55rem;
+  display: grid;
+  place-items: center;
+  width: 1.3rem;
+  height: 1.3rem;
+  border: 3px solid var(--line);
+  border-radius: 50%;
+  background: var(--cream);
+}
+
+.plan-item-done > .trail-stop {
+  border-color: var(--marigold);
+  background: var(--marigold);
+}
+
+.trail-stop svg {
+  width: 0.85rem;
+  height: 0.85rem;
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* A topic just finished: its check draws itself and the stop pops. */
+@keyframes stop-pop {
+  0% { transform: scale(0.4); }
+  60% { transform: scale(1.25); }
+}
+
+@keyframes check-draw {
+  from { stroke-dashoffset: 16; }
+}
+
+.is-just-done > .trail-stop {
+  animation: stop-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.6s backwards;
+}
+
+.is-just-done .trail-stop svg path {
+  stroke-dasharray: 16;
+  animation: check-draw 0.4s ease-out 0.95s backwards;
+}
+
+/* The next topic glows a few times to say "start here", then rests. */
+@keyframes current-glow {
+  50% { box-shadow: 0 0 0 8px rgba(255, 182, 39, 0.35); }
+}
+
+.plan-item-current {
+  animation: current-glow 1.6s ease-in-out 0.6s 3;
+}
+
+.plan-item-current > .trail-stop {
+  border-color: var(--marigold);
+  background: var(--white);
+}
+
+.plan-empty {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.plan-empty-critter {
+  width: 4.5rem;
+  flex: none;
+}
+
+/* Paused: a mascot asleep, with a couple of z's drifting up. */
+.plan-paused {
+  position: relative;
+  padding-right: 7rem;
+}
+
+.paused-critter {
+  position: absolute;
+  right: 1.25rem;
+  top: 50%;
+  width: 5.5rem;
+  translate: 0 -50%;
+}
+
+.is-asleep .critter-eyes,
+.is-asleep [class*="critter-eye"] {
+  transform: scaleY(0.12);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@keyframes z-drift {
+  0% { opacity: 0; transform: translate(0, 0) scale(0.7); }
+  30% { opacity: 1; }
+  100% { opacity: 0; transform: translate(14px, -26px) scale(1.1); }
+}
+
+.paused-z {
+  position: absolute;
+  top: -0.4rem;
+  right: -0.2rem;
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--teal-deep);
+  animation: z-drift 2.6s ease-out infinite;
+}
+
+.paused-z + .paused-z {
+  animation-delay: 1.3s;
+}
+
+/* Agapay thinks while a reply is on its way: the flower bobs and looks up. */
+@keyframes think-bob {
+  50% { transform: translateY(-4px) rotate(-6deg); }
+}
+
+.help-panel.is-thinking .help-head .mascot {
+  animation: think-bob 0.9s ease-in-out infinite;
+}
+
+.help-waiting::after {
+  content: "";
+  display: inline-block;
+  width: 1.2em;
+  text-align: left;
+  animation: thinking-dots 1.2s steps(4, end) infinite;
+}
+
+@keyframes thinking-dots {
+  0% { content: ""; }
+  25% { content: "."; }
+  50% { content: ".."; }
+  75% { content: "..."; }
+}
+
+/* Replies arrive like chat messages. */
+.help-question,
+.help-reply {
+  animation: rise-in 0.26s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+/* The hint ladder: three steps that fill as the learner asks for more. */
+.help-ladder {
+  display: inline-flex;
+  gap: 3px;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+}
+
+.help-ladder span {
+  width: 1.1rem;
+  height: 0.4rem;
+  border-radius: 999px;
+  background: var(--line);
+}
+
+.help-ladder span.is-on {
+  background: var(--berry);
+}
+
+.help-ladder span.is-new {
+  animation: ladder-fill 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes ladder-fill {
+  from { transform: scaleX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @view-transition {
+    navigation: none;
+  }
+
+  .mark-draw::after,
+  .plan-trail.is-growing::before,
+  .is-just-done > .trail-stop,
+  .is-just-done .trail-stop svg path,
+  .plan-item-current,
+  .paused-z,
+  .help-panel.is-thinking .help-head .mascot,
+  .help-waiting::after,
+  .help-question,
+  .help-reply,
+  .help-ladder span.is-new {
+    animation: none;
+  }
+}
+
 /* ---------- Welcome ---------- */
 
 .welcome {

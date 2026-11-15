@@ -169,3 +169,40 @@ class FlexibilityTests(TwoLearners):
         self.ana.paused_at = two_weeks_ago + timedelta(days=1)
         self.ana.save()
         self.assertEqual(rewards.weekly_streak(self.ana, today).weeks, 1)
+
+
+class PlanMomentTests(TwoLearners):
+    """The trail on the plan page, and the moment a topic is finished."""
+
+    def setUp(self):
+        super().setUp()
+        self.client.force_login(self.ana.user)
+        self.first, self.second = self.ana_plan.items.order_by("order")
+
+    def test_marking_done_grows_the_trail_once(self):
+        self.client.post(reverse("plan_item_status", args=[self.first.pk]), {"status": "done"})
+        page = self.client.get(reverse("plan"))
+        self.assertContains(page, "is-just-done")
+        self.assertContains(page, "is-growing")
+        week = next(w for w in page.context["weeks"] if self.first in w["items"])
+        self.assertEqual(week["trail_from"], week["trail"] - round(100 / len(week["items"])))
+        again = self.client.get(reverse("plan"))
+        self.assertNotContains(again, "is-just-done")
+
+    def test_skipping_is_not_celebrated(self):
+        self.client.post(reverse("plan_item_status", args=[self.first.pk]), {"status": "skipped"})
+        self.assertNotContains(self.client.get(reverse("plan")), "is-just-done")
+
+    def test_passing_the_quiz_is_celebrated_on_the_plan(self):
+        answers = {f"item_{q.pk}": q.accepted_answers[0] for q in self.first.topic.quiz_items.all()}
+        self.client.post(reverse("quiz", args=[self.first.topic.slug]), answers)
+        self.assertEqual(self.client.session.get("just_done"), self.first.pk)
+
+    def test_topic_title_carries_into_its_page(self):
+        name = f"view-transition-name: topic-{self.first.topic.slug}"
+        self.assertContains(self.client.get(reverse("plan")), name)
+        self.assertContains(self.client.get(reverse("lesson", args=[self.first.topic.slug])), name)
+
+    def test_a_paused_plan_has_a_sleeping_mascot(self):
+        self.client.post(reverse("plan_pause"), {"action": "pause"})
+        self.assertContains(self.client.get(reverse("plan")), "is-asleep")

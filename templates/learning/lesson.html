@@ -19,7 +19,7 @@
 </details>
 {% endif %}
 
-<h1>{{ topic.title }}</h1>
+<h1 style="view-transition-name: topic-{{ topic.slug }}">{{ topic.title }}</h1>
 {% if topic.summary %}<p class="lesson-summary"><strong>You'll be able to:</strong> {{ topic.summary }}</p>{% endif %}
 <p class="lesson-meta">About {{ topic.estimated_minutes }} minutes{% if item %} · <span class="status status-{{ item.status }}">{{ item.get_status_display }}</span>{% endif %}</p>
 

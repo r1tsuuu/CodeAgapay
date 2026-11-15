@@ -56,16 +56,24 @@ def plan(request):
         .order_by("order")
     )
     milestones = journey.milestones_by_week(current)
+    # The topic finished just before this visit gets its moment on the trail (set by a status change or a quiz pass).
+    just_done = request.session.pop("just_done", None)
     weeks = []
     for week, group in groupby(items, key=lambda item: item.week):
         group = list(group)
+        finished = sum(1 for i in group if i.status in (PlanItem.Status.DONE, PlanItem.Status.SKIPPED))
+        fresh = any(i.pk == just_done and i.status == PlanItem.Status.DONE for i in group)
         weeks.append({
             "number": week,
             "items": group,
             "milestones": milestones.get(week, []),
             # The week's milestone line: what each topic lets them do, skipped ones left out.
             "outcomes": [i.topic.summary for i in group if i.topic.summary and i.status != PlanItem.Status.SKIPPED],
-            "done": sum(1 for i in group if i.status in (PlanItem.Status.DONE, PlanItem.Status.SKIPPED)),
+            "done": finished,
+            # How far the week's trail is filled, and where it grew from if a topic was just finished.
+            "trail": round(finished * 100 / len(group)),
+            "trail_from": round((finished - 1) * 100 / len(group)) if fresh else None,
+            "just_finished": fresh and finished == len(group),
         })
     tracks = plan_tracks(profile)
     reviews = journey.due_reviews(profile, current)
@@ -101,6 +109,7 @@ def plan(request):
             "finished": journey.is_finished(items),
             "hours_choices": [1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 20],
             "streak": rewards.weekly_streak(profile),
+            "just_done": just_done,
         },
     )
 
@@ -204,6 +213,8 @@ def plan_item_status(request, item_id):
         messages.error(request, "That status isn't allowed.")
         return redirect("plan")
     set_item_status(item, status)
+    if status == PlanItem.Status.DONE:
+        request.session["just_done"] = item.pk
     messages.success(request, f"{item.topic.title}: {item.get_status_display().lower()}.")
     return redirect("plan")
 
@@ -318,7 +329,10 @@ def quiz(request, topic):
     items = list(topic.quiz_items.all())
     form = QuizForm(request.POST or None, items=items)
     if request.method == "POST" and items and form.is_valid():
-        result = submit_quiz(get_profile(request.user), topic, items, form.answers())
+        profile = get_profile(request.user)
+        result = submit_quiz(profile, topic, items, form.answers())
+        if result.passed and (item := plan_item_for_topic(profile, topic)) is not None:
+            request.session["just_done"] = item.pk
         if result.passed:
             messages.success(request, f"You passed with {result.percent}%! {topic.title} is done.")
         else:

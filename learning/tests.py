@@ -582,7 +582,8 @@ class FrameworkTests(PlanTestMixin, TestCase):
         self.assertContains(page, "By the end of Week 1, you'll be able to:")
         self.assertContains(page, "<li>Store values in variables.</li>")
         self.answer(4)
-        self.assertContains(self.client.get(reverse("plan")), "Week 1 done! You can now:")
+        page = self.client.get(reverse("plan"))
+        self.assertContains(page, "Week 1 done!</span> You can now:")
 
 
 AI_OFF = {"GROQ_API_KEY": "", "CF_ACCOUNT_ID": "", "CF_API_TOKEN": ""}

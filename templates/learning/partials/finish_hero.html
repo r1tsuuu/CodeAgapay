@@ -14,7 +14,7 @@ next_text, next_url, next_button (next_post: a POST form instead of a link).
     {% mascot "oval-pink" "fm fm-oval" %}
   </div>
   <p class="finish-kicker">{{ kicker }}</p>
-  <h1 id="finish-title">Congratulations, {{ user.first_name|default:user.username }}!</h1>
+  <h1 id="finish-title"><span class="mark mark-draw">Congratulations</span>, {{ user.first_name|default:user.username }}!</h1>
   <p class="finish-lead">You finished your {{ plan_name }} learning plan. You've built a foundation you can keep practicing and growing.</p>
 
   <ul class="finish-stats">

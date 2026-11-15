@@ -799,7 +799,7 @@ class AIFinishTests(AIPlanMixin, TestCase):
         self.assertEqual([x["key"] for x in page.context["skipped"]], ["L4"])
         self.assertContains(page, "Forms")  # The AI's "after this plan" suggestions.
         self.assertContains(page, "Your glossary: 2 terms")
-        self.assertContains(page, "Congratulations, ")
+        self.assertContains(page, "Congratulations</span>, ")
         self.assertContains(page, "Certificate of completion")
 
     def test_skipping_every_lesson_still_opens_the_finish_page(self):
