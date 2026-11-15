@@ -3,7 +3,7 @@
     content/curriculum/curriculum.json      {"version": ..., "paths": [...]}
     content/curriculum/tracks/<slug>.json   one track with its topics and everything they hold
 
-The rules are in SCHEMA (shapes) and `validate` (rules across files). docs/CURRICULUM.md
+The shapes are the *_SHAPE dicts below, and `validate` holds the rules across files. docs/CURRICULUM.md
 explains them for curators. Positions in a list are the order: the first topic is order 1.
 
 Importing is safe on a live database. It never deletes a topic, and never deletes a check

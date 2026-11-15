@@ -10,7 +10,7 @@
 [![Hosting cost](https://img.shields.io/badge/hosting_cost-%E2%82%B10-FFB627?style=flat-square)](#tech-stack)
 [![MIT license](https://img.shields.io/badge/license-MIT-2A1A20?style=flat-square)](LICENSE)
 
-**[How it works](#how-it-works)** · **[Architecture](#architecture)** · **[Run it locally](#run-it-locally)** · **[Curating topics](#curating-topics)** · **[Status](#status)** · **[Contributing](#contributing)**
+**[How it works](#how-it-works)** · **[Architecture](#architecture)** · **[Run it locally](#run-it-locally)** · **[Curating topics](#curating-topics)** · **[Status](#status)** · **[Handover docs](#handover-docs)**
 
 </div>
 
@@ -37,7 +37,7 @@ Beginner programmers get stuck, and there usually isn't a tutor around when it h
 6. **Learn and review.** Each topic has vetted resources, tips, practice and a short fill-in-the-blank quiz. Passed topics come back for review after a week. After repeated misses, the result page points to other resources and the topics it builds on.
 7. **Get help.** The "Need help?" panel steps through three levels of hints in English or Taglish, leaning toward what each learner said helps them.
 
-Paths, edited in admin: Make a website, Automate boring tasks, Work with data, Make games and fun projects, Get ahead in CS class. A path is offered once its first track is active. Tracks: Python, JavaScript, HTML, CSS, Java, SQL.
+Paths, in `content/curriculum/curriculum.json`: Make a website, Automate boring tasks, Work with data, Learn databases, Make games and fun projects, Get ahead in CS class, and (waiting for review) Start from zero. A path is offered once its first track is active. Tracks: Python, JavaScript, HTML, CSS, Java, SQL, and Programming Foundations (inactive).
 
 ## Architecture
 
@@ -148,12 +148,13 @@ erDiagram
 | --- | --- |
 | `config/` | Settings, root URLs, WSGI |
 | `accounts/` | Learner profile, the first-login redirect, Settings and unsubscribe |
-| `content/` | Paths, tracks, topics, resources, checks, the link checker, the AI drafting commands and `drafts/` |
+| `content/` | Curriculum models, `curriculum/` (the versioned curriculum files), import, export and validation (`curriculum.py`), the link checker, the AI drafting commands, and `drafts/` (frozen inputs of old data migrations) |
 | `diagnose/` | Onboarding, the skill check and scoring (`scoring.py`, `onboarding.py`) |
 | `learning/` | Plans, lessons, quizzes, practice and reminders (`planner.py`, `grading.py`, `tailoring.py`, `reminders.py`) |
 | `assistant/` | AI providers, the help endpoint and daily caps (`service.py`) |
 | `templates/`, `static/` | Server-rendered pages, one stylesheet and small vanilla JS files |
-| `fixtures/` | `content.json`, the sample and backup of curated topics |
+| `scripts/` | `check.sh`: every check to run before a commit |
+| `docs/` | Architecture, curriculum, AI, runbook, handover and audit notes |
 
 ## Tech stack
 
@@ -201,23 +202,30 @@ Open http://localhost:8000 for the app and http://localhost:8000/admin for curat
 | `AI_PLANS`, `AI_LESSON_DAILY_LIMIT` | `True` gives every learner AI-written plans and lessons instead of the curated plan (default `False`; to start with a few, tick **Gets AI plans early** on their profile in admin), and how many lessons the AI may write or rewrite per learner per day (default 12) |
 | `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_HOST_USER`, `EMAIL_HOST_PASSWORD`, `DEFAULT_FROM_EMAIL` | Reminder emails, on the machine that runs `send_reminders`. SMTP with TLS |
 | `SITE_URL` | Links in emails. Defaults to the live site; set it only to test emails locally |
+| `LOG_LEVEL` | Log detail (default `INFO`). Logs are JSON lines on stdout, with secrets redacted |
+| `CURRICULUM_AUTO_IMPORT` | Render only: `1` makes `build.sh` run `import_curriculum` on every deploy. See [docs/CURRICULUM.md](docs/CURRICULUM.md) |
 
 Ask a teammate for shared keys. Never commit `.env`.
 
-### Run the tests
+### Check before you commit
 
-There is no CI, so run the tests before you merge. All AI calls are mocked.
+There is no CI. One script runs every check: lint (ruff), Django's system and deploy checks, migrations, the curriculum files, the static build, and the tests. All AI calls are mocked, and it always uses a local SQLite database, whatever your `.env` says.
+
+```bash
+pip install -r requirements-dev.txt   # once: adds ruff
+./scripts/check.sh                    # about 30 seconds
+./scripts/check.sh --links            # also opens every resource link (needs internet)
+```
+
+To run only the tests, keep the `DATABASE_URL` override if your `.env` points at Neon, or they run on the production database server:
 
 ```bash
 DATABASE_URL="sqlite:///$PWD/db.sqlite3" python manage.py test
 ```
 
-> [!WARNING]
-> Keep the `DATABASE_URL` override if your `.env` points at Neon. Without it, the tests run on the production database server: a separate test database, but far slower (about 8 minutes instead of 8 seconds) and it uses up free compute.
-
 ## Curating topics
 
-Tracks, topics, links, tips and quiz questions are all edited at `/admin/`, with no coding. Adding a track is curation work, not new code. Ask a developer for an admin account.
+Paths, tracks, topics, links, tips and quiz questions live in versioned JSON files in `content/curriculum/`. Change a file, run `./scripts/check.sh`, open a pull request, then `import_curriculum` loads it. Admin still works for quick fixes; `export_curriculum` writes them back to the files. Adding a track is curation work, not new code. The full guide, with every field and rule, is [docs/CURRICULUM.md](docs/CURRICULUM.md).
 
 <details>
 <summary><strong>Draft topics with AI</strong></summary>
@@ -286,18 +294,19 @@ DATABASE_URL="<neon url>" python manage.py load_drafts content/drafts/css.json
 - Load HTML and CSS before activating either, then run `check_links`.
 - The Python questions go straight to learners because Python is live, so read `content/drafts/python_quiz.json` first, then add `--allow-active-track`.
 
-> [!WARNING]
-> Don't use `loaddata fixtures/content.json` to add content to production. It overwrites curated topics with the older copy in the file.
+> [!NOTE]
+> These drafts are already in `content/curriculum/`. New content goes straight into the curriculum files; `content/drafts/` stays only because old data migrations read it.
 
 </details>
 
 <details>
-<summary><strong>Back up curated topics from production</strong></summary>
+<summary><strong>Copy admin edits from production into the files</strong></summary>
 
 <br>
 
 ```bash
-DATABASE_URL="<production database url>" python manage.py dumpdata content --indent 2 > fixtures/content.json
+DATABASE_URL="<production database url>" python manage.py export_curriculum
+git diff content/curriculum/        # review, then commit on a branch
 ```
 
 </details>
@@ -386,7 +395,7 @@ DATABASE_URL="<neon url>" python manage.py createsuperuser
 ```
 
 > [!CAUTION]
-> Only run `loaddata fixtures/content.json` on an empty database. It writes by ID, so on production it can replace curated topics and quiz items that share an ID.
+> Before the first `import_curriculum` on production, run `export_curriculum` against production and commit the result, so admin edits made there aren't overwritten. See [docs/CURRICULUM.md](docs/CURRICULUM.md).
 
 </details>
 
@@ -411,7 +420,7 @@ The credentials live in settings only. Don't add a Google "Social application" i
 | Part | Status |
 | --- | --- |
 | Setup and deployment | ✅ Live on Render with Neon Postgres |
-| Curation admin | ✅ Done, with sample Python topics in `fixtures/content.json` |
+| Curation | ✅ Versioned files in `content/curriculum/`, validated by `./scripts/check.sh`; admin for quick fixes |
 | Google login | ✅ Done |
 | Onboarding and skill check | ✅ Guided flow at `/start/`, with the form at `/about/` as fallback |
 | Learning plan | ✅ Done |
@@ -420,8 +429,8 @@ The credentials live in settings only. Don't add a Google "Social application" i
 | Practice tasks | ✅ Done, with AI feedback. No code editor |
 | AI drafting commands | ✅ `draft_topic`, `draft_intro` and `draft_practice` |
 | AI-written plans and lessons | 🟡 Plans, lessons, checks, rewrites, setup, the help panel, reminders and the finish screen are done behind `AI_PLANS`, or per learner with **Gets AI plans early** in admin. To do: test with learners, then turn it on for everyone |
-| HTML and CSS tracks | 🟡 Drafted in `content/drafts/`. To do: review, load and activate. No practice tasks yet |
-| JavaScript, SQL and Java tracks | ⬜ Not started |
+| HTML, CSS, JavaScript, Java and SQL tracks | ✅ Live (migration `0011_unlock_tracks`), in the curriculum files |
+| Programming Foundations track | 🟡 In the curriculum files, inactive. To do: curators review it, then set `is_active` on the track and the "Start from zero" path |
 | Finish screen and Settings | ✅ Done, at `/plan/finished/` and `/settings/` |
 | Reminder emails | 🟡 `send_reminders` is done and opt-in. To do: choose the sending email account |
 | Broken-link check | ✅ `check_links`, with results in admin. Run by hand |
@@ -440,10 +449,21 @@ Update this table as parts are finished, and list known bugs below.
 - Onboarding answers live in the session until confirmed, so they survive a refresh but not a new device.
 - Marking a topic done by hand records it as known (source "manual"), so a rebuilt plan skips it. Undo reverses that.
 
+## Handover docs
+
+| Doc | What it covers |
+| --- | --- |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | How the parts fit, request flows, and who owns which module |
+| [docs/CURRICULUM.md](docs/CURRICULUM.md) | Adding or editing a track, language or resource, and how validation works |
+| [docs/AI.md](docs/AI.md) | Every prompt, what the AI may and may not do, limits and fallbacks |
+| [docs/RUNBOOK.md](docs/RUNBOOK.md) | What to do when login, the AI, the database or links break; rollback and backups |
+| [docs/HANDOVER.md](docs/HANDOVER.md) | Accounts to transfer, known limitations and prioritised next steps |
+| [docs/AUDIT.md](docs/AUDIT.md) | The audit taken before handover, and the decisions made from it |
+
 ## Contributing
 
 1. Create a branch from `main` named `<your-name>/<feature>`.
-2. Run the tests, then open a pull request. One teammate reviews it before merging.
+2. Run `./scripts/check.sh`, then open a pull request. One teammate reviews it before merging.
 3. `main` deploys to the live site automatically, so keep it working.
 
 Keep views thin and put logic in testable modules such as `scoring.py`, `planner.py` and `grading.py`. Mock every external call in tests.
