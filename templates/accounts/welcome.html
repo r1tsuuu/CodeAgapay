@@ -1,35 +1,36 @@
 {% extends "base.html" %}
-{% load static %}
+{% load static mascots %}
 
 {% block title %}Welcome · CodeAgapay{% endblock %}
+{% block head %}<script src="{% static 'js/mascots.js' %}" defer></script>{% endblock %}
 
 {% block content %}
-<section class="welcome">
-  <img class="mascot" src="{% static 'img/mascots/flower-yellow.svg' %}" alt="" width="96" height="86">
-  <h1>Hi{% if user.first_name %}, {{ user.first_name }}{% endif %}!</h1>
+<section class="welcome aura">
+  {% mascot "flower-yellow" "welcome-critter" %}
+  <h1>Hi{% if user.first_name %}, <span class="mark mark-draw">{{ user.first_name }}</span>{% endif %}!</h1>
   <p class="lead">Welcome to CodeAgapay. Here's how we'll help you learn to code.</p>
   <ol class="welcome-steps">
     <li class="tile welcome-step">
       <span class="step-pill">Step 1</span>
-      <img class="mascot" src="{% static 'img/mascots/star-yellow.svg' %}" alt="">
+      {% mascot "star-yellow" "welcome-step-critter" %}
       <h2>Check your skills</h2>
       <p>Tell us what you want to make, then answer a few quick questions so we know what you already know. It's not graded.</p>
     </li>
     <li class="tile welcome-step">
       <span class="step-pill">Step 2</span>
-      <img class="mascot" src="{% static 'img/mascots/star-pink.svg' %}" alt="">
+      {% mascot "star-pink" "welcome-step-critter" %}
       <h2>Get your plan</h2>
       <p>We build a week-by-week plan from the best free lessons online, skipping what you know.</p>
     </li>
     <li class="tile welcome-step">
       <span class="step-pill">Step 3</span>
-      <img class="mascot" src="{% static 'img/mascots/flower-teal.svg' %}" alt="">
+      {% mascot "flower-teal" "welcome-step-critter" %}
       <h2>Learn with help</h2>
       <p>Stuck? Ask Agapay, our AI helper, for a hint. It nudges you without giving away the answer.</p>
     </li>
   </ol>
   <p class="info-note"><span><strong>Heads up:</strong> AI help has a daily limit of {{ ai_daily_limit }} messages. It resets every day.</span></p>
-  <p><a class="button button-primary" href="{% url 'intake' %}">Get started</a></p>
+  <p><a class="button button-primary welcome-cta" href="{% url 'intake' %}" data-mascot-cheer>Get started</a></p>
   <p class="welcome-alt"><a href="{% url 'about_you' %}">Prefer a short form instead?</a></p>
 </section>
 {% endblock %}

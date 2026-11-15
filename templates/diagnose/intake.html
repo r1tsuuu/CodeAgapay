@@ -1,13 +1,18 @@
 {% extends "base.html" %}
+{% load static mascots %}
 
 {% block title %}Plan your learning · CodeAgapay{% endblock %}
 
+{% block head %}<script src="{% static 'js/mascots.js' %}" defer></script>{% endblock %}
+
 {% block content %}
-<h1>Let's plan your learning</h1>
+<div class="onboarding aura">
+<h1 class="onboarding-title">Let's plan your <span class="mark">learning</span></h1>
 {% include "partials/phase_steps.html" %}
 
 {% if question %}
-<section class="chat-message chat-assistant chat-current" aria-labelledby="current-question">
+<section class="chat-message chat-assistant chat-current has-avatar" aria-labelledby="current-question">
+  <span class="chat-avatar">{% mascot "flower-yellow" %}</span>
   <span class="chat-author">Agapay</span>
   <p class="chat-text chat-question" id="current-question">{{ question.title }}</p>
   <p class="chat-help">{{ question.help }}</p>
@@ -142,4 +147,5 @@
 </form>
 {% endif %}
 <p class="chat-note"><a href="{% url 'about_you' %}">Prefer a short form instead?</a></p>
+</div>
 {% endblock %}

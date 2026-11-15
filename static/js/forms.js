@@ -9,6 +9,8 @@ document.addEventListener("submit", function (event) {
     return;
   }
   form.dataset.submitting = "true";
+  // The choice that was tapped stays marked while the next step loads.
+  if (event.submitter) event.submitter.classList.add("is-picked");
   var status = document.createElement("p");
   status.className = "form-loading";
   status.setAttribute("role", "status");
