@@ -182,3 +182,13 @@ These need a decision before Phases 1 to 3:
 | Landing page | Exists (hero, how it works, hint demo, paths, close). Add the goal selector preview, sample week, trust section; fix contrast |
 | Handover docs | New: `ARCHITECTURE`, `CURRICULUM`, `AI`, `RUNBOOK`, `HANDOVER`; refresh README |
 | Lint, typecheck, build | None configured. Proposed: `python manage.py check`, `makemigrations --check`, `collectstatic --dry-run`, and the tests, as one script. Adding ruff is optional |
+
+## 16. Decisions (15 Nov 2026)
+
+| Conflict | Decision |
+| --- | --- |
+| 1. AI plans | Keep `AI_PLANS` live. The determinism rule applies to the curated planner (`learning/planner.py`), which is also the fallback. The trade-off is written up in `docs/HANDOVER.md` |
+| 2. Curriculum | Versioned JSON files in `content/curriculum/` become the source of truth, validated by code, loaded with `import_curriculum`. Admin stays for quick fixes; `export_curriculum` writes the database back to files. Each plan stores the curriculum version it was built from |
+| 3. CI | No GitHub Actions. One local script, `scripts/check.sh`, runs every check, and the link check can read the curriculum files |
+| 4. Language | Agapay gets an explanation style (English, Filipino, Taglish). The interface stays in English |
+| 5. Taste skill | Its rules only, applied by hand inside the existing design |
