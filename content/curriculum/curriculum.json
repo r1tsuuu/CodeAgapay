@@ -1,5 +1,5 @@
 {
-  "version": "2026.11.15",
+  "version": "2026.11.15.1",
   "paths": [
     {
       "slug": "website",
@@ -58,6 +58,16 @@
       "tracks": [
         "python",
         "java"
+      ]
+    },
+    {
+      "slug": "foundations",
+      "title": "Start from zero",
+      "tagline": "The ideas every language shares, before you pick one.",
+      "is_active": false,
+      "language_reason": "These ideas work in any language. The examples use Python because it reads almost like English.",
+      "tracks": [
+        "foundations"
       ]
     }
   ]
