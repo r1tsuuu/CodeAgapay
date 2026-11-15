@@ -929,6 +929,59 @@ input[type="radio"] {
   max-width: 30rem;
 }
 
+/* The sign-in column carries the brand glow, so it isn't a flat block beside the mascots. */
+.login-panel.aura::before {
+  inset: 10% -10% auto;
+  height: 80%;
+}
+
+.login-gets {
+  display: grid;
+  gap: 0.6rem;
+  max-width: 30rem;
+  margin: 2rem 0 0;
+  padding: 1.75rem 0 0;
+  border-top: 2px dashed var(--line);
+  list-style: none;
+  font-weight: 600;
+}
+
+.login-gets li {
+  position: relative;
+  padding-left: 2rem;
+}
+
+/* The plan trail's stop: a marigold dot with a check. */
+.login-gets li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.1rem;
+  width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 50%;
+  background: var(--marigold) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5 6.5 11.5 12.5 4.5' fill='none' stroke='%232A1A20' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 0.85rem no-repeat;
+}
+
+.login-tour {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.75rem;
+  margin-top: 1.25rem;
+  font-size: 1.1rem;
+}
+
+.login-tour::after {
+  content: "→"; /* The same arrow as the primary buttons. */
+  font-family: var(--font-body);
+  transition: transform 0.2s ease;
+}
+
+.login-tour:hover::after {
+  transform: translateX(4px);
+}
+
 @media (hover: hover) and (pointer: fine) {
   .google-button {
     transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
