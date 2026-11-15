@@ -39,7 +39,7 @@ No secret is written here. Hand each one over in person or through a password ma
 - **No HSTS or Content Security Policy** yet (`check --deploy` warns about HSTS).
 - **No burst rate limit** on `/help/ask/`; the daily cap is enforced, so the worst case is a learner using their own 20 messages quickly.
 - From the README's known issues: 70% pass mark means 2- or 3-item quizzes need every answer right; the quick check covers only a path's first track; reviews use a fixed 7-day rule; onboarding answers live in the session until confirmed; opening a lesson isn't recorded as activity for reminders.
-- **Lighthouse** (landing page, mobile, throttled, local server): Performance 89, Accessibility 100, Best Practices 100, SEO 100. The main cost is the Google Fonts stylesheet and the 110 KB stylesheet, both render-blocking.
+- **Lighthouse** (landing page, mobile, throttled, local server): Performance 83 to 89 (varies run to run), Accessibility 100, Best Practices 100, SEO 100. The main cost is the Google Fonts stylesheet and the 110 KB stylesheet, both render-blocking.
 
 ## Not done from the handover brief, and why
 

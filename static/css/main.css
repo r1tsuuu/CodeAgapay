@@ -1846,6 +1846,148 @@ input[type="radio"] {
   }
 }
 
+
+/* ---------- Landing: aura ---------- */
+
+/* Mascots peek past their panels; never let that make the page scroll sideways. */
+.landing {
+  overflow-x: clip;
+}
+
+/* A soft glow of the brand colours behind the hero, and coloured bands so sections alternate. */
+.landing-hero {
+  position: relative;
+  isolation: isolate;
+}
+
+.landing-hero::before {
+  content: "";
+  position: absolute;
+  inset: -4rem -10vw 0;
+  z-index: -1;
+  background:
+    radial-gradient(38rem 26rem at 8% 18%, rgba(255, 182, 39, 0.28), transparent 70%),
+    radial-gradient(34rem 30rem at 92% 30%, rgba(60, 198, 182, 0.24), transparent 70%),
+    radial-gradient(30rem 24rem at 55% 95%, rgba(199, 54, 111, 0.16), transparent 70%);
+  pointer-events: none;
+}
+
+.hero-mark {
+  color: var(--berry);
+  background: linear-gradient(transparent 62%, var(--marigold-light) 62%, var(--marigold-light) 92%, transparent 92%);
+  padding-inline: 0.06em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.landing-stage {
+  overflow: visible;
+  background:
+    radial-gradient(circle, rgba(14, 124, 126, 0.16) 1.5px, transparent 1.6px) 0 0 / 22px 22px,
+    linear-gradient(150deg, var(--teal-soft), #BFE9E3);
+  box-shadow: 0 10px 0 #A9DCD5;
+}
+
+/* Mascots peek around the card instead of hiding behind it. */
+.landing-stage .stage-critter {
+  z-index: 2;
+}
+
+/* Left-hand mascots sit behind the card, so they never cover its text. */
+.landing-stage .stage-1 { left: -10%; top: 4%; width: 26%; z-index: 0; }
+.landing-stage .stage-2 { left: auto; right: -6%; top: -9%; width: 28%; z-index: 0; }
+.landing-stage .stage-3 { left: auto; right: -5%; top: 44%; width: 20%; }
+.landing-stage .stage-4 { left: -9%; top: auto; bottom: -4%; width: 24%; z-index: 0; }
+.landing-stage .stage-7 { left: auto; right: 8%; top: auto; bottom: -10%; width: 22%; z-index: 0; }
+
+@keyframes card-float {
+  50% { transform: translateY(-6px); }
+}
+
+.preview-card {
+  box-shadow: 0 8px 0 var(--line), 0 24px 48px rgba(42, 26, 32, 0.14);
+  animation: card-float 6s ease-in-out infinite;
+}
+
+.landing-stats {
+  background: var(--ink);
+  color: #E8D9DE;
+  padding-block: 1.75rem;
+}
+
+.stats-list {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-block: 0;
+  padding: 0;
+  list-style: none;
+  font-weight: 700;
+}
+
+.stats-list strong {
+  display: block;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 1.4rem + 2vw, 3rem);
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--marigold);
+}
+
+.landing-goals {
+  background: var(--paper);
+  border-bottom: 3px solid var(--line);
+}
+
+.landing-week {
+  background: var(--teal-soft);
+}
+
+.landing-week .landing-sub {
+  color: var(--ink);
+}
+
+.landing-hints {
+  background: var(--berry-soft);
+  border-block: 0;
+}
+
+.landing-hints .landing-sub,
+.landing-hints .hints-limit {
+  color: var(--ink);
+}
+
+.landing-section h2 {
+  letter-spacing: -0.01em;
+}
+
+/* The section links need room; below this width the menu keeps only the brand and Log in. */
+@media (max-width: 64rem) {
+  .landing-links {
+    display: none;
+  }
+
+  .landing-login {
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 56rem) {
+  .landing-stage .stage-critter {
+    width: 20%;
+  }
+
+  .stats-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .preview-card {
+    animation: none;
+  }
+}
+
 /* ---------- Welcome ---------- */
 
 .welcome {

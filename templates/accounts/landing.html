@@ -34,7 +34,7 @@
   {# 1. Hero: the promise, two actions, and a live preview of a real plan. #}
   <section class="landing-hero" aria-labelledby="hero-title">
     <div class="landing-hero-text">
-      <h1 id="hero-title" class="landing-rise">Learn to code by making something real</h1>
+      <h1 id="hero-title" class="landing-rise">Learn to code by making <span class="hero-mark">something real</span></h1>
       <p class="landing-lead landing-rise">A free week-by-week plan for beginners, built from MDN, freeCodeCamp and the official docs. A short check skips what you know, and Agapay gives hints when you're stuck, never the answer.</p>
       <div class="landing-actions landing-rise">
         <a class="button button-primary landing-cta" href="{% url 'account_login' %}" data-mascot-cheer>Build my free plan</a>
@@ -52,6 +52,7 @@
       {% mascot "star-yellow-tilt" "stage-critter stage-2" %}
       {% mascot "flower-pink" "stage-critter stage-4" %}
       {% mascot "star-lime" "stage-critter stage-7" %}
+      {% mascot "oval-berry" "stage-critter stage-3" %}
       {% if hero_previews %}
       <div class="preview-card" data-preview-group="hero">
         <p class="preview-card-label" id="hero-preview-label">Preview a plan</p>
@@ -80,6 +81,18 @@
       {% endif %}
     </div>
   </section>
+
+  {# Real numbers from the curriculum, not marketing figures. #}
+  {% if stats %}
+  <section class="landing-stats" aria-label="CodeAgapay in numbers">
+    <ul class="landing-wrap stats-list">
+      <li><strong>{{ stats.languages }}</strong> languages</li>
+      <li><strong>{{ stats.topics }}</strong> curated topics</li>
+      <li><strong>{{ stats.links }}</strong> free lessons linked</li>
+      <li><strong>₱0</strong> to learn, always</li>
+    </ul>
+  </section>
+  {% endif %}
 
   {# 2. Goal selector: every real goal, each with its starting language, first project and milestone. #}
   {% if previews %}

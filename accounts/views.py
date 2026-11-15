@@ -45,7 +45,16 @@ def landing(request):
     all_sources = []
     for p in previews:
         all_sources += [s for s in p.sources if s not in all_sources]
+    from content.models import Resource, Topic
+
+    live = Track.objects.filter(is_active=True)
+    stats = {
+        "languages": live.count(),
+        "topics": Topic.objects.filter(track__in=live).count(),
+        "links": Resource.objects.filter(topic__track__in=live, is_active=True).count(),
+    }
     return render(request, "accounts/landing.html", {
+        "stats": stats if stats["topics"] else None,
         "previews": previews,
         "selected": selected,
         "hero_previews": hero,
